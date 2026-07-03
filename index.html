@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root{
     --paper:#EBEFF1;
@@ -147,6 +148,16 @@
   .s-btn:hover{background:#F1F5F6;border-color:#C2CDD2;}
   .s-btn-danger{color:var(--danger);}
   .s-btn-danger:hover{background:#FBF0EC;border-color:#E7C2B8;}
+  .s-btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;text-align:center;}
+  .s-btn-primary:hover{background:var(--accent-deep);border-color:var(--accent-deep);}
+  .sync-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .sync-row:first-of-type{border-top:1px solid var(--line);margin-top:14px;}
+  .sync-k{flex:none;font-size:.85rem;color:var(--ink-soft);}
+  .sync-v{font-size:.9rem;color:var(--ink);font-weight:600;display:inline-flex;align-items:center;gap:7px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .sync-dot{width:9px;height:9px;border-radius:50%;background:#9AA8AE;flex:none;}
+  .sync-dot.ok{background:var(--accent);}
+  .sync-dot.busy{background:#C2790B;animation:duePulse 1.2s ease-in-out infinite;}
+  .sync-dot.warn{background:var(--danger);}
   .soon-tag{font-family:inherit;font-size:.68rem;font-weight:700;letter-spacing:.02em;color:var(--accent-deep);
     background:#EAF4F0;border:1px solid #CDE6DD;border-radius:999px;padding:3px 9px;}
 
@@ -521,9 +532,20 @@
         <input type="file" id="importFile" accept="application/json,.json" hidden>
       </div>
 
-      <div class="set-card">
-        <div class="set-card-title">Google 雲端同步 <span class="soon-tag">即將推出</span></div>
-        <p class="set-card-desc">多裝置自動同步——電腦、手機的資料自動保持一致、互不覆蓋。啟用前需先將本 App 部署到固定網址並完成 Google 授權設定,之後即可在此連結你的 Google 帳號。</p>
+      <div class="set-card" id="syncCard">
+        <div class="set-card-title">Google 雲端同步</div>
+        <p class="set-card-desc">連結 Google 帳號後,多台裝置的物件資料會自動同步、互不覆蓋。資料只存放在你 Google 雲端硬碟的私密應用程式資料夾(appDataFolder),不會外流,也不占用你雲端硬碟的一般空間。</p>
+        <div id="syncBoxOff">
+          <div class="set-actions"><button class="s-btn s-btn-primary" id="gConnect">連結 Google 帳號</button></div>
+        </div>
+        <div id="syncBoxOn" style="display:none">
+          <div class="sync-row"><span class="sync-k">帳號</span><span class="sync-v" id="gEmail">—</span></div>
+          <div class="sync-row"><span class="sync-k">狀態</span><span class="sync-v"><span class="sync-dot" id="gDot"></span><span id="gStatus">—</span></span></div>
+          <div class="set-actions">
+            <button class="s-btn s-btn-primary" id="gSyncNow">立即同步</button>
+            <button class="s-btn s-btn-danger" id="gDisconnect">解除連結</button>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -782,10 +804,12 @@ function renderTabs(){
 }
 function refreshCategories(){
   saveCats();
+  touchCats();
   renderCover();
   renderTabs();
   renderCatOptions();
   applyFilter();
+  scheduleSync();
 }
 renderCover();
 
@@ -886,7 +910,7 @@ function setDensity(d){
 }
 densityEl.addEventListener("click", e => {
   const b = e.target.closest("button");
-  if (b) setDensity(b.dataset.d);
+  if (b){ setDensity(b.dataset.d); onLocalChange("settings"); }
 });
 setDensity(density);
 
@@ -909,6 +933,7 @@ function setSort(key){
   sortMenu.querySelectorAll(".cselect-opt").forEach(o => o.classList.toggle("sel", o.dataset.key === currentSort));
   saveSort();
   applyFilter();
+  onLocalChange("settings");
 }
 function openSortSel(){ sortSel.classList.add("open"); sortBtn.setAttribute("aria-expanded","true"); }
 function closeSortSel(){ sortSel.classList.remove("open"); sortBtn.setAttribute("aria-expanded","false"); }
@@ -1026,6 +1051,7 @@ function saveForm(){
   saveItems();
   closeForm();
   applyFilter();
+  onLocalChange("data");
   toast(isEdit ? "已更新" : "已新增");
 }
 function deleteItem(id){
@@ -1037,6 +1063,7 @@ function deleteItem(id){
     saveItems();
     if (editingId === id) closeForm();
     applyFilter();
+    onLocalChange("data");
     toast("已刪除");
   });
 }
@@ -1133,6 +1160,7 @@ selDelete.addEventListener("click", () => {
     exitSelectMode();
     renderCover();
     applyFilter();
+    onLocalChange("data");
     toast(`已刪除 ${n} 筆物件`);
   });
 });
@@ -1182,10 +1210,11 @@ importFile.addEventListener("change", e => {
         if (parsed.deleted && typeof parsed.deleted === "object") newDeleted = parsed.deleted;
       }
       else throw new Error("bad format");
-      items = newItems.map(d => ({...d, id: d.id || uid(), updatedAt: d.updatedAt || BASE_TS}));
-      if (newCats) { cats = newCats; saveCats(); renderTabs(); renderCatOptions(); }
+      items = newItems.map(d => ({...d, id: d.id || uid(), updatedAt: Date.now()}));
+      if (newCats) { cats = newCats; saveCats(); touchCats(); renderTabs(); renderCatOptions(); }
       if (newDeleted) { deleted = newDeleted; saveDeleted(); }
       saveItems(); renderCover();
+      onLocalChange("data");
       toast(`已匯入 ${items.length} 筆物件`);
     } catch (err) { toast("匯入失敗：格式不正確"); }
     importFile.value = "";
@@ -1197,6 +1226,7 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     items = SEED.map((d,i) => ({...d, id: "seed"+i, updatedAt: Date.now()}));
     deleted = {}; saveDeleted();
     saveItems(); renderCover();
+    onLocalChange("data");
     toast("已還原預設資料");
   });
 });
@@ -1224,6 +1254,7 @@ function setDueDays(v){
   saveDueDays();
   renderDueDays();
   applyFilter();
+  onLocalChange("settings");
 }
 document.getElementById("ddMinus").addEventListener("click", () => setDueDays(dueSoonDays - 1));
 document.getElementById("ddPlus").addEventListener("click", () => setDueDays(dueSoonDays + 1));
@@ -1324,6 +1355,294 @@ catListEl.addEventListener("click", e => {
     }
   );
 });
+
+let syncConnected = false, syncEmail = null;
+/* =========================================================================
+   Google 雲端同步 (依規格:appDataFolder 主檔 sync-main.json,union+LWW+墓碑
+   冪等合併,樂觀併發,啟動/變更/輪詢/焦點觸發,外加每日快照當保險)
+   ========================================================================= */
+(function(){
+  const CLIENT_ID = "50147242388-jqhblfo5uh482gv69qn6ee28foevrkbi.apps.googleusercontent.com";
+  const SCOPES = "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email";
+  const MAIN_NAME = "sync-main.json";
+  const POLL_MS = 10000;
+
+  let tokenClient = null, accessToken = null, tokenExpiry = 0;
+  let fileId = null, lastVersion = null;
+  let inFlight = false, needReauth = false, pollTimer = null;
+
+  // ---- persistence for auth flag + change timestamps ----
+  function saveTs(kind, v){ if (storageOK){ try { localStorage.setItem("property_app_"+kind+"_ts_v1", String(v)); } catch(e){} } }
+  function loadTs(kind){ if (storageOK){ try { const v = parseInt(localStorage.getItem("property_app_"+kind+"_ts_v1"),10); if (!isNaN(v)) return v; } catch(e){} } return 0; }
+  window.__catsTs = loadTs("cats");
+  window.__settingsTs = loadTs("settings");
+  function saveAuth(){ if (storageOK){ try { localStorage.setItem("property_app_gauth_v1", JSON.stringify({connected: syncConnected, email: syncEmail})); } catch(e){} } }
+  function loadAuth(){ if (storageOK){ try { return JSON.parse(localStorage.getItem("property_app_gauth_v1")||"{}") || {}; } catch(e){} } return {}; }
+
+  // expose touch/schedule hooks (called from mutation sites)
+  window.touchCats = function(){ window.__catsTs = Date.now(); saveTs("cats", window.__catsTs); };
+  window.touchSettings = function(){ window.__settingsTs = Date.now(); saveTs("settings", window.__settingsTs); };
+  window.onLocalChange = function(kind){ if (kind === "cats") window.touchCats(); if (kind === "settings") window.touchSettings(); window.scheduleSync(); };
+  let pushTimer = null;
+  window.scheduleSync = function(){ if (!syncConnected) return; clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 1500); };
+
+  // ---- GIS token flow ----
+  function gisReady(){ return !!(window.google && google.accounts && google.accounts.oauth2); }
+  function whenGis(cb){
+    if (gisReady()){ cb(); return; }
+    let n = 0; const t = setInterval(function(){ if (gisReady()){ clearInterval(t); cb(); } else if (++n > 120){ clearInterval(t); } }, 100);
+  }
+  function initClient(){
+    if (tokenClient || !gisReady()) return;
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: function(){} });
+  }
+  function requestToken(interactive){
+    return new Promise(function(resolve, reject){
+      if (!tokenClient){ reject(new Error("gis")); return; }
+      tokenClient.callback = function(resp){
+        if (resp && resp.error){ reject(resp); return; }
+        accessToken = resp.access_token;
+        tokenExpiry = Date.now() + ((resp.expires_in || 3600) - 90) * 1000;
+        needReauth = false;
+        resolve(accessToken);
+      };
+      try { tokenClient.requestAccessToken({ prompt: interactive ? "consent" : "" }); }
+      catch (e){ reject(e); }
+    });
+  }
+  async function ensureToken(){
+    if (accessToken && Date.now() < tokenExpiry) return accessToken;
+    return await requestToken(false);
+  }
+
+  // ---- Drive REST helpers ----
+  async function dfetch(url, opts){
+    const token = await ensureToken();
+    opts = opts || {}; opts.headers = Object.assign({}, opts.headers, { Authorization: "Bearer " + token });
+    let res = await fetch(url, opts);
+    if (res.status === 401){ accessToken = null; const t2 = await requestToken(false); opts.headers.Authorization = "Bearer " + t2; res = await fetch(url, opts); }
+    return res;
+  }
+  async function findFile(name){
+    const q = encodeURIComponent("name='" + name + "' and trashed=false");
+    const res = await dfetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&spaces=appDataFolder&fields=files(id,version)");
+    const data = await res.json();
+    return (data.files && data.files.length) ? data.files[0] : null;
+  }
+  async function createFile(name){
+    const res = await dfetch("https://www.googleapis.com/drive/v3/files", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name, parents: ["appDataFolder"] })
+    });
+    const data = await res.json();
+    return data.id;
+  }
+  async function ensureFileId(){
+    if (fileId) return fileId;
+    const f = await findFile(MAIN_NAME);
+    fileId = f ? f.id : await createFile(MAIN_NAME);
+    return fileId;
+  }
+  async function getVersion(){
+    const res = await dfetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?fields=version");
+    const data = await res.json();
+    return data.version || null;
+  }
+  async function download(){
+    const res = await dfetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media");
+    if (!res.ok) return null;
+    const text = await res.text();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch(e){ return null; }
+  }
+  async function upload(id, obj){
+    const res = await dfetch("https://www.googleapis.com/upload/drive/v3/files/" + id + "?uploadType=media&fields=version", {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj)
+    });
+    const data = await res.json();
+    return data.version || null;
+  }
+
+  // ---- main-file model + merge ----
+  function buildLocal(){
+    return {
+      rev: 0, lastWriteBy: deviceId, updatedAt: Date.now(),
+      data: { properties: items.map(function(x){ return Object.assign({}, x); }) },
+      cats: { list: cats.map(function(c){ return Object.assign({}, c); }), _updatedAt: window.__catsTs },
+      settings: { density: density, sort: currentSort, dueDays: dueSoonDays, _updatedAt: window.__settingsTs },
+      deleted: Object.assign({}, deleted)
+    };
+  }
+  function mergeMain(local, remote){
+    if (!remote || !remote.data) return local;
+    const out = { rev: 0, lastWriteBy: deviceId, updatedAt: Date.now(), data: {}, cats: null, settings: null, deleted: {} };
+    // tombstones: union, later deletion time wins
+    const del = {}; const ld = local.deleted || {}, rd = remote.deleted || {};
+    for (const k in ld) del[k] = ld[k];
+    for (const k in rd) del[k] = Math.max(del[k] || 0, rd[k]);
+    // properties: union by id, newer updatedAt wins, then drop if tombstoned after last update
+    const byId = {}; const lp = (local.data && local.data.properties) || [], rp = (remote.data && remote.data.properties) || [];
+    lp.concat(rp).forEach(function(r){ if (!r || r.id == null) return; if (!byId[r.id] || (r.updatedAt||0) > (byId[r.id].updatedAt||0)) byId[r.id] = r; });
+    const props = [];
+    for (const id in byId){ const r = byId[id]; const dt = del[id]; if (dt && dt >= (r.updatedAt||0)) continue; props.push(r); }
+    out.data.properties = props; out.deleted = del;
+    // categories: whole-list last-write-wins
+    const lc = local.cats || { list: [], _updatedAt: 0 }, rc = remote.cats || { list: [], _updatedAt: 0 };
+    out.cats = ((lc._updatedAt||0) >= (rc._updatedAt||0)) ? lc : rc;
+    // single-value settings: last-write-wins
+    const ls = local.settings || { _updatedAt: 0 }, rs = remote.settings || { _updatedAt: 0 };
+    out.settings = ((ls._updatedAt||0) >= (rs._updatedAt||0)) ? ls : rs;
+    return out;
+  }
+  function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r[k] = o[k]; }); return r; }
+  function canonical(m){
+    if (!m) return "";
+    const props = (((m.data||{}).properties)||[]).slice().sort(function(a,b){ return String(a.id).localeCompare(String(b.id)); }).map(sortKeys);
+    const del = m.deleted || {}; const dk = Object.keys(del).sort();
+    const catList = ((m.cats||{}).list || []).slice().sort(function(a,b){ return String(a.key).localeCompare(String(b.key)); }).map(sortKeys);
+    const s = m.settings || {};
+    return JSON.stringify({ p: props, d: dk.map(function(k){ return [k, del[k]]; }), c: [catList, (m.cats||{})._updatedAt||0], s: sortKeys(s) });
+  }
+  function applyMerged(merged){
+    items = (merged.data.properties || []).map(function(d){ return Object.assign({}, d, { id: d.id || uid(), updatedAt: d.updatedAt || BASE_TS }); });
+    saveItems();
+    deleted = merged.deleted || {}; saveDeleted();
+    if (merged.cats && Array.isArray(merged.cats.list) && merged.cats.list.length){
+      cats = merged.cats.list.map(function(c){ return Object.assign({}, c); });
+      window.__catsTs = merged.cats._updatedAt || window.__catsTs; saveTs("cats", window.__catsTs);
+      saveCats();
+    }
+    if (merged.settings && merged.settings._updatedAt){
+      const s = merged.settings;
+      if (s.density){ density = s.density; if (storageOK){ try { localStorage.setItem("property_app_density_v1", density); } catch(e){} } }
+      if (s.sort){ currentSort = s.sort; saveSort(); }
+      if (typeof s.dueDays === "number"){ dueSoonDays = s.dueDays; saveDueDays(); }
+      window.__settingsTs = s._updatedAt || window.__settingsTs; saveTs("settings", window.__settingsTs);
+    }
+    // re-render UI to reflect merged state
+    renderCover(); renderTabs(); renderCatOptions();
+    if (typeof renderSortOptions === "function"){ renderSortOptions(); sortTxt.textContent = (SORTS.find(function(x){ return x.key === currentSort; }) || SORTS[0]).label; }
+    if (typeof renderDueDays === "function") renderDueDays();
+    setDensity(density);
+  }
+
+  // ---- daily snapshot (insurance; keeps one per day) ----
+  async function maybeSnapshot(obj){
+    try {
+      const day = new Date().toISOString().slice(0,10);
+      const name = "sync-backup-" + day + ".json";
+      const existing = await findFile(name);
+      if (existing) return;
+      const id = await createFile(name);
+      await upload(id, obj);
+    } catch(e){}
+  }
+
+  // ---- status UI ----
+  function setStatus(text, kind){
+    const st = document.getElementById("gStatus"), dot = document.getElementById("gDot");
+    if (st) st.textContent = text;
+    if (dot) dot.className = "sync-dot" + (kind ? " " + kind : "");
+  }
+  function hhmm(){ try { return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch(e){ return ""; } }
+  window.renderSyncCard = function(){
+    const off = document.getElementById("syncBoxOff"), on = document.getElementById("syncBoxOn");
+    if (!off || !on) return;
+    if (syncConnected){
+      off.style.display = "none"; on.style.display = "";
+      const em = document.getElementById("gEmail"); if (em) em.textContent = syncEmail || "已連結";
+      const b = document.getElementById("gSyncNow"); if (b) b.textContent = needReauth ? "重新連結 Google" : "立即同步";
+    } else { off.style.display = ""; on.style.display = "none"; }
+  };
+
+  // ---- core two-way sync ----
+  async function syncNow(){
+    if (!syncConnected || inFlight) return;
+    inFlight = true; setStatus("同步中…", "busy");
+    try {
+      await ensureToken();
+      await ensureFileId();
+      let tries = 0, pushed = null;
+      while (tries < 3){
+        tries++;
+        const remote = await download();
+        const local = buildLocal();
+        const merged = mergeMain(local, remote);
+        applyMerged(merged);
+        const needPush = !remote || canonical(merged) !== canonical(remote);
+        if (!needPush){ lastVersion = await getVersion(); break; }
+        merged.rev = ((remote && remote.rev) || 0) + 1; merged.lastWriteBy = deviceId; merged.updatedAt = Date.now();
+        const newVer = await upload(fileId, merged);
+        const afterVer = await getVersion();
+        pushed = merged;
+        if (afterVer && newVer && afterVer === newVer){ lastVersion = afterVer; break; }
+        // else someone wrote concurrently → loop and re-merge
+      }
+      if (pushed) maybeSnapshot(pushed);
+      setStatus("已同步 · " + hhmm(), "ok");
+    } catch (e){
+      if (e && (e.error === "access_denied" || e.error === "interaction_required" || e.error === "login_required" || e.message === "gis")){
+        needReauth = true; setStatus("需要重新連結", "warn"); window.renderSyncCard();
+      } else {
+        setStatus("同步失敗,稍後重試", "warn");
+      }
+    } finally { inFlight = false; }
+  }
+  window.__syncNow = syncNow;
+
+  function startPolling(){
+    stopPolling();
+    pollTimer = setInterval(async function(){
+      if (!syncConnected || document.hidden || inFlight || needReauth) return;
+      try { await ensureFileId(); const v = await getVersion(); if (v && v !== lastVersion) syncNow(); } catch(e){}
+    }, POLL_MS);
+  }
+  function stopPolling(){ if (pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
+
+  // ---- connect / disconnect ----
+  async function connect(){
+    try {
+      initClient();
+      setStatus("連結中…", "busy");
+      await requestToken(true);
+      const res = await dfetch("https://www.googleapis.com/oauth2/v2/userinfo");
+      const info = await res.json();
+      syncEmail = info.email || "已連結"; syncConnected = true; needReauth = false;
+      saveAuth(); window.renderSyncCard();
+      await syncNow();
+      startPolling();
+      toast("已連結 Google 雲端");
+    } catch (e){
+      setStatus("連結失敗", "warn");
+    }
+  }
+  function disconnect(){
+    askConfirm("解除 Google 連結？", "只會停止這台裝置的同步,雲端資料不會被刪除。", function(){
+      if (accessToken && window.google && google.accounts && google.accounts.oauth2){ try { google.accounts.oauth2.revoke(accessToken, function(){}); } catch(e){} }
+      syncConnected = false; syncEmail = null; accessToken = null; tokenExpiry = 0; fileId = null; lastVersion = null; needReauth = false;
+      stopPolling(); saveAuth(); window.renderSyncCard();
+      toast("已解除連結");
+    });
+  }
+
+  // ---- wire buttons + init ----
+  document.getElementById("gConnect").addEventListener("click", connect);
+  document.getElementById("gDisconnect").addEventListener("click", disconnect);
+  document.getElementById("gSyncNow").addEventListener("click", function(){ if (needReauth) connect(); else syncNow(); });
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden && syncConnected && !needReauth) syncNow(); });
+
+  whenGis(function(){
+    initClient();
+    const auth = loadAuth();
+    if (auth && auth.connected){
+      syncConnected = true; syncEmail = auth.email || null;
+      window.renderSyncCard();
+      syncNow().then(function(){ if (!needReauth) startPolling(); });
+    } else {
+      window.renderSyncCard();
+    }
+  });
+})();
 </script>
 </body>
 </html>
