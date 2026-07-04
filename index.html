@@ -133,7 +133,7 @@
     -webkit-font-smoothing:antialiased;
     line-height:1.5;
   }
-  #app{max-width:480px;margin:0 auto;min-height:100%;position:relative;background:var(--paper);
+  #app{max-width:480px;margin:0 auto;min-height:100%;position:relative;background:var(--paper);transition:max-width .28s ease;
     box-shadow:0 0 60px rgba(0,0,0,.06);transition:max-width .28s ease;}
 
   /* ---------- COVER (View 1) ---------- */
@@ -256,7 +256,7 @@
   .sync-v{font-size:.9rem;color:var(--ink);font-weight:600;display:inline-flex;align-items:center;gap:7px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .sync-dot{width:9px;height:9px;border-radius:50%;background:var(--text-faint);flex:none;}
   .sync-dot.ok{background:var(--accent);}
-  .sync-dot.busy{background:#C2790B;animation:duePulse 1.2s ease-in-out infinite;}
+  .sync-dot.busy{background:#D8961F;animation:duePulse 1.2s ease-in-out infinite;}
   .sync-dot.warn{background:var(--danger);}
   /* header sync LED */
   .sync-led{flex:none;width:32px;height:32px;border-radius:50%;border:none;background:none;cursor:pointer;
@@ -566,8 +566,10 @@
   .list-vt button.on{background:var(--card);color:var(--accent-deep);box-shadow:0 1px 3px rgba(22,34,42,.12);}
 
   /* ===== editable table ===== */
-  #app.table-mode{max-width:min(1280px,100%);}
-  #app.table-mode .search input{max-width:460px;}
+  @media (min-width:820px){
+    #app.table-mode{max-width:min(1280px,96vw);}
+    #app.table-mode .search input{max-width:460px;}
+  }
   .table-wrap{margin:12px 18px 96px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;
     box-shadow:0 4px 18px rgba(22,34,42,.06);}
   .table-scroll{overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border-2) transparent;}
@@ -948,7 +950,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.04 l";
+const APP_VERSION = "2026.07.04 m";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1450,6 +1452,7 @@ document.getElementById("tabs").addEventListener("click", e => {
 });
 searchEl.addEventListener("input", applyFilter);
 document.getElementById("backBtn").addEventListener("click", showCover);
+document.getElementById("listLed").addEventListener("click", openSettings);
 
 // ---- Card density (正常 / 緊湊) ----
 const densityEl = document.getElementById("density");
@@ -2252,6 +2255,11 @@ let syncConnected = false, syncEmail = null;
     if (dot) dot.className = "sync-dot" + (kind ? " " + kind : "");
     const led = document.getElementById("listLed"); if (led) led.className = "sync-led" + (kind ? " " + kind : "");
   }
+  function refreshLed(){
+    const led = document.getElementById("listLed"); if (!led) return;
+    led.className = "sync-led " + (inFlight ? "busy" : ((syncConnected && !needReauth) ? "ok" : "warn"));
+  }
+  window.refreshLed = refreshLed;
   function hhmm(){ try { return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch(e){ return ""; } }
   function fmtSyncTime(ts){ const d=new Date(ts); const p=n=>String(n).padStart(2,"0"); return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); }
   window.renderLastSync = function(){ const el=document.getElementById("gLastSync"); if(!el) return; let ts=0; try{ ts=parseInt(localStorage.getItem("property_app_lastsync_v1")||"0",10);}catch(e){} el.textContent = ts ? fmtSyncTime(ts) : "尚未同步"; };
@@ -2291,6 +2299,8 @@ let syncConnected = false, syncEmail = null;
       }
       if (pushed) maybeSnapshot(pushed);
       setStatus("已同步 · " + hhmm(), "ok");
+      try { localStorage.setItem("property_app_lastsync_v1", String(Date.now())); } catch(e){}
+      window.renderLastSync();
     } catch (e){
       if (e && (e.error === "access_denied" || e.error === "interaction_required" || e.error === "login_required" || e.message === "gis")){
         needReauth = true; setStatus("需要重新連結", "warn"); window.renderSyncCard();
@@ -2331,7 +2341,7 @@ let syncConnected = false, syncEmail = null;
     askConfirm("解除 Google 連結？", "只會停止這台裝置的同步，雲端資料不會被刪除。", function(){
       if (accessToken && window.google && google.accounts && google.accounts.oauth2){ try { google.accounts.oauth2.revoke(accessToken, function(){}); } catch(e){} }
       syncConnected = false; syncEmail = null; accessToken = null; tokenExpiry = 0; fileId = null; lastVersion = null; needReauth = false;
-      stopPolling(); saveAuth(); window.renderSyncCard();
+      stopPolling(); saveAuth(); window.renderSyncCard(); refreshLed();
       toast("已解除連結");
     });
   }
@@ -2352,6 +2362,7 @@ let syncConnected = false, syncEmail = null;
     } else {
       window.renderSyncCard();
     }
+    refreshLed();
   });
 })();
 </script>
