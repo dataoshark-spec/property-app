@@ -570,10 +570,10 @@
     #app.table-mode{max-width:min(1280px,96vw);}
     #app.table-mode .search input{max-width:460px;}
   }
-  .table-wrap{margin:12px 18px 96px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  .table-wrap{margin:12px 18px 20px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;
     box-shadow:0 4px 18px rgba(22,34,42,.06);}
-  .table-scroll{overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border-2) transparent;}
-  .table-scroll::-webkit-scrollbar{height:10px;}
+  .table-scroll{overflow:auto;max-height:max(220px, calc(100dvh - var(--lh,240px) - 140px));scrollbar-width:thin;scrollbar-color:var(--border-2) transparent;}
+  .table-scroll::-webkit-scrollbar{height:10px;width:10px;}
   .table-scroll::-webkit-scrollbar-track{background:transparent;}
   .table-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:999px;border:3px solid transparent;background-clip:padding-box;}
   .table-scroll::-webkit-scrollbar-thumb:hover{background:var(--ink-soft);}
@@ -734,13 +734,13 @@
           <div class="cselect-menu" id="sortMenu" role="listbox"></div>
         </div>
         <div class="ctrl-right">
-          <div class="view-toggle list-vt" id="listVT" role="group" aria-label="檢視模式">
-            <button type="button" data-vm="card" title="卡片檢視"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><rect x="6.5" y="8.2" width="4.4" height="4.4" rx="1" fill="currentColor" stroke="none"/><line x1="13.2" y1="9.4" x2="17.5" y2="9.4"/><line x1="13.2" y1="12.2" x2="16.3" y2="12.2"/></svg></button>
-            <button type="button" data-vm="table" title="表格檢視"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><line x1="3.5" y1="9.2" x2="20.5" y2="9.2"/><line x1="3.5" y1="14.4" x2="20.5" y2="14.4"/><line x1="9.5" y1="9.2" x2="9.5" y2="19.5"/><line x1="14.8" y1="9.2" x2="14.8" y2="19.5"/></svg></button>
-          </div>
           <div class="density" id="density" role="group" aria-label="卡片密度">
             <button type="button" data-d="normal">正常</button>
             <button type="button" data-d="compact">緊湊</button>
+          </div>
+          <div class="view-toggle list-vt" id="listVT" role="group" aria-label="檢視模式">
+            <button type="button" data-vm="card" title="卡片檢視"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><rect x="6.5" y="8.2" width="4.4" height="4.4" rx="1" fill="currentColor" stroke="none"/><line x1="13.2" y1="9.4" x2="17.5" y2="9.4"/><line x1="13.2" y1="12.2" x2="16.3" y2="12.2"/></svg></button>
+            <button type="button" data-vm="table" title="表格檢視"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><line x1="3.5" y1="9.2" x2="20.5" y2="9.2"/><line x1="3.5" y1="14.4" x2="20.5" y2="14.4"/><line x1="9.5" y1="9.2" x2="9.5" y2="19.5"/><line x1="14.8" y1="9.2" x2="14.8" y2="19.5"/></svg></button>
           </div>
         </div>
       </div>
@@ -950,7 +950,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.04 q";
+const APP_VERSION = "2026.07.04 s";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1422,6 +1422,11 @@ renderTabs();
 // ---- View switching ----
 const cover = document.getElementById("cover");
 const listView = document.getElementById("list");
+function updateLH(){
+  const h = document.querySelector(".list-header");
+  if (h && listView.classList.contains("active")) document.documentElement.style.setProperty("--lh", h.offsetHeight + "px");
+}
+window.addEventListener("resize", function(){ requestAnimationFrame(updateLH); });
 function openList(cat){
   exitSelectMode();
   currentCat = cat || "";
@@ -1431,6 +1436,7 @@ function openList(cat){
   listView.classList.add("active");
   syncTableMode();
   window.scrollTo(0,0);
+  requestAnimationFrame(updateLH);
 }
 function showCover(){
   exitSelectMode();
