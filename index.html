@@ -306,7 +306,7 @@
   .search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
   .density{flex:none;display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px;}
   .density button{font-family:inherit;font-size:.8rem;font-weight:700;color:var(--ink-soft);background:none;border:none;
-    border-radius:8px;padding:8px 11px;cursor:pointer;white-space:nowrap;transition:background .15s ease,color .15s ease;}
+    border-radius:8px;height:31px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;white-space:nowrap;transition:background .15s ease,color .15s ease;}
   .density button.active{background:var(--ink);color:#fff;}
   .controls{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 18px 0;}
   .sortsel .cselect-btn{width:auto;gap:6px;padding:9px 12px;font-size:.85rem;font-weight:600;border-radius:11px;background:var(--card);}
@@ -323,7 +323,8 @@
   .cat-manage:hover{border-color:var(--accent);color:var(--accent-deep);background:var(--accent-tint);}
   .tab{flex:none;font-family:inherit;font-size:.88rem;font-weight:700;color:var(--ink-soft);
     background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer;
-    white-space:nowrap;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+    white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;line-height:1;
+    transition:background .15s ease,color .15s ease,border-color .15s ease;}
   .tab:hover{border-color:var(--border-2);}
   .tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
 
@@ -561,8 +562,8 @@
   .cover-vt button{flex:1;justify-content:center;color:rgba(243,241,233,.72);font-size:.95rem;padding:11px 10px;}
   .cover-vt button.on{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(15,122,95,.4);}
   .ctrl-right{display:flex;align-items:center;gap:8px;}
-  .list-vt{background:var(--surface-2);border:1px solid var(--line);}
-  .list-vt button{color:var(--ink-soft);font-size:1rem;padding:7px 11px;}
+  .list-vt{background:var(--surface-2);border:1px solid var(--line);gap:2px;}
+  .list-vt button{color:var(--ink-soft);height:31px;min-width:46px;padding:0 12px;justify-content:center;}
   .list-vt button.on{background:var(--card);color:var(--accent-deep);box-shadow:0 1px 3px rgba(22,34,42,.12);}
 
   /* ===== editable table ===== */
@@ -572,27 +573,36 @@
   }
   .table-wrap{margin:12px 18px 20px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;
     box-shadow:0 4px 18px rgba(22,34,42,.06);}
+  /* 表格模式:整頁固定滿版高度,只有表格內層捲動;工具列(編輯/正常+新增)固定在最上、共X筆固定在最下,不會被蓋住 */
+  #app.table-mode .list{height:100dvh;min-height:0;overflow:hidden;}
+  #app.table-mode .list-header{flex:none;}
+  #app.table-mode .table-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;margin-bottom:12px;}
+  #app.table-mode .ttop,#app.table-mode .tbar{flex:none;}
+  #app.table-mode .table-scroll{flex:1 1 auto;min-height:0;max-height:none;}
   .table-scroll{overflow:auto;max-height:max(220px, calc(100dvh - var(--lh,240px) - 140px));scrollbar-width:thin;scrollbar-color:var(--border-2) transparent;}
   .table-scroll::-webkit-scrollbar{height:10px;width:10px;}
   .table-scroll::-webkit-scrollbar-track{background:transparent;}
   .table-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:999px;border:3px solid transparent;background-clip:padding-box;}
   .table-scroll::-webkit-scrollbar-thumb:hover{background:var(--ink-soft);}
-  .ptable{border-collapse:collapse;width:100%;font-size:.85rem;}
+  .ptable{border-collapse:collapse;width:100%;min-width:1080px;table-layout:fixed;font-size:.85rem;}
   .ptable thead th{position:sticky;top:0;background:var(--accent-deep);color:var(--accent-tint);font-weight:700;font-size:.8rem;
     text-align:center;padding:11px 11px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);z-index:1;}
   .ptable .tcell[data-field="due"],
   .ptable .tcell[data-field="layout"],
   .ptable .tcell[data-field="floor"],
   .ptable .tcell[data-field="agent"],
-  .ptable .tcell[data-field="tel"]{text-align:center;}
+  .ptable .tcell[data-field="tel"],
+  .ptable .tcell[data-field="price"],
+  .ptable .tcell[data-field="store"]{text-align:center;}
   .ptable thead th:last-child{border-right:none;}
   .ptable tbody td{padding:0;border-bottom:1px solid var(--line-soft);border-right:1px solid var(--line-soft);
     white-space:nowrap;vertical-align:middle;}
   .ptable tbody td:last-child{border-right:none;}
   .ptable tbody tr:hover td{background:var(--surface-1);}
   .ptable tbody tr:last-child td{border-bottom:none;}
-  .tcell{padding:10px 11px;min-height:42px;outline:none;cursor:text;transition:background .12s,box-shadow .12s;
-    max-width:300px;overflow:hidden;text-overflow:ellipsis;}
+  .tcell{padding:9px 10px;min-height:40px;outline:none;cursor:text;transition:background .12s,box-shadow .12s;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tcell[data-field="due"],.tcell[data-field="addr"],.tcell[data-field="tel"],.tcell[data-field="store"]{font-size:.77rem;}
   .tcell:hover{background:var(--surface-2);}
   .tcell:focus{background:var(--card);box-shadow:inset 0 0 0 2px var(--accent);border-radius:5px;overflow:visible;white-space:normal;position:relative;z-index:2;}
   .tcell.saved{animation:tSaved .7s ease;}
@@ -617,8 +627,8 @@
   .tdel button:hover{border-color:var(--danger-tint-bd);color:#B4472E;background:var(--danger-tint);}
   .tbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line-soft);background:var(--surface-1);flex-wrap:wrap;}
   .tbar .tcount{font-size:.84rem;color:var(--ink-soft);}
-  .tbar .tadd{font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:10px;padding:9px 15px;transition:background .15s;}
-  .tbar .tadd:hover{background:var(--accent-deep);}
+  .tadd{font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:10px;padding:9px 15px;transition:background .15s;white-space:nowrap;flex:none;}
+  .tadd:hover{background:var(--accent-deep);}
   .tempty{padding:40px 20px;text-align:center;color:var(--ink-soft);font-size:.9rem;}
   tr.trow-removing{opacity:0;transform:translateX(8px);transition:opacity .22s,transform .22s;}
 
@@ -638,7 +648,7 @@
   .lp-btn.disabled{opacity:.4;pointer-events:none;}
   .lp-hint{font-size:.74rem;color:var(--text-faint);margin-top:8px;}
   /* ===== table: top mode toolbar (編輯/正常) ===== */
-  .ttop{display:flex;justify-content:flex-end;padding:11px 14px;border-bottom:1px solid var(--line-soft);background:var(--surface-1);}
+  .ttop{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line-soft);background:var(--surface-1);}
   .tmode{display:inline-flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:3px;}
   .tmode button{font-family:inherit;font-weight:700;font-size:.86rem;cursor:pointer;border:none;background:none;border-radius:8px;
     display:inline-flex;align-items:center;gap:6px;padding:7px 13px;color:var(--ink-soft);transition:all .15s;}
@@ -646,14 +656,13 @@
   .tmi{width:15px;height:15px;flex:none;}
 
   /* ===== table: custom category cell ===== */
-  .tcat-trigger{display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;
-    padding:6px 8px;font-family:inherit;font-size:.83rem;font-weight:600;color:var(--ink);cursor:pointer;transition:all .13s;}
-  .tcat-trigger:hover{background:var(--surface-2);border-color:var(--border-2);}
-  .tcat-trigger .dot{width:9px;height:9px;border-radius:50%;flex:none;}
-  .tcat-label{white-space:nowrap;}
-  .tcat-chev{width:13px;height:13px;flex:none;color:var(--ink-soft);margin-left:1px;}
-  .tcat-badge{display:inline-flex;align-items:center;gap:7px;font-size:.83rem;font-weight:600;color:var(--ink);padding:4px 2px;}
-  .tcat-badge .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .tcat-trigger{display:inline-flex;align-items:center;justify-content:center;max-width:100%;background:transparent;
+    border:1.7px solid var(--line);border-radius:7px;padding:4px 8px;font-family:inherit;font-size:.77rem;font-weight:700;
+    color:var(--ink);cursor:pointer;transition:background .13s;overflow:hidden;}
+  .tcat-trigger:hover{background:var(--surface-2);}
+  .tcat-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tcat-badge{display:inline-flex;align-items:center;justify-content:center;max-width:100%;border:1.7px solid var(--line);
+    border-radius:7px;padding:4px 8px;font-size:.77rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
   /* dropdown menu */
   .catmenu{position:fixed;z-index:210;display:none;min-width:150px;max-height:280px;overflow-y:auto;background:var(--card);
@@ -667,8 +676,7 @@
   .tdi{width:15px;height:15px;flex:none;}
 
   /* ===== table: 正常(唯讀)模式外觀 ===== */
-  .ptable.ro .tcell{cursor:default;}
-  .ptable.ro .tcell:hover{background:transparent;}
+  .ptable.ro .tcell{cursor:pointer;}
   .ptable.ro .tchip.on{cursor:pointer;}
   .ptable.ro .tchip:not(.on){opacity:.45;cursor:default;}
   .ptable.ro .tchip:not(.on):hover::after{content:none;}
@@ -776,28 +784,6 @@
     </div>
     <div class="settings-body">
 
-      <div class="set-card">
-        <div class="set-card-title">外觀主題</div>
-        <div class="theme-picker" id="themePicker">
-          <button type="button" data-theme-val="light">
-            <span class="sw" style="background:#E8EEEC">
-              <span class="mini-card" style="background:#FFFFFF;border-color:#E1E7EA">
-                <span class="l1" style="background:#0F7A5F"></span>
-                <span class="l2" style="background:#C7D0D3"></span>
-              </span>
-            </span>淺色
-          </button>
-          <button type="button" data-theme-val="dark">
-            <span class="sw" style="background:#0F1519">
-              <span class="mini-card" style="background:#1B242B;border-color:#2A353C">
-                <span class="l1" style="background:#54C7A3"></span>
-                <span class="l2" style="background:#46535A"></span>
-              </span>
-            </span>深色
-          </button>
-        </div>
-      </div>
-
       <div class="set-card" id="syncCard">
         <div class="set-card-title">Google 雲端同步</div>
         <p class="set-card-desc">連結 Google 帳號後，多台裝置的物件資料會自動同步、互不覆蓋。資料只存放在你 Google 雲端硬碟的私密應用程式資料夾（appDataFolder），不會外流，也不占用你雲端硬碟的一般空間。</p>
@@ -846,6 +832,28 @@
           <button type="button" data-v="90">90 天</button>
         </div>
         <p class="set-hint" id="ddHint">到期前 30 天內開始提醒</p>
+      </div>
+
+      <div class="set-card">
+        <div class="set-card-title">外觀主題</div>
+        <div class="theme-picker" id="themePicker">
+          <button type="button" data-theme-val="light">
+            <span class="sw" style="background:#E8EEEC">
+              <span class="mini-card" style="background:#FFFFFF;border-color:#E1E7EA">
+                <span class="l1" style="background:#0F7A5F"></span>
+                <span class="l2" style="background:#C7D0D3"></span>
+              </span>
+            </span>淺色
+          </button>
+          <button type="button" data-theme-val="dark">
+            <span class="sw" style="background:#0F1519">
+              <span class="mini-card" style="background:#1B242B;border-color:#2A353C">
+                <span class="l1" style="background:#54C7A3"></span>
+                <span class="l2" style="background:#46535A"></span>
+              </span>
+            </span>深色
+          </button>
+        </div>
       </div>
 
       <div class="ver-line" id="verLine"></div>
@@ -962,7 +970,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.04 u";
+const APP_VERSION = "2026.07.05 c";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1200,7 +1208,7 @@ function syncTableMode(){
 function setViewMode(vm){ viewMode = (vm==="table") ? "table" : "card"; saveViewMode(); applyFilter(); }
 
 // ---- table rendering ----
-const T_COLS = ["到期日","類別","格局","案名","地址","樓層","售價","承辦","電話","門市","連結",""];
+const T_COLS = ["到期日","類別","格局","案名","地址","樓層","售價","連結","承辦","電話","門市",""];
 function tchip(url, label, cls){
   const on = url && String(url).trim();
   return `<span class="tchip ${cls} ${on?'on':''}" data-label="${esc(label)}" data-url="${esc(url||'')}">${label}</span>`;
@@ -1209,8 +1217,8 @@ function trowHTML(d){
   const color = catColor(d.cat);
   const ce = tableEditMode ? "true" : "false";
   const catCell = tableEditMode
-    ? `<td class="tcat"><button type="button" class="tcat-trigger" data-field="cat"><span class="dot" style="background:${color}"></span><span class="tcat-label">${esc(d.cat)}</span>${ICON_CHEV}</button></td>`
-    : `<td class="tcat"><span class="tcat-badge"><span class="dot" style="background:${color}"></span>${esc(d.cat)}</span></td>`;
+    ? `<td class="tcat"><button type="button" class="tcat-trigger" data-field="cat" style="border-color:${color}"><span class="tcat-label">${esc(d.cat)}</span></button></td>`
+    : `<td class="tcat"><span class="tcat-badge" style="border-color:${color}">${esc(d.cat)}</span></td>`;
   const delCell = tableEditMode
     ? `<td class="tdel"><button data-act="del" title="刪除此列">${ICON_TRASH}</button></td>`
     : `<td class="tdel"></td>`;
@@ -1218,36 +1226,51 @@ function trowHTML(d){
     `<td><div class="tcell tdue" contenteditable="${ce}" data-field="due">${esc(d.due)}</div></td>`+
     catCell +
     `<td><div class="tcell" contenteditable="${ce}" data-field="layout">${esc(d.layout)}</div></td>`+
-    `<td><div class="tcell tname" contenteditable="${ce}" data-field="name">${esc(d.name)}</div></td>`+
-    `<td><div class="tcell" contenteditable="${ce}" data-field="addr">${esc(d.addr)}</div></td>`+
+    `<td><div class="tcell tname" contenteditable="${ce}" data-field="name" title="${esc(d.name)}">${esc(d.name)}</div></td>`+
+    `<td><div class="tcell" contenteditable="${ce}" data-field="addr" title="${esc(d.addr)}">${esc(d.addr)}</div></td>`+
     `<td><div class="tcell" contenteditable="${ce}" data-field="floor">${esc(d.floor)}</div></td>`+
     `<td><div class="tcell tnum" contenteditable="${ce}" data-field="price">${esc(d.price)}</div></td>`+
-    `<td><div class="tcell" contenteditable="${ce}" data-field="agent">${esc(d.agent)}</div></td>`+
-    `<td><div class="tcell" contenteditable="${ce}" data-field="tel">${esc(d.tel)}</div></td>`+
-    `<td><div class="tcell" contenteditable="${ce}" data-field="store">${esc(d.store)}</div></td>`+
     `<td class="tlinks"><span class="tchips">`+
       tchip(d.url591,"591","n591")+ tchip(d.urlLeju,"樂居","leju")+ tchip(d.urlI,"永慶","")+
     `</span></td>`+
+    `<td><div class="tcell" contenteditable="${ce}" data-field="agent" title="${esc(d.agent)}">${esc(d.agent)}</div></td>`+
+    `<td><div class="tcell" contenteditable="${ce}" data-field="tel">${esc(d.tel)}</div></td>`+
+    `<td><div class="tcell" contenteditable="${ce}" data-field="store" title="${esc(d.store)}">${esc(d.store)}</div></td>`+
     delCell +
   `</tr>`;
 }
 function renderTable(list){
+  const oldScroll = tableWrap.querySelector(".table-scroll");
+  const sTop = oldScroll ? oldScroll.scrollTop : 0, sLeft = oldScroll ? oldScroll.scrollLeft : 0;
   const head = T_COLS.map(h => `<th>${h}</th>`).join("");
+  const cols = ["5.5%","6%","5%","12.5%","23%","5.5%","5.5%","11%","5.5%","7%","10%","3.5%"].map(w => `<col style="width:${w}">`).join("");
   const rows = list.length ? list.map(trowHTML).join("")
     : `<tr><td colspan="${T_COLS.length}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，切到「編輯模式」後點「＋ 新增一列」開始建立。"}</td></tr>`;
   const modeBar =
     `<div class="ttop"><div class="tmode" id="tMode" role="group" aria-label="表格模式">`+
       `<button type="button" data-tm="edit" class="${tableEditMode?'on':''}" title="可直接修改資料">${ICON_EDIT}編輯模式</button>`+
       `<button type="button" data-tm="view" class="${tableEditMode?'':'on'}" title="只瀏覽，點連結直接開啟">${ICON_EYE}正常模式</button>`+
-    `</div></div>`;
+    `</div>`+
+    (tableEditMode ? `<button class="tadd" id="tAdd">＋ 新增一列</button>` : ``)+
+    `</div>`;
   const bottom = tableEditMode
-    ? `<div class="tbar"><span class="tcount">共 ${list.length} 筆　·　點格子即可修改，離開格子自動儲存並同步</span><button class="tadd" id="tAdd">＋ 新增一列</button></div>`
-    : `<div class="tbar"><span class="tcount">共 ${list.length} 筆　·　點 591／樂居／永慶 可直接開啟連結</span></div>`;
+    ? `<div class="tbar"><span class="tcount">共 ${list.length} 筆　·　點格子即可修改，離開格子自動儲存並同步</span></div>`
+    : `<div class="tbar"><span class="tcount">共 ${list.length} 筆　·　點欄位可複製內容，點 591／樂居／永慶 開啟連結</span></div>`;
   tableWrap.innerHTML =
     modeBar +
-    `<div class="table-scroll"><table class="ptable ${tableEditMode?'':'ro'}"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`+
+    `<div class="table-scroll"><table class="ptable ${tableEditMode?'':'ro'}"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`+
     bottom;
+  const ns = tableWrap.querySelector(".table-scroll");
+  if (ns){ ns.scrollTop = sTop; ns.scrollLeft = sLeft; }
 }
+// 編輯中(格子聚焦、連結框或類別選單開啟)時,暫停同步重繪,避免游標被打斷、畫面跳動
+window.isTableBusy = function(){
+  const a = document.activeElement;
+  if (a && a.classList && a.classList.contains("tcell")) return true;
+  const lp = document.getElementById("linkpop"); if (lp && lp.classList.contains("show")) return true;
+  const cm = document.getElementById("catmenu"); if (cm && cm.classList.contains("show")) return true;
+  return false;
+};
 
 // ---- inline editing ----
 function tFindItem(el){ const tr = el.closest("tr"); return tr ? items.find(x => x.id === tr.dataset.id) : null; }
@@ -1290,6 +1313,11 @@ tableWrap.addEventListener("click", e=>{
     }
     return;
   }
+  // 正常模式:點欄位自動複製內容(類別與連結除外)
+  if (!tableEditMode){
+    const cell = e.target.closest(".tcell");
+    if (cell){ copyCellText(cell); return; }
+  }
   // 刪除列
   const delBtn = e.target.closest("[data-act='del']");
   if (delBtn){
@@ -1305,6 +1333,31 @@ tableWrap.addEventListener("click", e=>{
   // 新增列
   if (e.target.closest("#tAdd")) addTableRow();
 });
+
+// ---- 正常模式:點格子複製內容 ----
+function copyCellText(cell){
+  const text = (cell.textContent || "").replace(/\s+/g, " ").trim();
+  if (!text) return;
+  const ok = () => {
+    cell.classList.remove("saved"); void cell.offsetWidth; cell.classList.add("saved");
+    setTimeout(() => cell.classList.remove("saved"), 700);
+    toast("已複製：" + (text.length > 18 ? text.slice(0, 18) + "…" : text));
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok).catch(() => { if (legacyCopy(text)) ok(); });
+  } else if (legacyCopy(text)) { ok(); }
+}
+function legacyCopy(text){
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.top = "-1000px"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    const done = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return done;
+  } catch (e) { return false; }
+}
 
 // ---- 表格模式切換 ----
 function setTableEditMode(on){
@@ -1338,7 +1391,7 @@ catmenu.addEventListener("click", e=>{
   const it = tFindItem(catTrigger); const key = opt.dataset.key;
   if (it){
     if (it.cat !== key){ it.cat = key; it.updatedAt = Date.now(); saveItems(); onLocalChange("data"); }
-    const dot = catTrigger.querySelector(".dot"); if (dot) dot.style.background = catColor(it.cat);
+    catTrigger.style.borderColor = catColor(it.cat);
     const lbl = catTrigger.querySelector(".tcat-label"); if (lbl) lbl.textContent = it.cat;
   }
   closeCatMenu();
@@ -2296,6 +2349,7 @@ let syncConnected = false, syncEmail = null;
   // ---- core two-way sync ----
   async function syncNow(){
     if (!syncConnected || inFlight) return;
+    if (window.isTableBusy && window.isTableBusy()){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return; }
     inFlight = true; setStatus("同步中…", "busy");
     try {
       await ensureToken();
