@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物件總覽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EBEFF1;
+    --card:#FFFFFF;
+    --ink:#16222A;
+    --ink-soft:#5C6E76;
+    --line:#E1E7EA;
+    --accent:#0F7A5F;
+    --accent-deep:#0A5C47;
+    --cover-bg:#0C1E1A;
+    --cover-grid:rgba(255,255,255,.05);
+    --cover-text:#F3F1E9;
+    --cat-tower:#0F7A5F;
+    --cat-office:#2C68A6;
+    --cat-shop:#C2790B;
+    --danger:#B4472E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  #app{max-width:480px;margin:0 auto;min-height:100%;position:relative;background:var(--paper);
+    box-shadow:0 0 60px rgba(0,0,0,.06);}
+
+  /* ---------- COVER (View 1) ---------- */
+  .cover{
+    min-height:100dvh;
+    background:var(--cover-bg);
+    color:var(--cover-text);
+    display:flex;flex-direction:column;
+    padding:clamp(28px,7vw,44px);
+    position:relative;overflow:hidden;
+    cursor:pointer;
+  }
+  /* signature: faint architectural blueprint grid */
+  .cover::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--cover-grid) 1px,transparent 1px),
+      linear-gradient(90deg,var(--cover-grid) 1px,transparent 1px);
+    background-size:34px 34px;
+    mask-image:radial-gradient(ellipse 120% 80% at 70% 15%,#000 30%,transparent 75%);
+    -webkit-mask-image:radial-gradient(ellipse 120% 80% at 70% 15%,#000 30%,transparent 75%);
+  }
+  .cover>*{position:relative;z-index:1;}
+  .cover .eyebrow{
+    font-size:.78rem;letter-spacing:.32em;font-weight:500;
+    color:var(--accent);text-transform:uppercase;
+  }
+  .cover .spacer{flex:1;}
+  .cover h1{
+    font-family:"Noto Serif TC",serif;
+    font-weight:900;
+    font-size:clamp(3.2rem,16vw,4.4rem);
+    line-height:1.02;letter-spacing:.02em;
+    margin-bottom:18px;
+  }
+  .cover .rule{width:46px;height:3px;background:var(--accent);margin-bottom:18px;}
+  .cover .sub{font-size:1rem;color:rgba(243,241,233,.72);max-width:30ch;}
+
+  .cats{display:flex;flex-direction:column;gap:10px;margin-top:24px;}
+  .cat-btn{
+    display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;padding:16px 18px;cursor:pointer;color:var(--cover-text);
+    font-family:inherit;
+    transition:background .18s ease,border-color .18s ease,transform .12s ease;
+  }
+  .cat-btn:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.24);}
+  .cat-btn:active{transform:scale(.99);}
+  .cat-dot{width:11px;height:11px;border-radius:50%;flex:none;}
+  .cat-btn.tower .cat-dot{background:#3FBF99;}
+  .cat-btn.office .cat-dot{background:#5C9BE0;}
+  .cat-btn.shop .cat-dot{background:#E0A23C;}
+  .cat-main{flex:1;display:flex;flex-direction:column;line-height:1.25;}
+  .cat-main b{font-family:"Noto Serif TC",serif;font-size:1.18rem;font-weight:700;}
+  .cat-main small{font-size:.8rem;color:rgba(243,241,233,.55);margin-top:2px;}
+  .cat-ct{font-size:1.3rem;font-weight:900;font-variant-numeric:tabular-nums;color:#fff;}
+  .cat-btn .arrow{color:rgba(243,241,233,.45);font-size:1.1rem;transition:transform .18s ease,color .18s ease;}
+  .cat-btn:hover .arrow{transform:translateX(3px);color:var(--accent);}
+  .all-btn{
+    margin-top:16px;width:100%;background:none;border:none;cursor:pointer;
+    color:rgba(243,241,233,.7);font-family:inherit;font-size:.95rem;padding:12px 8px 4px;
+    border-top:1px solid rgba(255,255,255,.1);transition:color .15s ease;
+  }
+  .all-btn b{color:#fff;font-weight:900;font-variant-numeric:tabular-nums;}
+  .all-btn:hover{color:#fff;}
+
+  .cover-gear{position:absolute;top:clamp(20px,5.5vw,32px);right:clamp(20px,5.5vw,32px);z-index:2;
+    width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:rgba(243,241,233,.85);
+    font-size:1.25rem;cursor:pointer;transition:background .15s ease,transform .15s ease;}
+  .cover-gear:hover{background:rgba(255,255,255,.16);color:#fff;}
+  .cover-gear:active{transform:scale(.93) rotate(30deg);}
+
+  /* ---------- SETTINGS (View 3) ---------- */
+  .settings-view{display:none;min-height:100dvh;flex-direction:column;background:var(--paper);}
+  .settings-view.active{display:flex;}
+  .settings-head{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;
+    padding:15px 18px;background:rgba(235,239,241,.9);backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .settings-head h2{font-family:"Noto Serif TC",serif;font-size:1.3rem;font-weight:900;color:var(--ink);}
+  .s-back{flex:none;width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:#fff;
+    color:var(--ink);font-size:1.15rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+    transition:background .15s ease,border-color .15s ease;}
+  .s-back:hover{background:#F1F5F6;border-color:#C2CDD2;}
+  .settings-body{flex:1;padding:18px;display:flex;flex-direction:column;gap:15px;}
+  .set-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;}
+  .set-card-title{font-family:"Noto Serif TC",serif;font-size:1.1rem;font-weight:700;color:var(--ink);
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .set-card-desc{font-size:.85rem;color:var(--ink-soft);line-height:1.65;margin-top:8px;}
+  .set-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;}
+  .set-line-label{font-size:.95rem;font-weight:700;color:var(--ink);}
+  .stepper{display:inline-flex;align-items:center;gap:2px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:4px;}
+  .stepper button{width:38px;height:38px;border:none;background:#F1F5F6;color:var(--ink);border-radius:9px;
+    font-size:1.3rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+    transition:background .15s ease;}
+  .stepper button:hover{background:#E4EBED;}
+  .stepper button:active{background:#D5DFE2;}
+  .stepper-val{min-width:62px;text-align:center;font-size:.9rem;color:var(--ink-soft);}
+  .stepper-val b{font-size:1.15rem;font-weight:900;color:var(--accent-deep);font-variant-numeric:tabular-nums;}
+  .set-presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .set-presets button{font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;
+    background:#fff;border:1px solid var(--line);color:var(--ink-soft);border-radius:999px;padding:8px 14px;
+    transition:background .15s ease,border-color .15s ease,color .15s ease;}
+  .set-presets button:hover{border-color:#C2CDD2;}
+  .set-presets button.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .set-hint{font-size:.82rem;color:var(--accent-deep);margin-top:14px;font-weight:600;}
+  .set-actions{display:flex;flex-direction:column;gap:9px;margin-top:14px;}
+  .s-btn{font-family:inherit;font-size:.92rem;font-weight:700;cursor:pointer;text-align:left;
+    background:#fff;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:14px 16px;
+    transition:background .15s ease,border-color .15s ease;}
+  .s-btn:hover{background:#F1F5F6;border-color:#C2CDD2;}
+  .s-btn-danger{color:var(--danger);}
+  .s-btn-danger:hover{background:#FBF0EC;border-color:#E7C2B8;}
+  .soon-tag{font-family:inherit;font-size:.68rem;font-weight:700;letter-spacing:.02em;color:var(--accent-deep);
+    background:#EAF4F0;border:1px solid #CDE6DD;border-radius:999px;padding:3px 9px;}
+
+  /* ---------- LIST (View 2) ---------- */
+  .list{display:none;min-height:100dvh;flex-direction:column;}
+  .list.active{display:flex;}
+  .list-header{
+    position:sticky;top:0;z-index:10;
+    background:rgba(235,239,241,.92);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding-bottom:10px;
+  }
+  .topbar{
+    padding:14px 18px 12px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .back{
+    appearance:none;border:1px solid var(--line);background:var(--card);
+    width:40px;height:40px;border-radius:11px;cursor:pointer;
+    font-size:1.2rem;color:var(--ink);display:grid;place-items:center;
+    transition:background .15s ease;flex:none;
+  }
+  .back:hover{background:#F4F7F8;}
+  .topbar .ttl{font-family:"Noto Serif TC",serif;font-weight:700;font-size:1.18rem;}
+  .topbar .ct{margin-left:auto;font-size:.8rem;color:var(--ink-soft);
+    background:var(--card);border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    font-variant-numeric:tabular-nums;}
+
+  .search{display:flex;align-items:center;gap:10px;padding:12px 18px 0;}
+  .search input{
+    flex:1;min-width:0;font-family:inherit;font-size:1rem;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:13px 16px;outline:none;transition:border-color .15s ease,box-shadow .15s ease;
+  }
+  .search input::placeholder{color:#9AA8AE;}
+  .search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
+  .density{flex:none;display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px;}
+  .density button{font-family:inherit;font-size:.8rem;font-weight:700;color:var(--ink-soft);background:none;border:none;
+    border-radius:8px;padding:8px 11px;cursor:pointer;white-space:nowrap;transition:background .15s ease,color .15s ease;}
+  .density button.active{background:var(--ink);color:#fff;}
+  .controls{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 18px 0;}
+  .sortsel .cselect-btn{width:auto;gap:6px;padding:9px 12px;font-size:.85rem;font-weight:600;border-radius:11px;background:var(--card);}
+  .sortsel .sort-ic{flex:none;font-size:.95rem;color:var(--accent);font-weight:700;line-height:1;}
+  .sortsel .cselect-txt{flex:none;}
+  .sortsel .cselect-menu{left:0;right:auto;min-width:168px;}
+
+  .tabs-row{display:flex;align-items:center;gap:8px;padding:12px 18px 0;}
+  .tabs{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .cat-manage{flex:none;width:38px;height:38px;border-radius:10px;border:1px dashed #C2CDD2;background:var(--card);
+    color:var(--ink-soft);font-size:1.25rem;line-height:1;cursor:pointer;display:grid;place-items:center;
+    transition:background .15s ease,border-color .15s ease,color .15s ease;}
+  .cat-manage:hover{border-color:var(--accent);color:var(--accent-deep);background:#EAF4F0;}
+  .tab{flex:none;font-family:inherit;font-size:.88rem;font-weight:700;color:var(--ink-soft);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer;
+    white-space:nowrap;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+  .tab:hover{border-color:#C2CDD2;}
+  .tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .cards{padding:14px 18px 40px;display:flex;flex-direction:column;gap:14px;}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    overflow:hidden;display:flex;
+    box-shadow:0 1px 2px rgba(22,34,42,.04);
+  }
+  .stripe{width:6px;flex:none;}
+  .card.cat-tower .stripe{background:var(--cat-tower);}
+  .card.cat-office .stripe{background:var(--cat-office);}
+  .card.cat-shop .stripe{background:var(--cat-shop);}
+  .body{padding:16px 16px 14px;flex:1;min-width:0;}
+
+  .card-head{display:flex;align-items:flex-start;gap:10px;}
+  .name{font-family:"Noto Serif TC",serif;font-weight:700;font-size:1.16rem;line-height:1.25;flex:1;}
+  .badge{flex:none;font-size:.74rem;font-weight:700;color:#fff;padding:4px 9px;border-radius:7px;letter-spacing:.05em;}
+  .cat-tower .badge{background:var(--cat-tower);}
+  .cat-office .badge{background:var(--cat-office);}
+  .cat-shop .badge{background:var(--cat-shop);}
+  .addr{font-size:.86rem;color:var(--ink-soft);margin-top:6px;}
+
+  .price{margin:13px 0 12px;display:flex;align-items:baseline;gap:5px;}
+  .price .num{font-size:1.85rem;font-weight:900;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--accent-deep);}
+  .price .unit{font-size:.92rem;font-weight:700;color:var(--ink-soft);}
+
+  .meta{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px;}
+  .meta span{font-size:.8rem;color:var(--ink);background:#F1F5F6;border:1px solid var(--line);
+    padding:5px 10px;border-radius:8px;}
+  .meta .due{color:var(--ink);background:#F1F5F6;border-color:var(--line);}
+  .meta .due.warn{color:#8A5200;background:#FCEBCF;border-color:#F1D49B;font-weight:700;
+    animation:duePulse 2.4s ease-in-out infinite;}
+  .meta .due.over{color:#A5341A;background:#F8D9CF;border-color:#EDB4A2;font-weight:700;
+    animation:duePulse 1.2s ease-in-out infinite;}
+  @keyframes duePulse{0%,100%{opacity:1;}50%{opacity:.42;}}
+  @media (prefers-reduced-motion: reduce){ .meta .due.warn,.meta .due.over{animation:none;} }
+
+  .agent{display:flex;align-items:center;gap:10px;padding-top:13px;border-top:1px dashed var(--line);}
+  .agent-info{font-size:.82rem;color:var(--ink-soft);flex:1;min-width:0;line-height:1.4;}
+  .agent-info b{color:var(--ink);font-weight:700;}
+  .tel{flex:none;text-decoration:none;font-size:.88rem;font-weight:700;color:var(--accent-deep);
+    background:#E8F3EF;border:1px solid #CDE6DD;padding:9px 14px;border-radius:10px;
+    transition:background .15s ease;white-space:nowrap;}
+  .tel:hover{background:#DBEDE6;}
+
+  .links{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;}
+  .chip{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:700;letter-spacing:.04em;color:var(--ink-soft);
+    border:1px solid var(--line);background:#F7FAFA;padding:8px 13px;border-radius:999px;}
+  .chip.on{color:var(--accent-deep);border-color:#CDE6DD;background:#EAF4F0;}
+  .chip.off{color:#B4BFC4;background:#F4F6F7;border-color:#EAEEF0;}
+  a.chip{text-decoration:none;cursor:pointer;transition:background .15s ease,border-color .15s ease;}
+  a.chip:hover{background:#DBEDE6;border-color:#A9D6C7;}
+  a.chip:active{background:#CFE7DD;}
+  .chip .ext{font-size:.72em;opacity:.7;}
+
+  .empty{text-align:center;color:var(--ink-soft);padding:60px 20px;font-size:.95rem;line-height:1.7;}
+  .note{font-size:.76rem;color:#9AA8AE;text-align:center;padding:6px 24px 0;line-height:1.6;}
+
+  /* CRUD: card actions, new-item button, data tools, modal */
+  .cards{padding-bottom:104px;}
+  .card-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px;padding-top:13px;border-top:1px solid var(--line);}
+  .card-actions button{font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;border-radius:9px;
+    padding:7px 14px;background:#fff;border:1px solid var(--line);color:var(--ink-soft);
+    transition:background .15s ease,border-color .15s ease,color .15s ease;}
+  .card-edit:hover{border-color:var(--accent);color:var(--accent-deep);background:#EAF4F0;}
+  .card-del:hover{border-color:#E7C2B8;color:var(--danger);background:#FBF0EC;}
+
+  /* Compact density: 案名 + 售價 (top), 類別 + 地址 (below); no edit/delete */
+  .cards.compact{gap:10px;}
+  .compact-card{cursor:pointer;}
+  .compact-card .body{padding:13px 15px;}
+  .compact-card .card-head{align-items:center;gap:10px;}
+  .compact-card .name{font-size:1.04rem;}
+  .compact-card .price-tag{flex:none;white-space:nowrap;font-variant-numeric:tabular-nums;
+    font-size:1.2rem;font-weight:900;color:var(--accent-deep);}
+  .compact-card .price-tag small{font-size:.72rem;font-weight:700;color:var(--ink-soft);margin-left:2px;}
+  .compact-card .sub-row{display:flex;align-items:flex-start;gap:8px;margin-top:8px;}
+  .compact-card .sub-row .addr{font-size:.84rem;color:var(--ink-soft);line-height:1.45;}
+
+  .fab{position:fixed;z-index:40;bottom:22px;right:max(18px,calc(50% - 222px));
+    display:inline-flex;align-items:center;gap:7px;
+    background:var(--accent);color:#fff;border:none;font-family:inherit;font-weight:700;font-size:1rem;
+    padding:14px 20px;border-radius:999px;cursor:pointer;
+    box-shadow:0 8px 22px rgba(15,122,95,.42);transition:background .18s ease,transform .12s ease;}
+  .fab:hover{background:var(--accent-deep);}
+  .fab:active{transform:scale(.96);}
+
+  /* Selection mode (long-press to multi-select) */
+  .card{position:relative;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+  .selbox{position:absolute;top:13px;right:13px;z-index:4;width:22px;height:22px;border-radius:50%;
+    border:2px solid #C4CFD4;background:rgba(255,255,255,.92);
+    display:none;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.14);
+    transition:background .12s ease,border-color .12s ease;}
+  .cards.selecting .selbox{display:inline-flex;}
+  .selbox::after{content:"✓";font-size:.82rem;font-weight:900;color:#fff;line-height:1;opacity:0;transition:opacity .12s ease;}
+  .selbox.on{background:var(--accent);border-color:var(--accent);}
+  .selbox.on::after{opacity:1;}
+  .cards.selecting .card-head{padding-right:34px;}
+  .cards.selecting .card{cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+  .cards.selecting .card.selected{border-color:var(--accent);
+    box-shadow:0 0 0 2px rgba(15,122,95,.4),0 8px 20px rgba(15,122,95,.16);}
+  .cards.selecting .card:not(.selected){opacity:.72;}
+
+  .selbar{position:fixed;z-index:41;left:50%;bottom:18px;width:min(444px,calc(100% - 28px));
+    transform:translateX(-50%) translateY(160%);
+    display:flex;align-items:center;gap:10px;
+    background:var(--ink);color:#fff;border-radius:16px;padding:10px 12px 10px 18px;
+    box-shadow:0 12px 32px rgba(0,0,0,.3);transition:transform .26s cubic-bezier(.2,.75,.3,1);}
+  .selbar.show{transform:translateX(-50%) translateY(0);}
+  .sel-count{flex:1;font-size:.92rem;font-weight:700;letter-spacing:.01em;}
+  .selbar button{font-family:inherit;font-weight:700;cursor:pointer;border:none;border-radius:11px;padding:11px 16px;font-size:.9rem;transition:background .15s ease,filter .15s ease,opacity .15s ease;}
+  .sel-cancel{background:rgba(255,255,255,.15);color:#fff;}
+  .sel-cancel:hover{background:rgba(255,255,255,.24);}
+  .sel-delete{background:var(--danger);color:#fff;}
+  .sel-delete:hover{filter:brightness(1.07);}
+  .sel-delete:disabled{opacity:.4;cursor:default;}
+
+  .modal-bg{position:fixed;inset:0;z-index:50;background:rgba(12,20,18,.55);
+    display:none;align-items:flex-end;justify-content:center;}
+  .modal-bg.open{display:flex;}
+  .modal{background:#fff;width:100%;max-width:480px;max-height:92dvh;display:flex;flex-direction:column;
+    border-radius:20px 20px 0 0;overflow:hidden;animation:sheet .22s ease;}
+  @keyframes sheet{from{transform:translateY(26px);opacity:.5;}to{transform:translateY(0);opacity:1;}}
+  .modal-head{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line);}
+  .modal-head h2{font-family:"Noto Serif TC",serif;font-size:1.25rem;font-weight:700;flex:1;}
+  .modal-head .x{appearance:none;border:none;background:#F1F5F6;width:34px;height:34px;border-radius:9px;
+    font-size:1rem;color:var(--ink-soft);cursor:pointer;flex:none;}
+  .modal-head .x:hover{background:#E6ECEE;}
+  .modal-body{padding:16px 20px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:11px;}
+  .modal-body label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:.8rem;font-weight:600;color:var(--ink-soft);}
+  .modal-body input,.modal-body select{width:100%;min-width:0;box-sizing:border-box;font-family:inherit;font-size:1rem;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;
+    transition:border-color .15s ease,box-shadow .15s ease;}
+  .modal-body input:focus,.modal-body select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
+  .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
+  .row2.name-row{grid-template-columns:minmax(0,4fr) minmax(0,1fr);}
+  .row2.name-row select{padding:10px 8px;font-size:.95rem;}
+  .row2.tel-row{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);}
+
+  /* Custom category dropdown */
+  .cselect{position:relative;}
+  .cselect-btn{width:100%;box-sizing:border-box;display:flex;align-items:center;gap:5px;
+    font-family:inherit;font-size:.92rem;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:10px;padding:10px 9px;cursor:pointer;
+    transition:border-color .15s ease,box-shadow .15s ease;}
+  .cselect-btn:hover{border-color:#C2CDD2;}
+  .cselect.open .cselect-btn{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
+  .cselect-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}
+  .cselect-chev{flex:none;font-size:.68rem;color:var(--ink-soft);transition:transform .18s ease;}
+  .cselect.open .cselect-chev{transform:rotate(180deg);}
+  .cselect-menu{position:absolute;top:calc(100% + 6px);right:0;z-index:20;min-width:158px;max-width:230px;
+    background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px;
+    box-shadow:0 14px 34px rgba(22,34,42,.18);display:none;flex-direction:column;gap:2px;}
+  .cselect.open .cselect-menu{display:flex;}
+  .cselect-opt{display:flex;align-items:center;gap:9px;width:100%;box-sizing:border-box;
+    font-family:inherit;font-size:.95rem;color:var(--ink);background:none;border:none;
+    border-radius:8px;padding:9px 10px;cursor:pointer;text-align:left;transition:background .12s ease;}
+  .cselect-opt:hover{background:#F1F5F6;}
+  .cselect-opt.sel{background:#EAF4F0;}
+  .cselect-opt .dot{flex:none;width:10px;height:10px;border-radius:50%;}
+  .cselect-opt .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;}
+  .cselect-opt.sel .nm{color:var(--accent-deep);}
+  .cselect-opt .chk{flex:none;color:var(--accent);font-size:.85rem;opacity:0;}
+  .cselect-opt.sel .chk{opacity:1;}
+  .modal-foot{display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid var(--line);background:#fff;}
+  .modal-foot .spacer{flex:1;}
+  .btn-primary{background:var(--accent);color:#fff;border:none;font-family:inherit;font-weight:700;font-size:.98rem;
+    padding:12px 22px;border-radius:11px;cursor:pointer;transition:background .15s ease;}
+  .btn-primary:hover{background:var(--accent-deep);}
+  .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line);font-family:inherit;font-weight:600;
+    font-size:.98rem;padding:12px 18px;border-radius:11px;cursor:pointer;}
+  .btn-ghost:hover{background:#F4F7F8;}
+  .btn-del{background:#fff;color:var(--danger);border:1px solid #F0D7CF;font-family:inherit;font-weight:700;
+    font-size:.92rem;padding:11px 16px;border-radius:11px;cursor:pointer;}
+  .btn-del:hover{background:#FBF0EC;}
+
+  /* Manage-categories dialog */
+  .cat-add{display:flex;gap:10px;}
+  .cat-add input{flex:1;min-width:0;font-family:inherit;font-size:1rem;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:10px;padding:11px 13px;outline:none;transition:border-color .15s ease,box-shadow .15s ease;}
+  .cat-add input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
+  .cat-add .btn-primary{flex:none;padding:11px 18px;}
+  .cat-list{display:flex;flex-direction:column;gap:9px;margin-top:16px;}
+  .cat-item{display:flex;align-items:center;gap:10px;background:#F7FAFA;border:1px solid var(--line);
+    border-radius:11px;padding:8px 10px;}
+  .cat-item .cat-color{flex:none;width:34px;height:34px;padding:0;border:1px solid var(--line);border-radius:8px;
+    background:none;cursor:pointer;}
+  .cat-item .cat-color::-webkit-color-swatch-wrapper{padding:2px;}
+  .cat-item .cat-color::-webkit-color-swatch{border:none;border-radius:6px;}
+  .cat-item .cat-name{flex:1;min-width:0;font-family:inherit;font-size:1rem;font-weight:600;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;outline:none;transition:border-color .15s ease;}
+  .cat-item .cat-name:focus{border-color:var(--accent);}
+  .cat-item .cat-count{flex:none;font-size:.76rem;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  .cat-item .cat-del{flex:none;width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;
+    color:var(--ink-soft);font-size:1rem;cursor:pointer;display:grid;place-items:center;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+  .cat-item .cat-del:hover{border-color:#E7C2B8;color:var(--danger);background:#FBF0EC;}
+  .cat-hint{font-size:.76rem;color:#9AA8AE;line-height:1.6;margin-top:14px;}
+
+  /* Confirm dialog (centered) + toast */
+  .modal-bg.center{align-items:center;padding:24px;}
+  .confirm{background:#fff;width:100%;max-width:340px;border-radius:18px;padding:26px 24px 18px;
+    animation:sheet .2s ease;}
+  .confirm-title{font-family:"Noto Serif TC",serif;font-size:1.2rem;font-weight:700;color:var(--ink);
+    line-height:1.55;letter-spacing:.01em;}
+  .confirm-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.75;margin-top:11px;}
+  .confirm-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
+  .btn-danger{background:var(--danger);color:#fff;border:none;font-family:inherit;font-weight:700;font-size:.95rem;
+    padding:11px 20px;border-radius:11px;cursor:pointer;transition:filter .15s ease;}
+  .btn-danger:hover{filter:brightness(.93);}
+  .toast{position:fixed;z-index:70;left:50%;bottom:30px;transform:translate(-50%,16px);
+    background:var(--ink);color:#fff;font-size:.9rem;font-weight:600;padding:12px 20px;border-radius:999px;
+    box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;
+    transition:opacity .2s ease,transform .2s ease;max-width:88%;text-align:center;}
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== View 1: Cover ===== -->
+  <section class="cover" id="cover">
+    <button class="cover-gear" id="coverGear" aria-label="設定" title="設定">⚙</button>
+    <div class="eyebrow">委託物件 · 台中</div>
+    <div class="spacer"></div>
+    <h1>物件<br>總覽</h1>
+    <div class="rule"></div>
+    <p class="sub">選擇物件類別,直接查看該分類的卡片。</p>
+    <div class="cats" id="cats"></div>
+    <button class="all-btn" id="allBtn">查看全部 <b id="coverCount">0</b> 筆物件 →</button>
+  </section>
+
+  <!-- ===== View 2: List ===== -->
+  <section class="list" id="list" aria-label="物件列表">
+    <div class="list-header">
+      <header class="topbar">
+        <button class="back" id="backBtn" aria-label="返回">←</button>
+        <span class="ttl" id="listTitle">全部物件</span>
+        <span class="ct" id="listCount"></span>
+      </header>
+      <div class="tabs-row">
+        <div class="tabs" id="tabs"></div>
+        <button class="cat-manage" id="catManage" aria-label="管理類別" title="管理類別">＋</button>
+      </div>
+      <div class="search">
+        <input id="search" type="search" placeholder="搜尋案名、地址、承辦人…" aria-label="搜尋">
+      </div>
+      <div class="controls">
+        <div class="cselect sortsel" id="sortSel">
+          <button type="button" class="cselect-btn" id="sortBtn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sort-ic">⇅</span>
+            <span class="cselect-txt" id="sortTxt">預設順序</span>
+            <span class="cselect-chev">▾</span>
+          </button>
+          <div class="cselect-menu" id="sortMenu" role="listbox"></div>
+        </div>
+        <div class="density" id="density" role="group" aria-label="卡片密度">
+          <button type="button" data-d="normal">正常</button>
+          <button type="button" data-d="compact">緊湊</button>
+        </div>
+      </div>
+    </div>
+    <div class="cards" id="cards"></div>
+    <p class="note" id="storeNote"></p>
+    <button class="fab" id="fab">＋ 新增物件</button>
+    <div class="selbar" id="selbar">
+      <span class="sel-count" id="selCount">已選 0 筆</span>
+      <button type="button" class="sel-cancel" id="selCancel">取消</button>
+      <button type="button" class="sel-delete" id="selDelete">刪除</button>
+    </div>
+  </section>
+
+  <!-- ===== View 3: Settings ===== -->
+  <section class="settings-view" id="settings" aria-label="設定">
+    <div class="settings-head">
+      <button class="s-back" id="setBack" aria-label="返回">←</button>
+      <h2>設定</h2>
+    </div>
+    <div class="settings-body">
+
+      <div class="set-card">
+        <div class="set-card-title">到期提醒</div>
+        <p class="set-card-desc">物件到期前幾天開始,用膠囊閃爍提醒你。已過期會以紅色、較快的速度閃爍。</p>
+        <div class="set-line">
+          <span class="set-line-label">即將到期天數</span>
+          <div class="stepper">
+            <button type="button" id="ddMinus" aria-label="減少">−</button>
+            <span class="stepper-val"><b id="ddVal">30</b> 天</span>
+            <button type="button" id="ddPlus" aria-label="增加">＋</button>
+          </div>
+        </div>
+        <div class="set-presets" id="ddPresets">
+          <button type="button" data-v="7">7 天</button>
+          <button type="button" data-v="14">14 天</button>
+          <button type="button" data-v="30">30 天</button>
+          <button type="button" data-v="60">60 天</button>
+          <button type="button" data-v="90">90 天</button>
+        </div>
+        <p class="set-hint" id="ddHint">到期前 30 天內開始提醒</p>
+      </div>
+
+      <div class="set-card">
+        <div class="set-card-title">資料與備份</div>
+        <p class="set-card-desc">變更會自動儲存在此瀏覽器。建議定期備份,或匯入先前的備份檔。</p>
+        <div class="set-actions">
+          <button class="s-btn" id="exportBtn">匯出備份檔</button>
+          <button class="s-btn" id="cloudBtn">備份到 Google 雲端</button>
+          <button class="s-btn" id="importBtn">匯入備份檔</button>
+          <button class="s-btn s-btn-danger" id="resetBtn">還原預設資料</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+
+      <div class="set-card">
+        <div class="set-card-title">Google 雲端同步 <span class="soon-tag">即將推出</span></div>
+        <p class="set-card-desc">多裝置自動同步——電腦、手機的資料自動保持一致、互不覆蓋。啟用前需先將本 App 部署到固定網址並完成 Google 授權設定,之後即可在此連結你的 Google 帳號。</p>
+      </div>
+
+    </div>
+  </section>
+  <div class="modal-bg" id="modalBg">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head">
+        <h2 id="modalTitle">新增物件</h2>
+        <button class="x" id="modalClose" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="row2 name-row">
+          <label>案名 *<input id="f_name" placeholder="例：麗晨卓爾／2A"></label>
+          <label>類別
+          <div class="cselect" id="catSel">
+            <button type="button" class="cselect-btn" id="catSelBtn" aria-haspopup="listbox" aria-expanded="false">
+              <span class="cselect-txt" id="catSelTxt"></span>
+              <span class="cselect-chev">▾</span>
+            </button>
+            <div class="cselect-menu" id="catSelMenu" role="listbox"></div>
+          </div>
+        </label>
+        </div>
+        <div class="row2">
+          <label>格局<input id="f_layout" placeholder="如 322、開放"></label>
+          <label>樓層<input id="f_floor" placeholder="如 4/11"></label>
+        </div>
+        <div class="row2">
+          <label>售價(萬元)<input id="f_price" type="number" inputmode="numeric" placeholder="如 1488"></label>
+          <label>到期日<input id="f_due" placeholder="如 1150827"></label>
+        </div>
+        <label>地址<input id="f_addr" placeholder="台中市…"></label>
+        <div class="row2 tel-row">
+          <label>承辦<input id="f_agent"></label>
+          <label>電話<input id="f_tel" inputmode="tel" placeholder="09xxxxxxxx"></label>
+        </div>
+        <label>門市<input id="f_store"></label>
+        <label>591 連結<input id="f_591" placeholder="https://…（可留空）"></label>
+        <label>樂居 連結<input id="f_leju" placeholder="https://…（可留空）"></label>
+        <label>永慶 連結<input id="f_i" placeholder="https://…（可留空）"></label>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-del" id="modalDelete">刪除</button>
+        <span class="spacer"></span>
+        <button class="btn-ghost" id="modalCancel">取消</button>
+        <button class="btn-primary" id="modalSave">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Manage categories dialog ===== -->
+  <div class="modal-bg" id="catBg">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>管理類別</h2>
+        <button class="x" id="catCloseX" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="cat-add">
+          <input id="catNew" type="text" placeholder="新增類別名稱（例：透天、套房）">
+          <button class="btn-primary" id="catAdd">新增</button>
+        </div>
+        <div class="cat-list" id="catList"></div>
+        <p class="cat-hint">左側色塊可改顏色；直接修改名稱即可改名；垃圾桶可刪除。</p>
+      </div>
+      <div class="modal-foot">
+        <span class="spacer"></span>
+        <button class="btn-primary" id="catDone">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Confirm dialog ===== -->
+  <div class="modal-bg center" id="confirmBg">
+    <div class="confirm">
+      <p class="confirm-title" id="confirmTitle"></p>
+      <p class="confirm-desc" id="confirmDesc"></p>
+      <div class="confirm-foot">
+        <button class="btn-ghost" id="confirmCancel">取消</button>
+        <button class="btn-danger" id="confirmOk">確定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Toast ===== -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+</div>
+
+<script>
+// ---- Seed data (initial defaults; editable in-app) ----
+const SEED = [
+  {name:"麗晨卓爾／2A", cat:"大樓", layout:"322", addr:"台中市北屯區景賢路179號二樓之1", floor:"2/17", price:2588, due:"1150820", agent:"蔡佩誼", tel:"0930512233", store:"永慶機捷敦富春賞加盟店", url591:"https://sale.591.com.tw/home/house/detail/2/20423576.html", urlLeju:"https://www.leju.com.tw/community/L0ec10654464bf8", urlI:"https://www.ycut.com.tw/case-info/f82affe1-a8e4-4a75-baba-e7f41309f196"},
+  {name:"登陽一溪雲／6B1", cat:"大樓", layout:"322", addr:"台中市北屯區南興路1338號六樓之1", floor:"6/15", price:1998, due:"1150820", agent:"陳徵", tel:"0919493359", store:"永慶14期松竹敦化加盟店", url591:"https://sale.591.com.tw/home/house/detail/2/20423834.html", urlLeju:"https://www.leju.com.tw/community/L0b0111053ec6e1", urlI:"https://www.ycut.com.tw/case-info/b52938c8-648b-4bbd-bb1e-9462d6ecba9f"},
+  {name:"勝美松竹／10E2", cat:"大樓", layout:"221", addr:"台中市北屯區松竹路二段346巷20號10樓之2", floor:"10/12", price:1488, due:"1150820", agent:"林姵吟", tel:"0912326685", store:"永慶14期松竹敦化加盟店", url591:"https://sale.591.com.tw/home/house/detail/2/20424171.html", urlLeju:"https://www.leju.com.tw/community/Laec96812bb0ea", urlI:"https://www.ycut.com.tw/case-info/bd33224f-0b06-4e64-9350-7091e3d90457"},
+  {name:"聚悅澄心／4J", cat:"大樓", layout:"322", addr:"台中市太平區中平九街201號4樓之11", floor:"4/11", price:1480, due:"1150624", agent:"賴盈臻", tel:"0928992697", store:"永慶太原車站店", url591:"https://sale.591.com.tw/home/house/detail/2/20442733.html", urlLeju:"https://www.leju.com.tw/community/L7711365745290b", urlI:"https://www.ycut.com.tw/case-info/7e137a4e-51e6-4372-a556-769094c2e718"},
+  {name:"櫻花市鎮之櫻／8A10", cat:"大樓", layout:"221", addr:"台中市清水區港新三路1號8樓之10", floor:"8/15", price:836, due:"1150825", agent:"謝芷榕", tel:"0988950826", store:"永慶機捷敦富春賞加盟店", url591:"https://sale.591.com.tw/home/house/detail/2/20452483.html", urlLeju:"https://www.leju.com.tw/community/Lada125342da43a", urlI:"https://www.ycut.com.tw/case-info/a38f4000-44ca-4abc-bb9c-bf0d2c4bf31a"},
+  {name:"仁美大觀／7B", cat:"大樓", layout:"3改2/22", addr:"台中市北屯區長生一街29號7樓之2", floor:"7/12", price:1988, due:"1150825", agent:"劉益忠", tel:"0923100111", store:"永慶14期山西昌平加盟店", url591:"https://sale.591.com.tw/home/house/detail/2/20452673.html", urlLeju:"https://www.leju.com.tw/community/L18799780d83e2", urlI:"https://www.ycut.com.tw/case-info/5b6c88d1-5b92-4473-ba1c-2554a353cfca"},
+  {name:"中港世貿天下A", cat:"商辦", layout:"開放", addr:"台中市西屯區臺灣大道四段925號25樓之1", floor:"25/28", price:8928, due:"1150826", agent:"鄭悟君", tel:"0958072949", store:"永慶北屯松竹旱溪加盟店", url591:"https://business.591.com.tw/sale/20457165", urlLeju:"https://www.leju.com.tw/community/Lfb761026b582", urlI:"https://www.ycut.com.tw/case-info/2d82039d-cde0-4e56-95a4-5757df3a978f"},
+  {name:"中港世貿天下B", cat:"商辦", layout:"開放", addr:"台中市西屯區臺灣大道四段925號25樓之2", floor:"25/28", price:9052, due:"1150826", agent:"鄭悟君", tel:"0958072949", store:"永慶北屯松竹旱溪加盟店", url591:"https://business.591.com.tw/sale/20457195", urlLeju:"https://www.leju.com.tw/community/Lfb761026b582", urlI:"https://www.ycut.com.tw/case-info/c31177fc-4ad0-43cf-8530-c2340f8bfef1"},
+  {name:"富宇藏富／19B", cat:"大樓", layout:"322", addr:"台中市北屯區崇德二路二段266號19樓之2", floor:"19/22", price:2888, due:"1150827", agent:"詹志騰", tel:"0901189147", store:"永慶機捷敦富春賞加盟店", url591:"https://sale.591.com.tw/home/house/detail/2/20459397.html", urlLeju:"https://www.leju.com.tw/community/L996135394389e0", urlI:"https://www.ycut.com.tw/case-info/a672604d-0553-4430-9adb-2a9c1792be0f"},
+  {name:"勝美有禮／11A3", cat:"大樓", layout:"322", addr:"台中市大里區環中東路六段270號11樓之3", floor:"11/15", price:1738, due:"1150827", agent:"謝芷榕", tel:"0988950826", store:"永慶機捷敦富春賞加盟店", url591:"https://sale.591.com.tw/home/house/detail/2/20460575.html", urlLeju:"https://www.leju.com.tw/community/L861111058242ce", urlI:"https://www.ycut.com.tw/case-info/74556e25-5bea-409f-a3db-a43382065898"},
+  {name:"仙園海鮮會館", cat:"店面", layout:"開放", addr:"台中市北屯區環中東路二段288、292號", floor:"3F／整棟", price:25000, due:"1150827", agent:"許綺芳", tel:"0909505148", store:"永慶14期松竹敦化加盟店", url591:"https://business.591.com.tw/sale/20460727", urlLeju:null, urlI:"https://www.ycut.com.tw/case-info/992b9e30-c149-469a-923b-5877f6d9f357"},
+  {name:"佑崧鼎豐", cat:"電梯別墅", layout:"637", addr:"台中市北屯區思齊街66號", floor:"4F／整棟", price:5588, due:"1150830", agent:"劉宥希", tel:"0909549943", store:"永慶機捷敦富春賞加盟店", url591:"https://sale.591.com.tw/home/house/detail/2/20474851.html", urlLeju:"https://www.leju.com.tw/community/L5a81234636b8c0", urlI:"https://www.ycut.com.tw/case-info/f9666b42-5fb1-46c0-904b-f1e317dc65b1"},
+  {name:"登陽穗悅／10B5", cat:"大樓", layout:"322", addr:"台中市北屯區松竹路一段881號10樓之5", floor:"10/15", price:1798, due:"1150830", agent:"廖常廷", tel:"0960619199", store:"永慶北屯松竹旱溪加盟店", url591:"https://sale.591.com.tw/home/house/detail/2/20478309.html", urlLeju:"https://www.leju.com.tw/community/Lee9101047e6f71", urlI:null},
+  {name:"大毅一嶼／11C", cat:"大樓", layout:"322", addr:"台中市北屯區豐樂北二路77號11樓之3", floor:"11/23", price:2918, due:"1150830", agent:"莊士賢", tel:"0919628208", store:"永慶太原車站店", url591:null, urlLeju:"https://www.leju.com.tw/community/La19125360b736c", urlI:null},
+];
+
+// ---- Helpers ----
+const layoutText = g => ({"322":"3房2廳2衛","221":"2房2廳1衛","3改2/22":"3改2房2廳2衛"}[g]) || (g==="開放"?"開放空間":g||"");
+const money = n => Number(n||0).toLocaleString("en-US");
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const linkChip = (url, label) => url
+  ? `<a class="chip on" href="${esc(url)}" target="_blank" rel="noopener">${label} <span class="ext">↗</span></a>`
+  : `<span class="chip off">${label}</span>`;
+
+let dueSoonDays = 30;
+function dueStatus(due){
+  const s = String(due||"").replace(/\D/g,"");
+  if (s.length < 6) return "";
+  const mmdd = s.slice(-4);
+  const roc = parseInt(s.slice(0, s.length-4),10);
+  const mm = parseInt(mmdd.slice(0,2),10), dd = parseInt(mmdd.slice(2,4),10);
+  if (isNaN(roc)||isNaN(mm)||isNaN(dd)||mm<1||mm>12||dd<1||dd>31) return "";
+  const exp = new Date(roc+1911, mm-1, dd);
+  if (isNaN(exp.getTime())) return "";
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((exp - today)/86400000);
+  if (diff < 0) return "over";
+  if (diff <= dueSoonDays) return "warn";
+  return "";
+}
+function selMark(d){
+  const on = selected.has(d.id) ? " on" : "";
+  return `<span class="selbox${on}" aria-hidden="true"></span>`;
+}
+function cardHTML(d){
+  const color = catColor(d.cat);
+  const sel = selected.has(d.id) ? " selected" : "";
+  if (density === "compact"){
+    return `<article class="card compact-card${sel}" data-id="${d.id}">
+    ${selMark(d)}
+    <div class="stripe" style="background:${color}"></div>
+    <div class="body">
+      <div class="card-head">
+        <h3 class="name">${esc(d.name)}</h3>
+        <span class="price-tag">${money(d.price)}<small>萬</small></span>
+      </div>
+      <div class="sub-row">
+        <span class="badge" style="background:${color}">${esc(d.cat)}</span>
+        <span class="addr">${esc(d.addr)}</span>
+      </div>
+    </div>
+  </article>`;
+  }
+  return `<article class="card${sel}" data-id="${d.id}">
+    ${selMark(d)}
+    <div class="stripe" style="background:${color}"></div>
+    <div class="body">
+      <div class="card-head">
+        <h3 class="name">${esc(d.name)}</h3>
+        <span class="badge" style="background:${color}">${esc(d.cat)}</span>
+      </div>
+      <div class="addr">${esc(d.addr)}</div>
+      <div class="price"><span class="num">${money(d.price)}</span><span class="unit">萬</span></div>
+      <div class="meta">
+        <span>${esc(layoutText(d.layout))}</span>
+        <span>樓層 ${esc(d.floor)}</span>
+        <span class="due ${dueStatus(d.due)}">到期 ${esc(d.due)}</span>
+      </div>
+      <div class="agent">
+        <div class="agent-info">承辦 <b>${esc(d.agent)}</b><br>${esc(d.store)}</div>
+        ${d.tel ? `<a class="tel" href="tel:${esc(d.tel)}">📞 ${esc(d.tel)}</a>` : ``}
+      </div>
+      <div class="links">
+        ${linkChip(d.url591, "591")}
+        ${linkChip(d.urlLeju, "樂居")}
+        ${linkChip(d.urlI, "永慶")}
+      </div>
+    </div>
+  </article>`;
+}
+
+// ---- Storage (auto-saves on your own device; degrades to memory in preview) ----
+const STORE_KEY = "property_app_data_v4";
+const DELETED_KEY = "property_app_deleted_v1";
+const DEVICE_KEY = "property_app_deviceid_v1";
+const BASE_TS = 1700000000000; // 舊/示範資料的預設時間戳(2023);任何實際新增或編輯都會比它新
+const storageOK = (() => {
+  try { localStorage.setItem("__probe","1"); localStorage.removeItem("__probe"); return true; }
+  catch (e) { return false; }
+})();
+let uidc = Date.now();
+const uid = () => "p" + (uidc++).toString(36);
+
+// 每台裝置固定 id（第一次啟動產生一次，之後雲端同步用來標記「這筆是哪台寫的」）
+function loadDeviceId(){
+  if (storageOK){ try {
+    let d = localStorage.getItem(DEVICE_KEY);
+    if (!d){ d = "dev-" + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-4); localStorage.setItem(DEVICE_KEY, d); }
+    return d;
+  } catch (e) {} }
+  return "dev-" + Math.random().toString(36).slice(2,8);
+}
+const deviceId = loadDeviceId();
+
+function loadItems(){
+  if (storageOK){
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw){ const arr = JSON.parse(raw); if (Array.isArray(arr)) return arr.map(d => ({...d, id: d.id || uid(), updatedAt: d.updatedAt || BASE_TS})); }
+    } catch (e) {}
+  }
+  return SEED.map((d,i) => ({...d, id: "seed"+i, updatedAt: BASE_TS}));
+}
+function saveItems(){
+  if (!storageOK) return;
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(items)); } catch (e) {}
+}
+let items = loadItems();
+
+// 墓碑：被刪的 id → 刪除時間（雲端同步用，避免某台刪掉的資料被另一台又同步回來）
+function loadDeleted(){
+  let obj = {};
+  if (storageOK){ try { obj = JSON.parse(localStorage.getItem(DELETED_KEY) || "{}") || {}; } catch (e) { obj = {}; } }
+  const cutoff = Date.now() - 90*86400000; // 清掉 90 天前的舊墓碑，避免無限增長
+  for (const k in obj){ if (!(obj[k] > cutoff)) delete obj[k]; }
+  return obj;
+}
+function saveDeleted(){ if (storageOK){ try { localStorage.setItem(DELETED_KEY, JSON.stringify(deleted)); } catch (e) {} } }
+let deleted = loadDeleted();
+
+// ---- Categories (editable + persisted) ----
+const DEFAULT_CATS = [
+  {key:"大樓", label:"住宅大樓", color:"#0F7A5F"},
+  {key:"商辦", label:"商業辦公", color:"#2C68A6"},
+  {key:"店面", label:"店面／透天", color:"#C2790B"},
+  {key:"電梯別墅", label:"電梯別墅", color:"#7A4F9E"},
+];
+const CAT_PALETTE = ["#0F7A5F","#2C68A6","#C2790B","#7A4F9E","#B4472E","#0E8A8A","#4A6B2A","#B03060"];
+const CATS_KEY = "property_app_cats_v4";
+function loadCats(){
+  if (storageOK){ try { const raw = localStorage.getItem(CATS_KEY); if (raw){ const a = JSON.parse(raw); if (Array.isArray(a) && a.length) return a; } } catch (e) {} }
+  return DEFAULT_CATS.map(c => ({...c}));
+}
+function saveCats(){ if (storageOK){ try { localStorage.setItem(CATS_KEY, JSON.stringify(cats)); } catch (e) {} } }
+let cats = loadCats();
+
+const catCount = key => items.filter(d => d.cat === key).length;
+const catColor = key => { const c = cats.find(x => x.key === key); return c ? c.color : "#8494A0"; };
+const nextColor = () => CAT_PALETTE.find(col => !cats.some(c => c.color === col)) || CAT_PALETTE[cats.length % CAT_PALETTE.length];
+
+function renderCover(){
+  document.getElementById("cats").innerHTML = cats.map(c => `
+    <button class="cat-btn" data-cat="${esc(c.key)}">
+      <span class="cat-dot" style="background:${c.color}"></span>
+      <span class="cat-main"><b>${esc(c.key)}</b><small>${esc(c.label||"")}</small></span>
+      <span class="cat-ct">${catCount(c.key)}</span>
+      <span class="arrow">→</span>
+    </button>`).join("");
+  document.getElementById("coverCount").textContent = items.length;
+}
+function renderTabs(){
+  document.getElementById("tabs").innerHTML =
+    `<button class="tab" data-cat="">全部</button>` +
+    cats.map(c => `<button class="tab" data-cat="${esc(c.key)}">${esc(c.key)}</button>`).join("");
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.cat === currentCat));
+}
+function refreshCategories(){
+  saveCats();
+  renderCover();
+  renderTabs();
+  renderCatOptions();
+  applyFilter();
+}
+renderCover();
+
+// ---- State + rendering ----
+let currentCat = "";
+let selectMode = false;
+const selected = new Set();
+const SORTS = [
+  {key:"default",    label:"預設順序"},
+  {key:"price_desc", label:"售價 高→低"},
+  {key:"price_asc",  label:"售價 低→高"},
+  {key:"due_asc",    label:"到期日 近→遠"},
+  {key:"due_desc",   label:"到期日 遠→近"},
+];
+function loadSort(){ if (storageOK){ try { return localStorage.getItem("property_app_sort_v1") || "default"; } catch (e) {} } return "default"; }
+function saveSort(){ if (storageOK){ try { localStorage.setItem("property_app_sort_v1", currentSort); } catch (e) {} } }
+let currentSort = loadSort();
+function sortList(list){
+  const dueNum = d => { const n = parseInt(String(d.due||"").replace(/\D/g,""),10); return isNaN(n) ? null : n; };
+  const byDue = dir => (a,b) => { const x=dueNum(a), y=dueNum(b); if(x===null&&y===null)return 0; if(x===null)return 1; if(y===null)return -1; return dir*(x-y); };
+  const arr = list.slice();
+  switch (currentSort){
+    case "price_desc": arr.sort((a,b)=>(Number(b.price)||0)-(Number(a.price)||0)); break;
+    case "price_asc":  arr.sort((a,b)=>(Number(a.price)||0)-(Number(b.price)||0)); break;
+    case "due_asc":    arr.sort(byDue(1));  break;
+    case "due_desc":   arr.sort(byDue(-1)); break;
+  }
+  return arr;
+}
+const cardsEl  = document.getElementById("cards");
+const countEl  = document.getElementById("listCount");
+const titleEl  = document.getElementById("listTitle");
+const searchEl = document.getElementById("search");
+
+document.getElementById("storeNote").textContent = storageOK
+  ? "變更會自動儲存在此瀏覽器；可到「設定」做備份或換裝置。"
+  : "預覽模式不會保存變更——下載檔案後於自己的瀏覽器開啟即可自動儲存（或用「設定」裡的備份）。";
+
+function applyFilter(){
+  const q = searchEl.value.trim().toLowerCase();
+  let list = currentCat ? items.filter(d => d.cat === currentCat) : items.slice();
+  if (q) list = list.filter(d => (d.name+d.addr+d.agent+d.store+d.cat).toLowerCase().includes(q));
+  list = sortList(list);
+  cardsEl.innerHTML = list.length
+    ? list.map(cardHTML).join("")
+    : `<p class="empty">${items.length ? "找不到符合的物件" : "尚無物件,點右下角「＋ 新增物件」開始建立。"}</p>`;
+  countEl.textContent = `${list.length} 筆`;
+  titleEl.textContent = currentCat ? currentCat + "物件" : "全部物件";
+  document.querySelectorAll(".tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.cat === currentCat));
+}
+renderTabs();
+
+// ---- View switching ----
+const cover = document.getElementById("cover");
+const listView = document.getElementById("list");
+function openList(cat){
+  exitSelectMode();
+  currentCat = cat || "";
+  searchEl.value = "";
+  applyFilter();
+  cover.style.display = "none";
+  listView.classList.add("active");
+  window.scrollTo(0,0);
+}
+function showCover(){
+  exitSelectMode();
+  listView.classList.remove("active");
+  cover.style.display = "flex";
+  renderCover();
+  window.scrollTo(0,0);
+}
+
+document.getElementById("cats").addEventListener("click", e => {
+  const btn = e.target.closest(".cat-btn");
+  if (btn) openList(btn.dataset.cat);
+});
+document.getElementById("allBtn").addEventListener("click", () => openList(""));
+document.getElementById("tabs").addEventListener("click", e => {
+  const btn = e.target.closest(".tab");
+  if (btn) { exitSelectMode(); currentCat = btn.dataset.cat; applyFilter(); }
+});
+searchEl.addEventListener("input", applyFilter);
+document.getElementById("backBtn").addEventListener("click", showCover);
+
+// ---- Card density (正常 / 緊湊) ----
+const densityEl = document.getElementById("density");
+function loadDensity(){ if (storageOK){ try { return localStorage.getItem("property_app_density_v1") || "normal"; } catch (e) {} } return "normal"; }
+function saveDensity(){ if (storageOK){ try { localStorage.setItem("property_app_density_v1", density); } catch (e) {} } }
+let density = loadDensity();
+dueSoonDays = loadDueDays();
+function setDensity(d){
+  density = (d === "compact") ? "compact" : "normal";
+  cardsEl.classList.toggle("compact", density === "compact");
+  densityEl.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.d === density));
+  saveDensity();
+  applyFilter();
+}
+densityEl.addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (b) setDensity(b.dataset.d);
+});
+setDensity(density);
+
+// ---- Sort dropdown ----
+const sortSel = document.getElementById("sortSel");
+const sortBtn = document.getElementById("sortBtn");
+const sortTxt = document.getElementById("sortTxt");
+const sortMenu = document.getElementById("sortMenu");
+function renderSortOptions(){
+  sortMenu.innerHTML = SORTS.map(s => `
+    <button type="button" class="cselect-opt" data-key="${s.key}" role="option">
+      <span class="nm">${s.label}</span>
+      <span class="chk">✓</span>
+    </button>`).join("");
+  sortMenu.querySelectorAll(".cselect-opt").forEach(o => o.classList.toggle("sel", o.dataset.key === currentSort));
+}
+function setSort(key){
+  currentSort = SORTS.some(s => s.key === key) ? key : "default";
+  sortTxt.textContent = (SORTS.find(s => s.key === currentSort) || SORTS[0]).label;
+  sortMenu.querySelectorAll(".cselect-opt").forEach(o => o.classList.toggle("sel", o.dataset.key === currentSort));
+  saveSort();
+  applyFilter();
+}
+function openSortSel(){ sortSel.classList.add("open"); sortBtn.setAttribute("aria-expanded","true"); }
+function closeSortSel(){ sortSel.classList.remove("open"); sortBtn.setAttribute("aria-expanded","false"); }
+sortBtn.addEventListener("click", e => { e.stopPropagation(); sortSel.classList.contains("open") ? closeSortSel() : openSortSel(); });
+sortMenu.addEventListener("click", e => { const o = e.target.closest(".cselect-opt"); if (o){ setSort(o.dataset.key); closeSortSel(); } });
+document.addEventListener("click", e => { if (!sortSel.contains(e.target)) closeSortSel(); });
+renderSortOptions();
+sortTxt.textContent = (SORTS.find(s => s.key === currentSort) || SORTS[0]).label;
+
+// ---- Toast + confirm dialog (native alert/confirm are blocked in the sandbox) ----
+const toastEl = document.getElementById("toast");
+let toastTimer = null;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
+}
+const confirmBg = document.getElementById("confirmBg");
+let confirmCb = null;
+function askConfirm(title, detail, onYes){
+  document.getElementById("confirmTitle").textContent = title;
+  const descEl = document.getElementById("confirmDesc");
+  descEl.textContent = detail || "";
+  descEl.style.display = detail ? "block" : "none";
+  confirmCb = onYes;
+  confirmBg.classList.add("open");
+}
+function closeConfirm(){ confirmBg.classList.remove("open"); confirmCb = null; }
+document.getElementById("confirmOk").addEventListener("click", () => { const cb = confirmCb; closeConfirm(); if (cb) cb(); });
+document.getElementById("confirmCancel").addEventListener("click", closeConfirm);
+confirmBg.addEventListener("click", e => { if (e.target === confirmBg) closeConfirm(); });
+
+// ---- Add / Edit / Delete ----
+const modalBg = document.getElementById("modalBg");
+const F = {
+  name:document.getElementById("f_name"),
+  layout:document.getElementById("f_layout"), floor:document.getElementById("f_floor"),
+  price:document.getElementById("f_price"), addr:document.getElementById("f_addr"),
+  due:document.getElementById("f_due"), agent:document.getElementById("f_agent"),
+  tel:document.getElementById("f_tel"), store:document.getElementById("f_store"),
+  u591:document.getElementById("f_591"), uleju:document.getElementById("f_leju"), ui:document.getElementById("f_i"),
+};
+
+// ---- Custom category dropdown (styled) ----
+const catSel = document.getElementById("catSel");
+const catSelBtn = document.getElementById("catSelBtn");
+const catSelTxt = document.getElementById("catSelTxt");
+const catSelMenu = document.getElementById("catSelMenu");
+let formCat = "";
+function renderCatOptions(){
+  catSelMenu.innerHTML = cats.map(c => `
+    <button type="button" class="cselect-opt" data-key="${esc(c.key)}" role="option">
+      <span class="dot" style="background:${c.color}"></span>
+      <span class="nm">${esc(c.key)}</span>
+      <span class="chk">✓</span>
+    </button>`).join("");
+  catSelMenu.querySelectorAll(".cselect-opt").forEach(o => o.classList.toggle("sel", o.dataset.key === formCat));
+}
+function setFormCat(key){
+  formCat = key || "";
+  catSelTxt.textContent = formCat || "選擇類別";
+  catSelMenu.querySelectorAll(".cselect-opt").forEach(o => o.classList.toggle("sel", o.dataset.key === formCat));
+}
+function openCatSel(){ catSel.classList.add("open"); catSelBtn.setAttribute("aria-expanded","true"); }
+function closeCatSel(){ catSel.classList.remove("open"); catSelBtn.setAttribute("aria-expanded","false"); }
+catSelBtn.addEventListener("click", e => { e.stopPropagation(); catSel.classList.contains("open") ? closeCatSel() : openCatSel(); });
+catSelMenu.addEventListener("click", e => { const o = e.target.closest(".cselect-opt"); if (o){ setFormCat(o.dataset.key); closeCatSel(); } });
+document.addEventListener("click", e => { if (!catSel.contains(e.target)) closeCatSel(); });
+renderCatOptions();
+let editingId = null;
+
+function openForm(id){
+  editingId = id || null;
+  const d = id ? items.find(x => x.id === id) : null;
+  document.getElementById("modalTitle").textContent = d ? "編輯物件" : "新增物件";
+  document.getElementById("modalDelete").style.display = d ? "inline-flex" : "none";
+  F.name.value   = d ? d.name||""    : "";
+  renderCatOptions();
+  setFormCat(d ? (d.cat || "") : (currentCat || (cats[0] && cats[0].key) || ""));
+  F.layout.value = d ? d.layout||""  : "";
+  F.floor.value  = d ? d.floor||""   : "";
+  F.price.value  = d ? (d.price ?? "") : "";
+  F.addr.value   = d ? d.addr||""    : "";
+  F.due.value    = d ? d.due||""     : "";
+  F.agent.value  = d ? d.agent||""   : "";
+  F.tel.value    = d ? d.tel||""     : "";
+  F.store.value  = d ? d.store||""   : "";
+  F.u591.value   = d ? d.url591||""  : "";
+  F.uleju.value  = d ? d.urlLeju||"" : "";
+  F.ui.value     = d ? d.urlI||""   : "";
+  modalBg.classList.add("open");
+  setTimeout(() => F.name.focus(), 50);
+}
+function closeForm(){ modalBg.classList.remove("open"); editingId = null; }
+
+function saveForm(){
+  const name = F.name.value.trim();
+  if (!name){ toast("請輸入案名"); F.name.focus(); return; }
+  const isEdit = !!editingId;
+  const rec = {
+    name, cat: formCat,
+    layout: F.layout.value.trim(), floor: F.floor.value.trim(),
+    price: parseInt(F.price.value, 10) || 0,
+    addr: F.addr.value.trim(), due: F.due.value.trim(),
+    agent: F.agent.value.trim(), tel: F.tel.value.trim(), store: F.store.value.trim(),
+    url591: F.u591.value.trim() || null, urlLeju: F.uleju.value.trim() || null, urlI: F.ui.value.trim() || null,
+  };
+  if (editingId){
+    const i = items.findIndex(x => x.id === editingId);
+    if (i > -1) items[i] = {...items[i], ...rec, updatedAt: Date.now()};
+  } else {
+    items.push({...rec, id: uid(), updatedAt: Date.now()});
+  }
+  saveItems();
+  closeForm();
+  applyFilter();
+  toast(isEdit ? "已更新" : "已新增");
+}
+function deleteItem(id){
+  const d = items.find(x => x.id === id);
+  if (!d) return;
+  askConfirm(`刪除「${d.name}」？`, "刪除後將無法復原。", () => {
+    items = items.filter(x => x.id !== id);
+    deleted[id] = Date.now(); saveDeleted();
+    saveItems();
+    if (editingId === id) closeForm();
+    applyFilter();
+    toast("已刪除");
+  });
+}
+
+document.getElementById("fab").addEventListener("click", () => openForm(null));
+
+// ---- Card interaction: tap = edit, long-press = multi-select delete ----
+const fabEl = document.getElementById("fab");
+const selbar = document.getElementById("selbar");
+const selCount = document.getElementById("selCount");
+const selDelete = document.getElementById("selDelete");
+const selCancel = document.getElementById("selCancel");
+let pressTimer = null, pressX = 0, pressY = 0, longPressed = false, pressId = null;
+const isLink = t => t.closest("a, .chip, .tel");
+
+function updateSelbar(){
+  selCount.textContent = `已選 ${selected.size} 筆`;
+  selDelete.disabled = selected.size === 0;
+}
+function enterSelectMode(){
+  selectMode = true;
+  selected.clear();
+  cardsEl.classList.add("selecting");
+  fabEl.style.display = "none";
+  selbar.classList.add("show");
+  updateSelbar();
+}
+function exitSelectMode(){
+  if (!selectMode) return;
+  selectMode = false;
+  selected.clear();
+  cardsEl.classList.remove("selecting");
+  cardsEl.querySelectorAll(".card.selected").forEach(c => c.classList.remove("selected"));
+  cardsEl.querySelectorAll(".selbox.on").forEach(c => c.classList.remove("on"));
+  fabEl.style.display = "";
+  selbar.classList.remove("show");
+}
+function toggleSelect(id){
+  const card = cardsEl.querySelector(`[data-id="${id}"]`);
+  if (selected.has(id)){
+    selected.delete(id);
+    if (card){ card.classList.remove("selected"); const b = card.querySelector(".selbox"); if (b) b.classList.remove("on"); }
+  } else {
+    selected.add(id);
+    if (card){ card.classList.add("selected"); const b = card.querySelector(".selbox"); if (b) b.classList.add("on"); }
+  }
+  updateSelbar();
+}
+function endPress(){ clearTimeout(pressTimer); pressTimer = null; }
+
+cardsEl.addEventListener("pointerdown", e => {
+  const card = e.target.closest("[data-id]");
+  if (!card) return;
+  if (!selectMode && isLink(e.target)) return;
+  pressId = card.dataset.id; pressX = e.clientX; pressY = e.clientY; longPressed = false;
+  clearTimeout(pressTimer);
+  pressTimer = setTimeout(() => {
+    longPressed = true;
+    if (navigator.vibrate){ try { navigator.vibrate(15); } catch (err){} }
+    if (!selectMode) enterSelectMode();
+    toggleSelect(pressId);
+  }, 480);
+});
+cardsEl.addEventListener("pointermove", e => {
+  if (pressTimer && (Math.abs(e.clientX - pressX) > 10 || Math.abs(e.clientY - pressY) > 10)) endPress();
+});
+cardsEl.addEventListener("pointerup", endPress);
+cardsEl.addEventListener("pointercancel", endPress);
+cardsEl.addEventListener("pointerleave", endPress);
+cardsEl.addEventListener("contextmenu", e => { if (longPressed) e.preventDefault(); });
+cardsEl.addEventListener("click", e => {
+  if (longPressed){ longPressed = false; e.preventDefault(); e.stopPropagation(); return; }
+  const card = e.target.closest("[data-id]");
+  if (!card) return;
+  const id = card.dataset.id;
+  if (selectMode){
+    if (e.target.closest("a")) e.preventDefault();
+    toggleSelect(id);
+    return;
+  }
+  if (isLink(e.target)) return;
+  openForm(id);
+});
+
+selCancel.addEventListener("click", exitSelectMode);
+selDelete.addEventListener("click", () => {
+  if (!selected.size) return;
+  const n = selected.size;
+  askConfirm(`刪除所選 ${n} 筆物件？`, "刪除後無法復原,建議先做雲端備份。", () => {
+    selected.forEach(id => { deleted[id] = Date.now(); });
+    saveDeleted();
+    items = items.filter(d => !selected.has(d.id));
+    saveItems();
+    exitSelectMode();
+    renderCover();
+    applyFilter();
+    toast(`已刪除 ${n} 筆物件`);
+  });
+});
+document.getElementById("modalSave").addEventListener("click", saveForm);
+document.getElementById("modalCancel").addEventListener("click", closeForm);
+document.getElementById("modalClose").addEventListener("click", closeForm);
+document.getElementById("modalDelete").addEventListener("click", () => { if (editingId) deleteItem(editingId); });
+modalBg.addEventListener("click", e => { if (e.target === modalBg) closeForm(); });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  if (confirmBg.classList.contains("open")) closeConfirm();
+  else if (catBg.classList.contains("open")) closeCatManager();
+  else if (catSel.classList.contains("open")) closeCatSel();
+  else if (sortSel.classList.contains("open")) closeSortSel();
+  else if (modalBg.classList.contains("open")) closeForm();
+});
+
+// ---- Backup / Import / Cloud / Reset ----
+function downloadBackup(){
+  const data = { version: 4, exportedAt: new Date().toISOString(), deviceId, cats, items, deleted };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `物件備份_${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+document.getElementById("exportBtn").addEventListener("click", () => { downloadBackup(); toast("已下載備份檔"); });
+document.getElementById("cloudBtn").addEventListener("click", () => {
+  downloadBackup();
+  window.open("https://drive.google.com/drive/my-drive", "_blank", "noopener");
+  toast("已下載備份，請在雲端硬碟上傳");
+});
+const importFile = document.getElementById("importFile");
+document.getElementById("importBtn").addEventListener("click", () => importFile.click());
+importFile.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      let newItems, newCats = null, newDeleted = null;
+      if (Array.isArray(parsed)) { newItems = parsed; }
+      else if (parsed && Array.isArray(parsed.items)) {
+        newItems = parsed.items;
+        if (Array.isArray(parsed.cats) && parsed.cats.length) newCats = parsed.cats;
+        if (parsed.deleted && typeof parsed.deleted === "object") newDeleted = parsed.deleted;
+      }
+      else throw new Error("bad format");
+      items = newItems.map(d => ({...d, id: d.id || uid(), updatedAt: d.updatedAt || BASE_TS}));
+      if (newCats) { cats = newCats; saveCats(); renderTabs(); renderCatOptions(); }
+      if (newDeleted) { deleted = newDeleted; saveDeleted(); }
+      saveItems(); renderCover();
+      toast(`已匯入 ${items.length} 筆物件`);
+    } catch (err) { toast("匯入失敗：格式不正確"); }
+    importFile.value = "";
+  };
+  reader.readAsText(file);
+});
+document.getElementById("resetBtn").addEventListener("click", () => {
+  askConfirm("還原預設資料？", "目前所有的新增與修改都會被覆蓋。", () => {
+    items = SEED.map((d,i) => ({...d, id: "seed"+i, updatedAt: Date.now()}));
+    deleted = {}; saveDeleted();
+    saveItems(); renderCover();
+    toast("已還原預設資料");
+  });
+});
+
+// ---- Settings page ----
+const DD_MIN = 1, DD_MAX = 180;
+function loadDueDays(){
+  if (storageOK){ try { const v = parseInt(localStorage.getItem("property_app_duedays_v1"),10);
+    if (!isNaN(v)) return Math.min(DD_MAX, Math.max(DD_MIN, v)); } catch (e) {} }
+  return 30;
+}
+function saveDueDays(){ if (storageOK){ try { localStorage.setItem("property_app_duedays_v1", String(dueSoonDays)); } catch (e) {} } }
+
+const settingsView = document.getElementById("settings");
+const ddValEl = document.getElementById("ddVal");
+const ddHintEl = document.getElementById("ddHint");
+const ddPresetsEl = document.getElementById("ddPresets");
+function renderDueDays(){
+  ddValEl.textContent = dueSoonDays;
+  ddHintEl.textContent = `到期前 ${dueSoonDays} 天內開始提醒`;
+  ddPresetsEl.querySelectorAll("button").forEach(b => b.classList.toggle("active", parseInt(b.dataset.v,10) === dueSoonDays));
+}
+function setDueDays(v){
+  dueSoonDays = Math.min(DD_MAX, Math.max(DD_MIN, v|0));
+  saveDueDays();
+  renderDueDays();
+  applyFilter();
+}
+document.getElementById("ddMinus").addEventListener("click", () => setDueDays(dueSoonDays - 1));
+document.getElementById("ddPlus").addEventListener("click", () => setDueDays(dueSoonDays + 1));
+ddPresetsEl.addEventListener("click", e => { const b = e.target.closest("button"); if (b) setDueDays(parseInt(b.dataset.v,10)); });
+
+function openSettings(){
+  exitSelectMode();
+  renderDueDays();
+  settingsView.classList.add("active");
+  cover.style.display = "none";
+  listView.classList.remove("active");
+  window.scrollTo(0,0);
+}
+function closeSettings(){
+  settingsView.classList.remove("active");
+  cover.style.display = "flex";
+  renderCover();
+  window.scrollTo(0,0);
+}
+document.getElementById("coverGear").addEventListener("click", e => { e.stopPropagation(); openSettings(); });
+document.getElementById("setBack").addEventListener("click", closeSettings);
+renderDueDays();
+
+// ---- Manage categories ----
+const catBg = document.getElementById("catBg");
+const catListEl = document.getElementById("catList");
+const catNewEl = document.getElementById("catNew");
+
+function renderCatList(){
+  catListEl.innerHTML = cats.map(c => `
+    <div class="cat-item" data-key="${esc(c.key)}">
+      <input type="color" class="cat-color" value="${c.color}" aria-label="顏色">
+      <input type="text" class="cat-name" value="${esc(c.key)}" aria-label="類別名稱">
+      <span class="cat-count">${catCount(c.key)} 筆</span>
+      <button class="cat-del" aria-label="刪除類別">🗑</button>
+    </div>`).join("");
+}
+function openCatManager(){ renderCatList(); catNewEl.value = ""; catBg.classList.add("open"); }
+function closeCatManager(){ catBg.classList.remove("open"); }
+document.getElementById("catManage").addEventListener("click", openCatManager);
+document.getElementById("catCloseX").addEventListener("click", closeCatManager);
+document.getElementById("catDone").addEventListener("click", closeCatManager);
+catBg.addEventListener("click", e => { if (e.target === catBg) closeCatManager(); });
+
+function addCategory(){
+  const name = catNewEl.value.trim();
+  if (!name){ catNewEl.focus(); return; }
+  if (cats.some(c => c.key === name)){ toast("類別名稱重複"); return; }
+  cats.push({ key: name, label: "", color: nextColor() });
+  refreshCategories();
+  renderCatList();
+  catNewEl.value = "";
+  toast("已新增類別");
+}
+document.getElementById("catAdd").addEventListener("click", addCategory);
+catNewEl.addEventListener("keydown", e => { if (e.key === "Enter") addCategory(); });
+
+catListEl.addEventListener("change", e => {
+  const item = e.target.closest(".cat-item");
+  if (!item) return;
+  const oldKey = item.dataset.key;
+  const cat = cats.find(c => c.key === oldKey);
+  if (!cat) return;
+  if (e.target.classList.contains("cat-color")){
+    cat.color = e.target.value;
+    refreshCategories();
+    return;
+  }
+  if (e.target.classList.contains("cat-name")){
+    const newKey = e.target.value.trim();
+    if (!newKey){ e.target.value = oldKey; return; }
+    if (newKey === oldKey) return;
+    if (cats.some(c => c.key === newKey)){ toast("類別名稱重複"); e.target.value = oldKey; return; }
+    cat.key = newKey;
+    item.dataset.key = newKey;
+    items.forEach(it => { if (it.cat === oldKey) it.cat = newKey; });
+    if (currentCat === oldKey) currentCat = newKey;
+    saveItems();
+    refreshCategories();
+    toast("已改名");
+  }
+});
+catListEl.addEventListener("click", e => {
+  const del = e.target.closest(".cat-del");
+  if (!del) return;
+  const item = e.target.closest(".cat-item");
+  const key = item.dataset.key;
+  const n = catCount(key);
+  askConfirm(
+    `刪除類別「${key}」？`,
+    n > 0 ? `該類別的 ${n} 筆物件會變成未分類,仍可在「全部」中找到。` : "",
+    () => {
+      cats = cats.filter(c => c.key !== key);
+      if (currentCat === key) currentCat = "";
+      refreshCategories();
+      renderCatList();
+      toast("已刪除類別");
+    }
+  );
+});
+</script>
+</body>
+</html>
