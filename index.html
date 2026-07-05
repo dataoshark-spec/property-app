@@ -248,11 +248,13 @@
   .s-btn{font-family:inherit;font-size:.92rem;font-weight:700;cursor:pointer;text-align:left;
     background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:14px 16px;
     transition:background .15s ease,border-color .15s ease;}
-  .s-btn:hover{background:var(--surface-2);border-color:var(--border-2);}
   .s-btn-danger{color:var(--danger);}
-  .s-btn-danger:hover{background:var(--danger-tint);border-color:var(--danger-tint-bd);}
   .s-btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;text-align:center;}
-  .s-btn-primary:hover{background:var(--accent-deep);border-color:var(--accent-deep);}
+  @media (hover:hover){
+    .s-btn:hover{background:var(--surface-2);border-color:var(--border-2);}
+    .s-btn-danger:hover{background:var(--danger-tint);border-color:var(--danger-tint-bd);}
+    .s-btn-primary:hover{background:var(--accent-deep);border-color:var(--accent-deep);}
+  }
   .sync-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);}
   .sync-row:first-of-type{border-top:1px solid var(--line);margin-top:14px;}
   .sync-k{flex:none;font-size:.85rem;color:var(--ink-soft);}
@@ -835,6 +837,7 @@
           <button class="s-btn" id="exportBtn">匯出備份檔</button>
           <button class="s-btn" id="importBtn">匯入備份檔</button>
           <button class="s-btn" id="cloudBtn">備份到 Google 雲端</button>
+          <button class="s-btn" id="cloudImportBtn">從 Google 雲端匯入</button>
           <button class="s-btn s-btn-danger" id="resetBtn">還原預設資料</button>
         </div>
         <input type="file" id="importFile" accept="application/json,.json" hidden>
@@ -997,7 +1000,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.05 X";
+const APP_VERSION = "2026.07.05 Y";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1902,6 +1905,7 @@ importFile.addEventListener("change", e => {
   };
   reader.readAsText(file);
 });
+document.getElementById("importBtn").addEventListener("click", () => importFile.click());
 document.getElementById("resetBtn").addEventListener("click", () => {
   askConfirm("還原預設資料？", "目前所有的新增與修改都會被覆蓋。", () => {
     items = SEED.map((d,i) => ({...d, id: "seed"+i, updatedAt: Date.now()}));
@@ -2341,6 +2345,7 @@ let syncConnected = false, syncEmail = null;
         .setDeveloperKey(PICKER_KEY)
         .setOAuthToken(token)
         .addView(view)
+        .setLocale("zh-TW")
         .setTitle("選擇備份要存放的資料夾")
         .setCallback(function(data){
           const act = data[google.picker.Response.ACTION];
@@ -2383,6 +2388,7 @@ let syncConnected = false, syncEmail = null;
         .setDeveloperKey(PICKER_KEY)
         .setOAuthToken(token)
         .addView(view)
+        .setLocale("zh-TW")
         .setTitle("選擇要匯入的備份檔(.json)")
         .setCallback(function(data){
           const act = data[google.picker.Response.ACTION];
@@ -2616,9 +2622,7 @@ let syncConnected = false, syncEmail = null;
       else { toast("備份失敗,請重試,或改用「匯出備份檔」"); }
     }
   });
-  document.getElementById("importBtn").addEventListener("click", function(){
-    askChoice("匯入備份檔", "要從哪裡選擇備份檔？", "從 Google 雲端", driveImportBackup, "從手機檔案", function(){ importFile.click(); });
-  });
+  document.getElementById("cloudImportBtn").addEventListener("click", driveImportBackup);
   document.addEventListener("visibilitychange", function(){ if (!document.hidden && syncConnected && !needReauth) syncNow(); });
 
   whenGis(function(){
