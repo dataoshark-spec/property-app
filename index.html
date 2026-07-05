@@ -138,7 +138,7 @@
 
   /* ---------- COVER (View 1) ---------- */
   .cover{
-    min-height:100dvh;
+    height:100dvh;
     background:var(--cover-bg);
     color:var(--cover-text);
     display:flex;flex-direction:column;
@@ -162,6 +162,8 @@
     color:var(--accent);text-transform:uppercase;
   }
   .cover .spacer{flex:1;}
+  .cover-body{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;}
+  .cover-body::-webkit-scrollbar{display:none;}
   .cover-top{display:flex;flex-direction:row-reverse;align-items:center;justify-content:space-between;gap:14px;}
   .cover h1{
     font-family:"Noto Serif TC",serif;
@@ -172,7 +174,7 @@
   .cover .rule{width:46px;height:3px;background:var(--accent);margin-bottom:18px;}
   .cover .sub{font-size:1rem;color:rgba(243,241,233,.72);max-width:30ch;}
 
-  .cats{display:flex;flex-direction:column;gap:10px;margin-top:24px;}
+  .cats{display:flex;flex-direction:column;gap:10px;margin-top:24px;flex:none;}
   .cat-btn{
     display:flex;align-items:center;gap:14px;width:100%;text-align:left;
     background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
@@ -193,7 +195,7 @@
   .cat-btn .arrow{color:rgba(243,241,233,.45);font-size:1.1rem;transition:transform .18s ease,color .18s ease;}
   .cat-btn:hover .arrow{transform:translateX(3px);color:var(--accent);}
   .all-btn{
-    margin-top:16px;width:100%;background:none;border:none;cursor:pointer;
+    margin-top:16px;width:100%;background:none;border:none;cursor:pointer;flex:none;
     color:rgba(243,241,233,.7);font-family:inherit;font-size:.95rem;padding:12px 8px 4px;
     border-top:1px solid rgba(255,255,255,.1);transition:color .15s ease;
   }
@@ -389,7 +391,7 @@
   .note{font-size:.76rem;color:var(--text-faint);text-align:center;padding:6px 24px 0;line-height:1.6;}
 
   /* CRUD: card actions, new-item button, data tools, modal */
-  .cards{padding-bottom:104px;}
+  .cards{padding-bottom:32px;}
   .card-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px;padding-top:13px;border-top:1px solid var(--line);}
   .card-actions button{font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;border-radius:9px;
     padding:7px 14px;background:var(--card);border:1px solid var(--line);color:var(--ink-soft);
@@ -409,13 +411,12 @@
   .compact-card .sub-row{display:flex;align-items:flex-start;gap:8px;margin-top:8px;}
   .compact-card .sub-row .addr{font-size:.84rem;color:var(--ink-soft);line-height:1.45;}
 
-  .fab{position:fixed;z-index:40;bottom:22px;right:max(18px,calc(50% - 222px));
-    display:inline-flex;align-items:center;gap:7px;
-    background:var(--accent);color:#fff;border:none;font-family:inherit;font-weight:700;font-size:1rem;
-    padding:14px 20px;border-radius:999px;cursor:pointer;
-    box-shadow:0 8px 22px rgba(15,122,95,.42);transition:background .18s ease,transform .12s ease;}
-  .fab:hover{background:var(--accent-deep);}
-  .fab:active{transform:scale(.96);}
+  .add-obj{flex:none;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+    background:var(--accent);color:#fff;border:none;font-family:inherit;font-weight:700;font-size:.95rem;
+    padding:14px 15px;border-radius:12px;cursor:pointer;
+    box-shadow:0 3px 10px rgba(15,122,95,.26);transition:background .15s ease,transform .12s ease;}
+  .add-obj:hover{background:var(--accent-deep);}
+  .add-obj:active{transform:scale(.97);}
 
   /* Selection mode (long-press to multi-select) */
   .card{position:relative;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
@@ -558,7 +559,7 @@
   .view-toggle button{font-family:inherit;font-weight:700;cursor:pointer;border:none;background:none;border-radius:8px;
     display:inline-flex;align-items:center;gap:6px;transition:all .15s ease;}
   .vt-ic{width:16px;height:16px;flex:none;}
-  .cover-vt{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);margin:28px 0 14px;width:100%;}
+  .cover-vt{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);margin:28px 0 14px;width:100%;flex:none;}
   .cover-vt button{flex:1;justify-content:center;color:rgba(243,241,233,.72);font-size:.95rem;padding:11px 10px;}
   .cover-vt button.on{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(15,122,95,.4);}
   .ctrl-right{display:flex;align-items:center;gap:8px;}
@@ -603,12 +604,20 @@
   .tcell{padding:9px 10px;min-height:40px;outline:none;cursor:text;transition:background .12s,box-shadow .12s;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .tcell[data-field="due"],.tcell[data-field="addr"],.tcell[data-field="tel"],.tcell[data-field="store"]{font-size:.77rem;}
+  .tcell[data-field="due"]{font-size:.66rem;}
+  .tcell[data-field="layout"],.tcell[data-field="floor"],.tcell[data-field="agent"],.tcell[data-field="store"],.tcell[data-field="tel"]{font-size:.72rem;}
   .tcell:hover{background:var(--surface-2);}
   .tcell:focus{background:var(--card);box-shadow:inset 0 0 0 2px var(--accent);border-radius:5px;overflow:visible;white-space:normal;position:relative;z-index:2;}
   .tcell.saved{animation:tSaved .7s ease;}
   @keyframes tSaved{0%{background:#D6EFE6;}100%{background:transparent;}}
   .tcell.tnum{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
   .tcell.tdue{font-variant-numeric:tabular-nums;color:var(--ink-soft);font-weight:600;}
+  .tcell.tdue.warn{color:#B26A00;animation:duePulse 2.4s ease-in-out infinite;}
+  .tcell.tdue.over{color:#C0341A;font-weight:700;animation:duePulse 1.2s ease-in-out infinite;}
+  .tcell.tdue.warn:focus,.tcell.tdue.over:focus{animation:none;}
+  [data-theme="dark"] .tcell.tdue.warn{color:#E6A94A;}
+  [data-theme="dark"] .tcell.tdue.over{color:#F0745A;}
+  @media (prefers-reduced-motion: reduce){ .tcell.tdue.warn,.tcell.tdue.over{animation:none;} }
   .tcell.tname{font-weight:700;}
   .tcat{padding:7px 9px;text-align:center;}
   .tcat-wrap{display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:4px 7px;}
@@ -719,8 +728,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
       <span>搜尋案名、地址、售價、格局、樓層…</span>
     </button>
-    <div class="spacer"></div>
-    <div class="cats" id="cats"></div>
+    <div class="cover-body">
+      <div class="spacer"></div>
+      <div class="cats" id="cats"></div>
+    </div>
     <div class="view-toggle cover-vt" id="coverVT" role="group" aria-label="檢視模式">
       <button type="button" data-vm="card"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><rect x="6.5" y="8.2" width="4.4" height="4.4" rx="1" fill="currentColor" stroke="none"/><line x1="13.2" y1="9.4" x2="17.5" y2="9.4"/><line x1="13.2" y1="12.2" x2="16.3" y2="12.2"/></svg>卡片檢視</button>
       <button type="button" data-vm="table"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><line x1="3.5" y1="9.2" x2="20.5" y2="9.2"/><line x1="3.5" y1="14.4" x2="20.5" y2="14.4"/><line x1="9.5" y1="9.2" x2="9.5" y2="19.5"/><line x1="14.8" y1="9.2" x2="14.8" y2="19.5"/></svg>表格檢視</button>
@@ -743,6 +754,7 @@
       </div>
       <div class="search">
         <input id="search" type="search" placeholder="搜尋案名、地址、售價、格局、樓層…" aria-label="搜尋">
+        <button class="add-obj" id="fab">＋ 新增物件</button>
       </div>
       <div class="controls">
         <div class="cselect sortsel" id="sortSel">
@@ -758,6 +770,10 @@
             <button type="button" data-d="normal">正常</button>
             <button type="button" data-d="compact">緊湊</button>
           </div>
+          <div class="density tmode-head" id="tModeHead" role="group" aria-label="編輯／正常模式" style="display:none">
+            <button type="button" data-tm="edit" title="可直接修改資料">編輯</button>
+            <button type="button" data-tm="view" title="只瀏覽，點連結直接開啟">正常</button>
+          </div>
           <div class="view-toggle list-vt" id="listVT" role="group" aria-label="檢視模式">
             <button type="button" data-vm="card" title="卡片檢視"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><rect x="6.5" y="8.2" width="4.4" height="4.4" rx="1" fill="currentColor" stroke="none"/><line x1="13.2" y1="9.4" x2="17.5" y2="9.4"/><line x1="13.2" y1="12.2" x2="16.3" y2="12.2"/></svg></button>
             <button type="button" data-vm="table" title="表格檢視"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><line x1="3.5" y1="9.2" x2="20.5" y2="9.2"/><line x1="3.5" y1="14.4" x2="20.5" y2="14.4"/><line x1="9.5" y1="9.2" x2="9.5" y2="19.5"/><line x1="14.8" y1="9.2" x2="14.8" y2="19.5"/></svg></button>
@@ -768,7 +784,6 @@
     <div class="cards" id="cards"></div>
     <div class="table-wrap" id="tableWrap" style="display:none"></div>
     <p class="note" id="storeNote"></p>
-    <button class="fab" id="fab">＋ 新增物件</button>
     <div class="selbar" id="selbar">
       <span class="sel-count" id="selCount">已選 0 筆</span>
       <button type="button" class="sel-cancel" id="selCancel">取消</button>
@@ -970,7 +985,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.05 c";
+const APP_VERSION = "2026.07.05 i";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1200,7 +1215,11 @@ const ICON_TRASH = '<svg class="tdi" viewBox="0 0 24 24" fill="none" stroke="cur
 function syncToggleUI(){
   document.querySelectorAll("#coverVT button, #listVT button").forEach(b => b.classList.toggle("on", b.dataset.vm === viewMode));
   if (typeof densityEl !== "undefined" && densityEl) densityEl.style.display = (viewMode==="table") ? "none" : "";
-  const fab = document.getElementById("fab"); if (fab) fab.style.display = (viewMode==="table") ? "none" : "";
+  const tmh = document.getElementById("tModeHead");
+  if (tmh){
+    tmh.style.display = (viewMode==="table") ? "" : "none";
+    tmh.querySelectorAll("button").forEach(b => b.classList.toggle("active", (b.dataset.tm==="edit") === tableEditMode));
+  }
 }
 function syncTableMode(){
   document.getElementById("app").classList.toggle("table-mode", viewMode==="table" && listView.classList.contains("active"));
@@ -1208,7 +1227,7 @@ function syncTableMode(){
 function setViewMode(vm){ viewMode = (vm==="table") ? "table" : "card"; saveViewMode(); applyFilter(); }
 
 // ---- table rendering ----
-const T_COLS = ["到期日","類別","格局","案名","地址","樓層","售價","連結","承辦","電話","門市",""];
+const T_COLS = ["到期日","類別","格局","案名","地址","樓層","售價","連結","承辦","電話","門市"];
 function tchip(url, label, cls){
   const on = url && String(url).trim();
   return `<span class="tchip ${cls} ${on?'on':''}" data-label="${esc(label)}" data-url="${esc(url||'')}">${label}</span>`;
@@ -1221,9 +1240,9 @@ function trowHTML(d){
     : `<td class="tcat"><span class="tcat-badge" style="border-color:${color}">${esc(d.cat)}</span></td>`;
   const delCell = tableEditMode
     ? `<td class="tdel"><button data-act="del" title="刪除此列">${ICON_TRASH}</button></td>`
-    : `<td class="tdel"></td>`;
+    : ``;
   return `<tr data-id="${esc(d.id)}">`+
-    `<td><div class="tcell tdue" contenteditable="${ce}" data-field="due">${esc(d.due)}</div></td>`+
+    `<td><div class="tcell tdue ${dueStatus(d.due)}" contenteditable="${ce}" data-field="due">${esc(d.due)}</div></td>`+
     catCell +
     `<td><div class="tcell" contenteditable="${ce}" data-field="layout">${esc(d.layout)}</div></td>`+
     `<td><div class="tcell tname" contenteditable="${ce}" data-field="name" title="${esc(d.name)}">${esc(d.name)}</div></td>`+
@@ -1242,22 +1261,18 @@ function trowHTML(d){
 function renderTable(list){
   const oldScroll = tableWrap.querySelector(".table-scroll");
   const sTop = oldScroll ? oldScroll.scrollTop : 0, sLeft = oldScroll ? oldScroll.scrollLeft : 0;
-  const head = T_COLS.map(h => `<th>${h}</th>`).join("");
-  const cols = ["5.5%","6%","5%","12.5%","23%","5.5%","5.5%","11%","5.5%","7%","10%","3.5%"].map(w => `<col style="width:${w}">`).join("");
+  const T = tableEditMode ? T_COLS.concat("") : T_COLS;
+  const head = T.map(h => `<th>${h}</th>`).join("");
+  const cols = (tableEditMode
+    ? ["5.5%","6%","5%","12.5%","21.5%","5.5%","5.5%","11%","5.5%","8.5%","10%","3.5%"]
+    : ["5.5%","6%","5%","12.5%","21.5%","5.5%","5.5%","11%","5.5%","8.5%","13.5%"]
+  ).map(w => `<col style="width:${w}">`).join("");
   const rows = list.length ? list.map(trowHTML).join("")
-    : `<tr><td colspan="${T_COLS.length}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，切到「編輯模式」後點「＋ 新增一列」開始建立。"}</td></tr>`;
-  const modeBar =
-    `<div class="ttop"><div class="tmode" id="tMode" role="group" aria-label="表格模式">`+
-      `<button type="button" data-tm="edit" class="${tableEditMode?'on':''}" title="可直接修改資料">${ICON_EDIT}編輯模式</button>`+
-      `<button type="button" data-tm="view" class="${tableEditMode?'':'on'}" title="只瀏覽，點連結直接開啟">${ICON_EYE}正常模式</button>`+
-    `</div>`+
-    (tableEditMode ? `<button class="tadd" id="tAdd">＋ 新增一列</button>` : ``)+
-    `</div>`;
+    : `<tr><td colspan="${T.length}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，點右上「＋ 新增物件」開始建立。"}</td></tr>`;
   const bottom = tableEditMode
     ? `<div class="tbar"><span class="tcount">共 ${list.length} 筆　·　點格子即可修改，離開格子自動儲存並同步</span></div>`
     : `<div class="tbar"><span class="tcount">共 ${list.length} 筆　·　點欄位可複製內容，點 591／樂居／永慶 開啟連結</span></div>`;
   tableWrap.innerHTML =
-    modeBar +
     `<div class="table-scroll"><table class="ptable ${tableEditMode?'':'ro'}"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`+
     bottom;
   const ns = tableWrap.querySelector(".table-scroll");
@@ -1296,9 +1311,6 @@ tableWrap.addEventListener("keydown", e=>{
   } else if (e.key === "Escape"){ c.blur(); }
 });
 tableWrap.addEventListener("click", e=>{
-  // 編輯 / 正常 模式切換
-  const mb = e.target.closest("#tMode button");
-  if (mb){ setTableEditMode(mb.dataset.tm === "edit"); return; }
   // 類別下拉(僅編輯模式有觸發鈕)
   const trig = e.target.closest(".tcat-trigger");
   if (trig){ e.stopPropagation(); openCatMenu(trig); return; }
@@ -1330,8 +1342,6 @@ tableWrap.addEventListener("click", e=>{
     });
     return;
   }
-  // 新增列
-  if (e.target.closest("#tAdd")) addTableRow();
 });
 
 // ---- 正常模式:點格子複製內容 ----
@@ -1397,6 +1407,7 @@ catmenu.addEventListener("click", e=>{
   closeCatMenu();
 });
 function addTableRow(){
+  if (!tableEditMode){ tableEditMode = true; saveTEdit(); }
   const cat = currentCat || (cats[0] && cats[0].key) || "";
   const it = { id: uid(), name:"", cat, layout:"", floor:"", price:"", addr:"", due:"", agent:"", tel:"", store:"", url591:null, urlLeju:null, urlI:null, updatedAt: Date.now() };
   items.push(it); saveItems(); onLocalChange("data");
@@ -1459,6 +1470,10 @@ document.getElementById("coverVT").addEventListener("click", e=>{
 document.getElementById("listVT").addEventListener("click", e=>{
   const b = e.target.closest("button"); if (!b) return;
   setViewMode(b.dataset.vm);
+});
+document.getElementById("tModeHead").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if (!b) return;
+  setTableEditMode(b.dataset.tm === "edit");
 });
 
 function applyFilter(){
@@ -1699,7 +1714,9 @@ function deleteItem(id){
   });
 }
 
-document.getElementById("fab").addEventListener("click", () => openForm(null));
+document.getElementById("fab").addEventListener("click", () => {
+  if (viewMode === "table") addTableRow(); else openForm(null);
+});
 
 // ---- Card interaction: tap = edit, long-press = multi-select delete ----
 const fabEl = document.getElementById("fab");
