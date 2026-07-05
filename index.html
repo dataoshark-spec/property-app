@@ -250,6 +250,9 @@
     transition:background .15s ease,border-color .15s ease;}
   .s-btn-danger{color:var(--danger);}
   .s-btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;text-align:center;}
+  /* Google 檔案選擇器開啟時:鎖住背景捲動、並把後方蓋成不透明白底,避免看到雜亂內容 */
+  html.picker-open, body.picker-open{overflow:hidden !important;}
+  .picker-dialog-bg{background-color:#fff !important;opacity:1 !important;}
   @media (hover:hover){
     .s-btn:hover{background:var(--surface-2);border-color:var(--border-2);}
     .s-btn-danger:hover{background:var(--danger-tint);border-color:var(--danger-tint-bd);}
@@ -1000,7 +1003,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.05 Z";
+const APP_VERSION = "2026.07.06 A";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2327,6 +2330,8 @@ let syncConnected = false, syncEmail = null;
   }
   const PICKER_KEY = "AIzaSyB25vpOEfkBH7o3ERwhOluIGUp8EW0Zim4";
   let pickerLoaded = false;
+  function lockBg(){ document.documentElement.classList.add("picker-open"); document.body.classList.add("picker-open"); }
+  function unlockBg(){ document.documentElement.classList.remove("picker-open"); document.body.classList.remove("picker-open"); }
   function loadPicker(){
     return new Promise(function(resolve, reject){
       if (pickerLoaded && window.google && google.picker){ resolve(); return; }
@@ -2336,15 +2341,13 @@ let syncConnected = false, syncEmail = null;
   }
   function pickFolder(token){
     return new Promise(function(resolve){
-      const view = new google.picker.DocsView(google.picker.ViewId.DOCS)
-        .setParent("root")
-        .setIncludeFolders(true)
-        .setSelectFolderEnabled(true)
-        .setMimeTypes("application/vnd.google-apps.folder");
+      lockBg();
       new google.picker.PickerBuilder()
         .setDeveloperKey(PICKER_KEY)
         .setOAuthToken(token)
-        .addView(view)
+        .addView(new google.picker.DocsView(google.picker.ViewId.DOCS)
+          .setParent("root").setIncludeFolders(true).setSelectFolderEnabled(true)
+          .setMimeTypes("application/vnd.google-apps.folder"))
         .setLocale("zh-TW")
         .setSize(window.innerWidth, window.innerHeight)
         .setTitle("選擇備份要存放的資料夾")
@@ -2352,9 +2355,9 @@ let syncConnected = false, syncEmail = null;
           const act = data[google.picker.Response.ACTION];
           if (act === google.picker.Action.PICKED){
             const doc = data[google.picker.Response.DOCUMENTS][0];
-            resolve({ id: doc[google.picker.Document.ID], name: doc[google.picker.Document.NAME] });
+            unlockBg(); resolve({ id: doc[google.picker.Document.ID], name: doc[google.picker.Document.NAME] });
           } else if (act === google.picker.Action.CANCEL){
-            resolve(null);
+            unlockBg(); resolve(null);
           }
         })
         .build()
@@ -2381,14 +2384,12 @@ let syncConnected = false, syncEmail = null;
   }
   function pickBackupFile(token){
     return new Promise(function(resolve){
-      const view = new google.picker.DocsView(google.picker.ViewId.DOCS)
-        .setParent("root")
-        .setIncludeFolders(true)
-        .setMimeTypes("application/json");
+      lockBg();
       new google.picker.PickerBuilder()
         .setDeveloperKey(PICKER_KEY)
         .setOAuthToken(token)
-        .addView(view)
+        .addView(new google.picker.DocsView(google.picker.ViewId.DOCS)
+          .setParent("root").setIncludeFolders(true).setMimeTypes("application/json"))
         .setLocale("zh-TW")
         .setSize(window.innerWidth, window.innerHeight)
         .setTitle("選擇要匯入的備份檔(.json)")
@@ -2396,8 +2397,8 @@ let syncConnected = false, syncEmail = null;
           const act = data[google.picker.Response.ACTION];
           if (act === google.picker.Action.PICKED){
             const doc = data[google.picker.Response.DOCUMENTS][0];
-            resolve({ id: doc[google.picker.Document.ID], name: doc[google.picker.Document.NAME] });
-          } else if (act === google.picker.Action.CANCEL){ resolve(null); }
+            unlockBg(); resolve({ id: doc[google.picker.Document.ID], name: doc[google.picker.Document.NAME] });
+          } else if (act === google.picker.Action.CANCEL){ unlockBg(); resolve(null); }
         })
         .build()
         .setVisible(true);
@@ -2513,7 +2514,7 @@ let syncConnected = false, syncEmail = null;
     led.className = "sync-led " + (inFlight ? "busy" : ((syncConnected && !needReauth) ? "ok" : "warn"));
   }
   window.refreshLed = refreshLed;
-  function hhmm(){ try { return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); } catch(e){ return ""; } }
+  function hhmm(){ const d=new Date(); const p=n=>String(n).padStart(2,"0"); return p(d.getHours())+":"+p(d.getMinutes()); }
   function fmtSyncTime(ts){ const d=new Date(ts); const p=n=>String(n).padStart(2,"0"); return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); }
   window.renderLastSync = function(){ const el=document.getElementById("gLastSync"); if(!el) return; let ts=0; try{ ts=parseInt(localStorage.getItem("property_app_lastsync_v1")||"0",10);}catch(e){} el.textContent = ts ? fmtSyncTime(ts) : "尚未同步"; };
   window.renderSyncCard = function(){
