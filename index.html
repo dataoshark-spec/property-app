@@ -110,9 +110,8 @@
   [data-theme="light"] .all-btn:hover{color:var(--ink);}
   [data-theme="light"] .cover-gear{background:var(--card);border-color:var(--line);color:var(--ink-soft);}
   [data-theme="light"] .cover-gear:hover{background:var(--surface-2);color:var(--ink);}
-  [data-theme="light"] .cover-vt{background:var(--card);border-color:var(--line);}
-  [data-theme="light"] .cover-vt button{color:var(--ink-soft);}
-  [data-theme="light"] .cover-vt button.on{background:var(--accent);color:#fff;}
+  [data-theme="light"] .cover-vt button{background:var(--card);border-color:var(--line);color:var(--ink);box-shadow:0 2px 8px rgba(22,34,42,.07);}
+  [data-theme="light"] .cover-vt button:active{background:var(--surface-2);}
 
   /* theme picker */
   .theme-picker{display:flex;gap:8px;margin-top:14px;}
@@ -589,9 +588,11 @@
   .view-toggle button{font-family:inherit;font-weight:700;cursor:pointer;border:none;background:none;border-radius:8px;
     display:inline-flex;align-items:center;gap:6px;transition:all .15s ease;}
   .vt-ic{width:16px;height:16px;flex:none;}
-  .cover-vt{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);margin:28px 0 14px;width:100%;flex:none;}
-  .cover-vt button{flex:1;justify-content:center;color:rgba(243,241,233,.72);font-size:.95rem;padding:11px 10px;}
-  .cover-vt button.on{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(15,122,95,.4);}
+  /* 首頁「卡片檢視 / 表格檢視」:兩顆獨立按鈕(非切換,點了直接進對應檢視) */
+  .cover-vt{background:none;border:none;padding:0;margin:28px 0 14px;gap:10px;width:100%;flex:none;}
+  .cover-vt button{flex:1;justify-content:center;gap:8px;font-size:.95rem;padding:13px 10px;border-radius:12px;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(243,241,233,.95);}
+  .cover-vt button:active{background:rgba(255,255,255,.2);transform:scale(.99);}
   .ctrl-right{display:flex;align-items:center;gap:8px;}
   .list-vt{background:var(--surface-2);border:1px solid var(--line);gap:2px;}
   .list-vt button{color:var(--ink-soft);height:31px;min-width:46px;padding:0 12px;justify-content:center;}
@@ -807,13 +808,13 @@
           <div class="cselect-menu" id="sortMenu" role="listbox"></div>
         </div>
         <div class="ctrl-right">
-          <div class="density mode-head" id="modeHead" role="group" aria-label="編輯／正常模式">
-            <button type="button" data-m="edit" title="可修改資料">編輯</button>
-            <button type="button" data-m="view" title="只瀏覽，點內容可複製">正常</button>
-          </div>
           <div class="view-toggle list-vt" id="listVT" role="group" aria-label="檢視模式">
             <button type="button" data-vm="card" title="卡片檢視"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><rect x="6.5" y="8.2" width="4.4" height="4.4" rx="1" fill="currentColor" stroke="none"/><line x1="13.2" y1="9.4" x2="17.5" y2="9.4"/><line x1="13.2" y1="12.2" x2="16.3" y2="12.2"/></svg></button>
             <button type="button" data-vm="table" title="表格檢視"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><line x1="3.5" y1="9.2" x2="20.5" y2="9.2"/><line x1="3.5" y1="14.4" x2="20.5" y2="14.4"/><line x1="9.5" y1="9.2" x2="9.5" y2="19.5"/><line x1="14.8" y1="9.2" x2="14.8" y2="19.5"/></svg></button>
+          </div>
+          <div class="density mode-head" id="modeHead" role="group" aria-label="編輯／正常模式">
+            <button type="button" data-m="edit" title="可修改資料">編輯</button>
+            <button type="button" data-m="view" title="只瀏覽，點內容可複製">正常</button>
           </div>
         </div>
       </div>
@@ -1023,7 +1024,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.06 M";
+const APP_VERSION = "2026.07.06 N";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1267,7 +1268,7 @@ const ICON_CHEV  = '<svg class="tcat-chev" viewBox="0 0 24 24" fill="none" strok
 const ICON_TRASH = '<svg class="tdi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
 
 function syncToggleUI(){
-  document.querySelectorAll("#coverVT button, #listVT button").forEach(b => b.classList.toggle("on", b.dataset.vm === viewMode));
+  document.querySelectorAll("#listVT button").forEach(b => b.classList.toggle("on", b.dataset.vm === viewMode));
   const mh = document.getElementById("modeHead");
   if (mh){
     mh.querySelectorAll("button").forEach(b => b.classList.toggle("active", (b.dataset.m==="edit") === editMode));
@@ -1536,11 +1537,14 @@ lpOpenBtn.addEventListener("click", ()=>{ const u=lpInput.value.trim(); if (u) w
 // ---- toggle handlers ----
 document.getElementById("coverVT").addEventListener("click", e=>{
   const b = e.target.closest("button"); if (!b) return;
-  setViewMode(b.dataset.vm); openList("");
+  viewMode = (b.dataset.vm === "table") ? "table" : "card"; saveViewMode();
+  openList("");                       // 進入「全部」;openList 內會一律恢復正常模式
 });
 document.getElementById("listVT").addEventListener("click", e=>{
   const b = e.target.closest("button"); if (!b) return;
-  setViewMode(b.dataset.vm);
+  const vm = (b.dataset.vm === "table") ? "table" : "card";
+  if (vm !== viewMode){ editMode = false; saveEditMode(); }   // 切換檢視一律恢復正常模式
+  setViewMode(vm);
 });
 document.getElementById("modeHead").addEventListener("click", e=>{
   const b = e.target.closest("button"); if (!b) return;
@@ -1580,6 +1584,7 @@ function updateLH(){
 window.addEventListener("resize", function(){ requestAnimationFrame(updateLH); });
 function openList(cat){
   exitSelectMode();
+  editMode = false; saveEditMode();     // 進入列表一律預設「正常」模式;要編輯需先選檢視再點編輯
   currentCat = cat || "";
   searchEl.value = "";
   applyFilter();
@@ -1600,10 +1605,10 @@ function showCover(){
 
 document.getElementById("cats").addEventListener("click", e => {
   const btn = e.target.closest(".cat-btn");
-  if (btn) openList(btn.dataset.cat);
+  if (btn){ viewMode = "card"; saveViewMode(); openList(btn.dataset.cat); }   // 首頁點類別一律進卡片檢視
 });
-document.getElementById("allBtn").addEventListener("click", () => openList(""));
-document.getElementById("coverSearch").addEventListener("click", function(){ openList(""); searchEl.focus(); });
+document.getElementById("allBtn").addEventListener("click", () => { viewMode = "card"; saveViewMode(); openList(""); });
+document.getElementById("coverSearch").addEventListener("click", function(){ viewMode = "card"; saveViewMode(); openList(""); searchEl.focus(); });
 document.getElementById("tabs").addEventListener("click", e => {
   const btn = e.target.closest(".tab");
   if (btn) { exitSelectMode(); currentCat = btn.dataset.cat; applyFilter(); }
@@ -1646,9 +1651,19 @@ function setDensity(d){
   saveDensity();
   applyFilter();
 }
-function toggleDensity(){
+function toggleDensity(anchorId){
   const next = (density === "compact") ? "normal" : "compact";
-  setDensity(next);
+  // 以長按的那張卡片為錨點:記住它切換前在畫面上的位置,切換後捲回同一位置,使用者不用重找
+  const before = anchorId ? cardsEl.querySelector(`[data-id="${anchorId}"]`) : null;
+  const beforeTop = before ? before.getBoundingClientRect().top : null;
+  setDensity(next);   // 會重繪卡片(緊湊/正常高度不同)
+  if (anchorId && beforeTop != null){
+    const after = cardsEl.querySelector(`[data-id="${anchorId}"]`);
+    if (after){
+      const delta = after.getBoundingClientRect().top - beforeTop;
+      if (delta) window.scrollBy(0, delta);
+    }
+  }
   onLocalChange("settings");
   toast(next === "compact" ? "已切換為緊湊顯示" : "已切換為正常顯示");
 }
@@ -1883,8 +1898,8 @@ cardsEl.addEventListener("pointerdown", e => {
       if (!selectMode) enterSelectMode();
       toggleSelect(pressId);
     } else {
-      // 正常模式:長按切換 正常 ↔ 緊湊
-      toggleDensity();
+      // 正常模式:長按切換 正常 ↔ 緊湊(以這張卡片為錨點,切換後停在原位)
+      toggleDensity(pressId);
     }
   }, 480);
 });
