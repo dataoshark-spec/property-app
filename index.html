@@ -398,6 +398,25 @@
   a.chip:active{background:var(--accent-tint);}
   .chip .ext{font-size:.72em;opacity:.7;}
 
+  /* 卡片「正常」模式:點欄位複製內容(柔和綠色高亮、限制在欄框內、不外突不碰鄰字 + toast) */
+  .card [data-copy]{border-radius:6px;}
+  .card .cv{display:inline-block;border-radius:6px;}     /* 案名/地址:內層文字容器,高亮只貼住文字、不拉滿版 */
+  .agent-info [data-copy]{display:inline-block;}
+  .cards.cmode-view [data-copy]{cursor:pointer;}
+  /* hover 提示只在真的有滑鼠的裝置顯示;手機不套用,避免點擊後 hover 樣式黏住不消失 */
+  @media (hover:hover){
+    .cards.cmode-view [data-copy]:hover{box-shadow:inset 0 0 0 100px rgba(15,122,95,.07);}
+  }
+  .cards.cmode-view .card,.cards.cmode-view .compact-card{cursor:default;}
+  .card [data-copy].copied{animation:cardCopiedFlash .7s ease;}
+  @keyframes cardCopiedFlash{
+    0%,45%{box-shadow:inset 0 0 0 100px rgba(15,122,95,.18);}
+    100%{box-shadow:inset 0 0 0 100px rgba(15,122,95,0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .card [data-copy].copied{animation:none;box-shadow:inset 0 0 0 100px rgba(15,122,95,.16);}
+  }
+
   .empty{text-align:center;color:var(--ink-soft);padding:60px 20px;font-size:.95rem;line-height:1.7;}
   .note{font-size:.76rem;color:var(--text-faint);text-align:center;padding:6px 24px 0;line-height:1.6;}
 
@@ -788,13 +807,9 @@
           <div class="cselect-menu" id="sortMenu" role="listbox"></div>
         </div>
         <div class="ctrl-right">
-          <div class="density" id="density" role="group" aria-label="卡片密度">
-            <button type="button" data-d="normal">正常</button>
-            <button type="button" data-d="compact">緊湊</button>
-          </div>
-          <div class="density tmode-head" id="tModeHead" role="group" aria-label="編輯／正常模式" style="display:none">
-            <button type="button" data-tm="edit" title="可直接修改資料">編輯</button>
-            <button type="button" data-tm="view" title="只瀏覽，點連結直接開啟">正常</button>
+          <div class="density mode-head" id="modeHead" role="group" aria-label="編輯／正常模式">
+            <button type="button" data-m="edit" title="可修改資料">編輯</button>
+            <button type="button" data-m="view" title="只瀏覽，點內容可複製">正常</button>
           </div>
           <div class="view-toggle list-vt" id="listVT" role="group" aria-label="檢視模式">
             <button type="button" data-vm="card" title="卡片檢視"><svg class="vt-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><rect x="6.5" y="8.2" width="4.4" height="4.4" rx="1" fill="currentColor" stroke="none"/><line x1="13.2" y1="9.4" x2="17.5" y2="9.4"/><line x1="13.2" y1="12.2" x2="16.3" y2="12.2"/></svg></button>
@@ -1008,7 +1023,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.06 J";
+const APP_VERSION = "2026.07.06 M";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1052,12 +1067,12 @@ function cardHTML(d){
     <div class="stripe" style="background:${color}"></div>
     <div class="body">
       <div class="card-head">
-        <h3 class="name">${esc(d.name)}</h3>
-        <span class="price-tag">${money(d.price)}<small>萬</small></span>
+        <h3 class="name"><span class="cv" data-copy="${esc(d.name)}">${esc(d.name)}</span></h3>
+        <span class="price-tag" data-copy="${esc(d.price)}">${money(d.price)}<small>萬</small></span>
       </div>
       <div class="sub-row">
         <span class="badge" style="--bc:${color}">${esc(d.cat)}</span>
-        <span class="addr">${esc(d.addr)}</span>
+        <span class="addr" data-copy="${esc(d.addr)}">${esc(d.addr)}</span>
       </div>
     </div>
   </article>`;
@@ -1067,21 +1082,21 @@ function cardHTML(d){
     <div class="stripe" style="background:${color}"></div>
     <div class="body">
       <div class="card-head">
-        <h3 class="name">${esc(d.name)}</h3>
+        <h3 class="name"><span class="cv" data-copy="${esc(d.name)}">${esc(d.name)}</span></h3>
         <span class="badge" style="--bc:${color}">${esc(d.cat)}</span>
       </div>
-      <div class="addr">${esc(d.addr)}</div>
+      <div class="addr"><span class="cv" data-copy="${esc(d.addr)}">${esc(d.addr)}</span></div>
       <div class="price">
-        <span class="price-value"><span class="num">${money(d.price)}</span><span class="unit">萬</span></span>
+        <span class="price-value" data-copy="${esc(d.price)}"><span class="num">${money(d.price)}</span><span class="unit">萬</span></span>
         <div class="links">${linkChip(d.url591, "591")}${linkChip(d.urlLeju, "樂居")}${linkChip(d.urlI, "永慶")}</div>
       </div>
       <div class="meta">
-        <span>格局 ${esc(d.layout)}</span>
-        <span>樓層 ${esc(d.floor)}</span>
-        <span class="due ${dueStatus(d.due)}">到期 ${esc(d.due)}</span>
+        <span data-copy="${esc(d.layout)}">格局 ${esc(d.layout)}</span>
+        <span data-copy="${esc(d.floor)}">樓層 ${esc(d.floor)}</span>
+        <span class="due ${dueStatus(d.due)}" data-copy="${esc(d.due)}">到期 ${esc(d.due)}</span>
       </div>
       <div class="agent">
-        <div class="agent-info">承辦 <b>${esc(d.agent)}</b><br>${esc(d.store)}</div>
+        <div class="agent-info">承辦 <b data-copy="${esc(d.agent)}">${esc(d.agent)}</b><br><span data-copy="${esc(d.store)}">${esc(d.store)}</span></div>
         ${d.tel ? `<a class="tel" href="tel:${esc(d.tel)}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.53 15.53 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.36 11.36 0 0 0 3.57.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>${esc(d.tel)}</a>` : ``}
       </div>
     </div>
@@ -1233,10 +1248,18 @@ function loadViewMode(){ if (storageOK){ try { const v = localStorage.getItem("p
 function saveViewMode(){ if (storageOK){ try { localStorage.setItem("property_app_viewmode_v1", viewMode); } catch(e){} } }
 let viewMode = loadViewMode();
 
-// table 內的「編輯 / 正常」模式
-function loadTEdit(){ if (storageOK){ try { const v = localStorage.getItem("property_app_tedit_v1"); if (v==="0") return false; if (v==="1") return true; } catch(e){} } return true; }
-function saveTEdit(){ if (storageOK){ try { localStorage.setItem("property_app_tedit_v1", tableEditMode ? "1" : "0"); } catch(e){} } }
-let tableEditMode = loadTEdit();
+// 卡片與表格共用的「編輯 / 正常」模式(單一狀態,兩檢視一致)
+function loadEditMode(){
+  if (storageOK){ try {
+    const v = localStorage.getItem("property_app_editmode_v1");
+    if (v==="0") return false; if (v==="1") return true;
+    const t = localStorage.getItem("property_app_tedit_v1");   // 相容舊的表格模式設定
+    if (t==="0") return false; if (t==="1") return true;
+  } catch(e){} }
+  return true;
+}
+function saveEditMode(){ if (storageOK){ try { localStorage.setItem("property_app_editmode_v1", editMode ? "1" : "0"); } catch(e){} } }
+let editMode = loadEditMode();
 
 const ICON_EDIT  = '<svg class="tmi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 const ICON_EYE   = '<svg class="tmi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -1245,12 +1268,12 @@ const ICON_TRASH = '<svg class="tdi" viewBox="0 0 24 24" fill="none" stroke="cur
 
 function syncToggleUI(){
   document.querySelectorAll("#coverVT button, #listVT button").forEach(b => b.classList.toggle("on", b.dataset.vm === viewMode));
-  if (typeof densityEl !== "undefined" && densityEl) densityEl.style.display = (viewMode==="table") ? "none" : "";
-  const tmh = document.getElementById("tModeHead");
-  if (tmh){
-    tmh.style.display = (viewMode==="table") ? "" : "none";
-    tmh.querySelectorAll("button").forEach(b => b.classList.toggle("active", (b.dataset.tm==="edit") === tableEditMode));
+  const mh = document.getElementById("modeHead");
+  if (mh){
+    mh.querySelectorAll("button").forEach(b => b.classList.toggle("active", (b.dataset.m==="edit") === editMode));
   }
+  const ce = document.getElementById("cards");
+  if (ce) ce.classList.toggle("cmode-view", !editMode);
 }
 function syncTableMode(){
   document.getElementById("app").classList.toggle("table-mode", viewMode==="table" && listView.classList.contains("active"));
@@ -1267,11 +1290,11 @@ function tchip(url, label, cls){
 }
 function trowHTML(d){
   const color = catColor(d.cat);
-  const ce = tableEditMode ? "true" : "false";
-  const catCell = tableEditMode
+  const ce = editMode ? "true" : "false";
+  const catCell = editMode
     ? `<td class="tcat"><button type="button" class="tcat-trigger" data-field="cat" style="border-color:${color}"><span class="tcat-label">${esc(d.cat)}</span></button></td>`
     : `<td class="tcat"><span class="tcat-badge" style="border-color:${color}">${esc(d.cat)}</span></td>`;
-  const delCell = tableEditMode
+  const delCell = editMode
     ? `<td class="tdel"><button data-act="del" title="刪除此列">${ICON_TRASH}</button></td>`
     : ``;
   return `<tr data-id="${esc(d.id)}">`+
@@ -1294,9 +1317,9 @@ function trowHTML(d){
 function renderTable(list){
   const oldScroll = tableWrap.querySelector(".table-scroll");
   const sTop = oldScroll ? oldScroll.scrollTop : 0, sLeft = oldScroll ? oldScroll.scrollLeft : 0;
-  const T = tableEditMode ? T_COLS.concat("") : T_COLS;
+  const T = editMode ? T_COLS.concat("") : T_COLS;
   const head = T.map(h => `<th>${h}</th>`).join("");
-  const cols = (tableEditMode
+  const cols = (editMode
     ? ["5.5%","6%","5%","12.5%","21.5%","5.5%","5.5%","11%","5.5%","8.5%","10%","3.5%"]
     : ["5.5%","6%","5%","12.5%","21.5%","5.5%","5.5%","11%","5.5%","8.5%","13.5%"]
   ).map(w => `<col style="width:${w}">`).join("");
@@ -1304,7 +1327,7 @@ function renderTable(list){
     : `<tr><td colspan="${T.length}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，點右上「＋ 新增物件」開始建立。"}</td></tr>`;
   const bottom = "";
   tableWrap.innerHTML =
-    `<div class="table-scroll"><table class="ptable ${tableEditMode?'':'ro'}"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`+
+    `<div class="table-scroll"><table class="ptable ${editMode?'':'ro'}"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`+
     bottom;
   const ns = tableWrap.querySelector(".table-scroll");
   if (ns){ ns.scrollTop = sTop; ns.scrollLeft = sLeft; }
@@ -1348,7 +1371,7 @@ tableWrap.addEventListener("click", e=>{
   // 連結:編輯模式→開編輯框;正常模式→直接開啟
   const chip = e.target.closest(".tchip");
   if (chip){
-    if (tableEditMode){ e.stopPropagation(); openLinkPop(chip); }
+    if (editMode){ e.stopPropagation(); openLinkPop(chip); }
     else {
       const u = (chip.dataset.url || "").trim();
       if (u) window.open(u, "_blank", "noopener");
@@ -1357,7 +1380,7 @@ tableWrap.addEventListener("click", e=>{
     return;
   }
   // 正常模式:點欄位自動複製內容(類別與連結除外)
-  if (!tableEditMode){
+  if (!editMode){
     const cell = e.target.closest(".tcell");
     if (cell){ copyCellText(cell); return; }
   }
@@ -1400,11 +1423,26 @@ function legacyCopy(text){
   } catch (e) { return false; }
 }
 
-// ---- 表格模式切換 ----
-function setTableEditMode(on){
-  tableEditMode = !!on; saveTEdit();
-  closeCatMenu(); closeLinkPop();
-  applyFilter();
+// ---- 卡片正常模式:點欄位複製內容(綠閃 + toast,重用 legacyCopy/toast) ----
+function copyFieldText(el){
+  const text = (el.dataset.copy || "").replace(/\s+/g, " ").trim();
+  if (!text) return;
+  const ok = () => {
+    el.classList.remove("copied"); void el.offsetWidth; el.classList.add("copied");
+    setTimeout(() => el.classList.remove("copied"), 700);
+    toast("已複製：" + text);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok).catch(() => { if (legacyCopy(text)) ok(); });
+  } else if (legacyCopy(text)) { ok(); }
+}
+
+// ---- 編輯 / 正常 模式切換(卡片與表格共用單一狀態) ----
+function setEditMode(on){
+  editMode = !!on; saveEditMode();
+  if (!editMode) exitSelectMode();       // 離開編輯模式時取消卡片多選
+  closeCatMenu(); closeLinkPop();        // 收合表格的類別/連結浮層
+  applyFilter();                          // 重繪當前檢視並更新切換鈕狀態
 }
 
 // ---- 類別下拉選單 ----
@@ -1439,7 +1477,7 @@ catmenu.addEventListener("click", e=>{
   closeCatMenu();
 });
 function addTableRow(){
-  if (!tableEditMode){ tableEditMode = true; saveTEdit(); }
+  if (!editMode){ editMode = true; saveEditMode(); }
   const cat = currentCat || (cats[0] && cats[0].key) || "";
   const it = { id: uid(), name:"", cat, layout:"", floor:"", price:"", addr:"", due:"", agent:"", tel:"", store:"", url591:null, urlLeju:null, urlI:null, updatedAt: Date.now() };
   items.push(it); saveItems(); onLocalChange("data");
@@ -1504,9 +1542,9 @@ document.getElementById("listVT").addEventListener("click", e=>{
   const b = e.target.closest("button"); if (!b) return;
   setViewMode(b.dataset.vm);
 });
-document.getElementById("tModeHead").addEventListener("click", e=>{
+document.getElementById("modeHead").addEventListener("click", e=>{
   const b = e.target.closest("button"); if (!b) return;
-  setTableEditMode(b.dataset.tm === "edit");
+  setEditMode(b.dataset.m === "edit");
 });
 
 function applyFilter(){
@@ -1597,8 +1635,7 @@ document.getElementById("backBtn").addEventListener("click", showCover);
 tableWrap.addEventListener("focusin", function(){ if (window.refreshLed) window.refreshLed(); });
 tableWrap.addEventListener("focusout", function(){ setTimeout(function(){ if (window.refreshLed) window.refreshLed(); }, 0); });
 
-// ---- Card density (正常 / 緊湊) ----
-const densityEl = document.getElementById("density");
+// ---- Card density (正常 / 緊湊):不再有獨立按鈕,藏在卡片「正常」模式的長按裡 ----
 function loadDensity(){ if (storageOK){ try { return localStorage.getItem("property_app_density_v1") || "normal"; } catch (e) {} } return "normal"; }
 function saveDensity(){ if (storageOK){ try { localStorage.setItem("property_app_density_v1", density); } catch (e) {} } }
 let density = loadDensity();
@@ -1606,14 +1643,15 @@ dueSoonDays = loadDueDays();
 function setDensity(d){
   density = (d === "compact") ? "compact" : "normal";
   cardsEl.classList.toggle("compact", density === "compact");
-  densityEl.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.d === density));
   saveDensity();
   applyFilter();
 }
-densityEl.addEventListener("click", e => {
-  const b = e.target.closest("button");
-  if (b){ setDensity(b.dataset.d); onLocalChange("settings"); }
-});
+function toggleDensity(){
+  const next = (density === "compact") ? "normal" : "compact";
+  setDensity(next);
+  onLocalChange("settings");
+  toast(next === "compact" ? "已切換為緊湊顯示" : "已切換為正常顯示");
+}
 setDensity(density);
 
 // ---- Sort dropdown ----
@@ -1840,8 +1878,14 @@ cardsEl.addEventListener("pointerdown", e => {
   pressTimer = setTimeout(() => {
     longPressed = true;
     if (navigator.vibrate){ try { navigator.vibrate(15); } catch (err){} }
-    if (!selectMode) enterSelectMode();
-    toggleSelect(pressId);
+    if (editMode || selectMode){
+      // 編輯模式:長按進多選批量刪除
+      if (!selectMode) enterSelectMode();
+      toggleSelect(pressId);
+    } else {
+      // 正常模式:長按切換 正常 ↔ 緊湊
+      toggleDensity();
+    }
   }, 480);
 });
 cardsEl.addEventListener("pointermove", e => {
@@ -1862,8 +1906,13 @@ cardsEl.addEventListener("click", e => {
     toggleSelect(id);
     return;
   }
-  if (isLink(e.target)) return;
-  openForm(id);
+  if (isLink(e.target)) return;   // 電話撥號 / 連結開啟:兩模式皆維持原生動作
+  if (editMode){
+    openForm(id);                 // 編輯模式:點卡片進編輯表單
+  } else {
+    const cp = e.target.closest("[data-copy]");   // 正常模式:點欄位複製內容
+    if (cp) copyFieldText(cp);
+  }
 });
 
 selCancel.addEventListener("click", exitSelectMode);
