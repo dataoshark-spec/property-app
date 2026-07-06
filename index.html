@@ -555,10 +555,32 @@
   .cat-item .cat-drag:active{cursor:grabbing;}
   .cat-item.dragging{transition:none;background:var(--card);border-color:var(--border-2);position:relative;z-index:5;
     box-shadow:0 10px 24px rgba(22,34,42,.16);}
-  .cat-item .cat-color{flex:none;width:34px;height:34px;padding:0;border:1px solid var(--line);border-radius:8px;
-    background:none;cursor:pointer;}
-  .cat-item .cat-color::-webkit-color-swatch-wrapper{padding:2px;}
-  .cat-item .cat-color::-webkit-color-swatch{border:none;border-radius:6px;}
+  .cat-item .cat-color{flex:none;width:34px;height:34px;padding:4px;border:1px solid var(--line);border-radius:9px;
+    background:var(--card);cursor:pointer;}
+  .cat-item .cat-color::before{content:"";display:block;width:100%;height:100%;border-radius:5px;background:var(--cc,#8494A0);}
+  /* 類別調色:進階調色盤(色域拖曳 + 色相/深淺滑桿(%) + 顏色編號 + 快選色票) */
+  .palette-pop{position:fixed;z-index:340;display:none;width:280px;padding:14px;
+    background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 40px rgba(15,30,40,.26);}
+  .palette-pop.open{display:block;}
+  .cpk-sv{position:relative;width:100%;height:150px;border-radius:10px;border:1px solid var(--line);cursor:crosshair;touch-action:none;
+    background:linear-gradient(to top,#000,rgba(0,0,0,0)),linear-gradient(to right,#fff,var(--cpk-hue,#f00));}
+  .cpk-knob{position:absolute;width:16px;height:16px;border-radius:50%;border:2.5px solid #fff;
+    box-shadow:0 0 0 1px rgba(0,0,0,.4),0 1px 4px rgba(0,0,0,.35);transform:translate(-50%,-50%);pointer-events:none;}
+  .cpk-slider{position:relative;height:16px;border-radius:8px;border:1px solid var(--line);touch-action:none;cursor:pointer;}
+  .cpk-hue{margin-top:12px;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);}
+  .cpk-thumb{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;background:#fff;
+    border:1px solid rgba(0,0,0,.25);box-shadow:0 1px 4px rgba(0,0,0,.3);transform:translate(-50%,-50%);pointer-events:none;}
+  .cpk-row{display:flex;align-items:center;gap:10px;margin-top:12px;}
+  .cpk-row .cpk-slider{flex:1;}
+  .cpk-pct{flex:none;font-size:.78rem;font-weight:700;color:var(--ink-soft);min-width:66px;text-align:right;font-variant-numeric:tabular-nums;}
+  .cpk-prev{flex:none;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--cpk-cur,#8494A0);}
+  .cpk-hex{flex:1;min-width:0;font-family:inherit;font-size:.98rem;font-weight:700;letter-spacing:.04em;color:var(--ink);
+    background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;text-transform:uppercase;}
+  .cpk-hex:focus{outline:none;border-color:var(--accent);}
+  .cpk-presets{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-top:12px;}
+  .cpk-presets button{aspect-ratio:1;border-radius:6px;border:1px solid rgba(0,0,0,.10);background:var(--pc);cursor:pointer;padding:0;}
+  .cpk-presets button:active{transform:scale(.9);}
+  [data-theme="dark"] .cpk-presets button{border-color:rgba(255,255,255,.16);}
   .cat-item .cat-name{flex:1;min-width:0;font-family:inherit;font-size:1rem;font-weight:600;color:var(--ink);
     background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 11px;outline:none;transition:border-color .15s ease;}
   .cat-item .cat-name:focus{border-color:var(--accent);}
@@ -1041,7 +1063,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.06 R";
+const APP_VERSION = "2026.07.06 T";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2078,12 +2100,14 @@ function openSettings(){
   settingsView.classList.add("active");
   cover.style.display = "none";
   listView.classList.remove("active");
+  syncTableMode();   // 離開表格頁就取消寬版,設定頁維持一般寬度
   window.scrollTo(0,0);
 }
 function closeSettings(){
   settingsView.classList.remove("active");
   cover.style.display = "flex";
   renderCover();
+  syncTableMode();   // 回首頁也維持一般寬度
   window.scrollTo(0,0);
 }
 document.getElementById("coverGear").addEventListener("click", e => { e.stopPropagation(); openSettings(); });
@@ -2139,14 +2163,141 @@ function renderCatList(){
   catListEl.innerHTML = cats.map(c => `
     <div class="cat-item" data-key="${esc(c.key)}">
       <span class="cat-drag" aria-label="拖曳排序" title="拖曳排序"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"/><circle cx="10" cy="4" r="1.25"/><circle cx="6" cy="8" r="1.25"/><circle cx="10" cy="8" r="1.25"/><circle cx="6" cy="12" r="1.25"/><circle cx="10" cy="12" r="1.25"/></g></svg></span>
-      <input type="color" class="cat-color" value="${c.color}" aria-label="顏色">
+      <button type="button" class="cat-color" data-color="${c.color}" style="--cc:${c.color}" aria-label="選擇顏色" title="選擇顏色"></button>
       <input type="text" class="cat-name" value="${esc(c.key)}" aria-label="類別名稱">
       <span class="cat-count">${catCount(c.key)} 筆</span>
       <button class="cat-del" aria-label="刪除類別">🗑</button>
     </div>`).join("");
 }
 function openCatManager(){ renderCatList(); catNewEl.value = ""; catBg.classList.add("open"); }
-function closeCatManager(){ catBg.classList.remove("open"); }
+function closeCatManager(){ closePalette(); catBg.classList.remove("open"); }
+
+// ---- 類別調色:進階調色盤(色域拖曳 + 色相/深淺滑桿 + 顏色編號 + 快選色票) ----
+const PALETTE = ["#C0341A","#D6452A","#E0662E","#E09A1B","#B5A216",
+                 "#7FA02F","#3E8E5A","#0F7A5F","#14776F","#0E7490",
+                 "#075E83","#2F6FB8","#274FAE","#6D4FC4","#8E44AD",
+                 "#A63D8F","#C2447A","#8A5A3B","#5B6B76","#8494A0"];
+function hsvToRgb(h,s,v){ s/=100; v/=100;
+  const c=v*s, x=c*(1-Math.abs(((h/60)%2)-1)), m=v-c;
+  let r=0,g=0,b=0;
+  if (h<60){r=c;g=x;} else if (h<120){r=x;g=c;} else if (h<180){g=c;b=x;}
+  else if (h<240){g=x;b=c;} else if (h<300){r=x;b=c;} else {r=c;b=x;}
+  return [Math.round((r+m)*255), Math.round((g+m)*255), Math.round((b+m)*255)];
+}
+function rgbToHsv(r,g,b){ r/=255;g/=255;b/=255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn;
+  let h=0;
+  if (d){ if (mx===r) h=60*(((g-b)/d)%6); else if (mx===g) h=60*((b-r)/d+2); else h=60*((r-g)/d+4); }
+  if (h<0) h+=360;
+  return [h, mx? d/mx*100 : 0, mx*100];
+}
+function rgbToHex(r,g,b){ return "#"+[r,g,b].map(n=>n.toString(16).padStart(2,"0")).join("").toUpperCase(); }
+function hexToRgb(hx){
+  let m=/^#?([0-9a-f]{6})$/i.exec(String(hx).trim());
+  if (m){ const n=parseInt(m[1],16); return [n>>16&255, n>>8&255, n&255]; }
+  m=/^#?([0-9a-f]{3})$/i.exec(String(hx).trim());
+  if (m) return m[1].split("").map(c=>parseInt(c+c,16));
+  return null;
+}
+const palettePop = document.createElement("div");
+palettePop.className = "palette-pop";
+palettePop.innerHTML =
+  `<div class="cpk-sv"><div class="cpk-knob"></div></div>`+
+  `<div class="cpk-slider cpk-hue" aria-label="色相"><div class="cpk-thumb"></div></div>`+
+  `<div class="cpk-row"><div class="cpk-slider cpk-val" aria-label="深淺"><div class="cpk-thumb"></div></div><span class="cpk-pct">深淺 100%</span></div>`+
+  `<div class="cpk-row"><div class="cpk-prev"></div><input class="cpk-hex" maxlength="7" spellcheck="false" inputmode="text" aria-label="顏色編號"></div>`+
+  `<div class="cpk-presets">${PALETTE.map(c=>`<button type="button" data-c="${c}" style="--pc:${c}" aria-label="快選 ${c}"></button>`).join("")}</div>`;
+document.body.appendChild(palettePop);
+const cpkSvEl  = palettePop.querySelector(".cpk-sv");
+const cpkKnob  = palettePop.querySelector(".cpk-knob");
+const cpkHueEl = palettePop.querySelector(".cpk-hue");
+const cpkHueTh = cpkHueEl.querySelector(".cpk-thumb");
+const cpkValEl = palettePop.querySelector(".cpk-val");
+const cpkValTh = cpkValEl.querySelector(".cpk-thumb");
+const cpkPctEl = palettePop.querySelector(".cpk-pct");
+const cpkPrev  = palettePop.querySelector(".cpk-prev");
+const cpkHexEl = palettePop.querySelector(".cpk-hex");
+let paletteFor = null, cpkH = 200, cpkS = 80, cpkV = 50, cpkDirty = false;
+function cpkHexNow(){ const [r,g,b]=hsvToRgb(cpkH,cpkS,cpkV); return rgbToHex(r,g,b); }
+function cpkRender(apply){
+  const hex = cpkHexNow();
+  cpkSvEl.style.setProperty("--cpk-hue", "hsl("+Math.round(cpkH)+",100%,50%)");
+  cpkKnob.style.left = cpkS+"%"; cpkKnob.style.top = (100-cpkV)+"%";
+  cpkHueTh.style.left = (cpkH/360*100)+"%";
+  cpkValTh.style.left = cpkV+"%";
+  const [vr,vg,vb] = hsvToRgb(cpkH,cpkS,100);
+  cpkValEl.style.background = "linear-gradient(to right,#000,rgb("+vr+","+vg+","+vb+"))";
+  cpkPctEl.textContent = "深淺 "+Math.round(cpkV)+"%";
+  cpkPrev.style.setProperty("--cpk-cur", hex);
+  if (document.activeElement !== cpkHexEl) cpkHexEl.value = hex;
+  if (apply && paletteFor){
+    const item = paletteFor.closest(".cat-item");
+    const cat = item && cats.find(c => c.key === item.dataset.key);
+    if (cat){ cat.color = hex; paletteFor.dataset.color = hex; paletteFor.style.setProperty("--cc", hex); cpkDirty = true; }
+  }
+}
+function cpkCommit(){ if (cpkDirty){ cpkDirty = false; refreshCategories(); } }   // 存檔+重繪+排程同步
+function cpkSet(hex, apply){
+  const rgb = hexToRgb(hex); if (!rgb) return false;
+  const hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
+  cpkH = hsv[0]; cpkS = hsv[1]; cpkV = hsv[2];
+  cpkRender(apply); return true;
+}
+function cpkDrag(el, onMove){
+  el.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch(err){}
+    const move = ev => {
+      const r = el.getBoundingClientRect();
+      onMove(Math.min(1, Math.max(0, (ev.clientX-r.left)/r.width)),
+             Math.min(1, Math.max(0, (ev.clientY-r.top)/r.height)));
+    };
+    move(e);
+    const up = () => {
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
+      cpkCommit();   // 拖曳結束才存檔同步(拖曳中只即時預覽,避免重繪抖動)
+    };
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+  });
+}
+cpkDrag(cpkSvEl,  (x,y) => { cpkS = x*100; cpkV = (1-y)*100; cpkRender(true); });
+cpkDrag(cpkHueEl, (x)   => { cpkH = Math.min(359.9, x*360); cpkRender(true); });
+cpkDrag(cpkValEl, (x)   => { cpkV = x*100; cpkRender(true); });
+cpkHexEl.addEventListener("input", () => {
+  const v = cpkHexEl.value.trim();
+  if (/^#?[0-9a-fA-F]{6}$/.test(v) || /^#?[0-9a-fA-F]{3}$/.test(v)) cpkSet(v.charAt(0)==="#" ? v : "#"+v, true);
+});
+cpkHexEl.addEventListener("change", cpkCommit);
+cpkHexEl.addEventListener("keydown", e => { if (e.key === "Enter"){ cpkHexEl.blur(); cpkCommit(); } });
+palettePop.querySelector(".cpk-presets").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  cpkSet(b.dataset.c, true); cpkCommit();
+});
+function openPalette(btn){
+  paletteFor = btn; cpkDirty = false;
+  cpkSet(btn.dataset.color || "#8494A0", false);
+  palettePop.classList.add("open");
+  const r = btn.getBoundingClientRect();
+  const pw = palettePop.offsetWidth, ph = palettePop.offsetHeight;
+  const x = Math.min(Math.max(8, r.left), window.innerWidth - pw - 8);
+  let y = r.bottom + 8;
+  if (y + ph > window.innerHeight - 8) y = Math.max(8, r.top - ph - 8);
+  palettePop.style.left = x + "px"; palettePop.style.top = y + "px";
+}
+function closePalette(){
+  if (!palettePop.classList.contains("open")) return;
+  cpkCommit();   // 保底:關閉時若有未存的變更一併存檔同步
+  palettePop.classList.remove("open"); paletteFor = null;
+}
+document.addEventListener("pointerdown", e => {
+  if (palettePop.classList.contains("open") && !palettePop.contains(e.target) && !(paletteFor && paletteFor.contains(e.target))) closePalette();
+}, true);
+document.addEventListener("scroll", e => { if (!palettePop.contains(e.target)) closePalette(); }, true);
+window.addEventListener("resize", () => closePalette());
 document.getElementById("catManage").addEventListener("click", openCatManager);
 document.getElementById("catCloseX").addEventListener("click", closeCatManager);
 document.getElementById("catDone").addEventListener("click", closeCatManager);
@@ -2171,11 +2322,6 @@ catListEl.addEventListener("change", e => {
   const oldKey = item.dataset.key;
   const cat = cats.find(c => c.key === oldKey);
   if (!cat) return;
-  if (e.target.classList.contains("cat-color")){
-    cat.color = e.target.value;
-    refreshCategories();
-    return;
-  }
   if (e.target.classList.contains("cat-name")){
     const newKey = e.target.value.trim();
     if (!newKey){ e.target.value = oldKey; return; }
@@ -2191,6 +2337,8 @@ catListEl.addEventListener("change", e => {
   }
 });
 catListEl.addEventListener("click", e => {
+  const cbtn = e.target.closest(".cat-color");
+  if (cbtn){ openPalette(cbtn); return; }
   const del = e.target.closest(".cat-del");
   if (!del) return;
   const item = e.target.closest(".cat-item");
@@ -2348,6 +2496,10 @@ let syncConnected = false, syncEmail = null;
   window.__settingsTs = loadTs("settings");
   function saveAuth(){ if (storageOK){ try { localStorage.setItem("property_app_gauth_v1", JSON.stringify({connected: syncConnected, email: syncEmail})); } catch(e){} } }
   function loadAuth(){ if (storageOK){ try { return JSON.parse(localStorage.getItem("property_app_gauth_v1")||"{}") || {}; } catch(e){} } return {}; }
+  // access token 持久化:重開 App 時若仍在有效期內就直接沿用,避免每次開啟都閃 Google 視窗
+  function saveGToken(){ if (storageOK){ try { localStorage.setItem("property_app_gtoken_v1", JSON.stringify({ t: accessToken, exp: tokenExpiry, email: syncEmail || "" })); } catch(e){} } }
+  function loadGToken(){ if (storageOK){ try { return JSON.parse(localStorage.getItem("property_app_gtoken_v1") || "null"); } catch(e){} } return null; }
+  function clearGToken(){ if (storageOK){ try { localStorage.removeItem("property_app_gtoken_v1"); } catch(e){} } }
 
   // expose touch/schedule hooks (called from mutation sites)
   window.touchCats = function(){ window.__catsTs = Date.now(); saveTs("cats", window.__catsTs); };
@@ -2374,6 +2526,7 @@ let syncConnected = false, syncEmail = null;
         accessToken = resp.access_token;
         tokenExpiry = Date.now() + ((resp.expires_in || 3600) - 90) * 1000;
         needReauth = false;
+        saveGToken();
         resolve(accessToken);
       };
       try {
@@ -2394,7 +2547,7 @@ let syncConnected = false, syncEmail = null;
     const token = await ensureToken();
     opts = opts || {}; opts.headers = Object.assign({}, opts.headers, { Authorization: "Bearer " + token });
     let res = await fetch(url, opts);
-    if (res.status === 401){ accessToken = null; const t2 = await requestToken(false); opts.headers.Authorization = "Bearer " + t2; res = await fetch(url, opts); }
+    if (res.status === 401){ accessToken = null; clearGToken(); const t2 = await requestToken(false); opts.headers.Authorization = "Bearer " + t2; res = await fetch(url, opts); }
     return res;
   }
   async function findFile(name){
@@ -2718,7 +2871,7 @@ let syncConnected = false, syncEmail = null;
       const res = await dfetch("https://www.googleapis.com/oauth2/v2/userinfo");
       const info = await res.json();
       syncEmail = info.email || "已連結"; syncConnected = true; needReauth = false;
-      saveAuth(); window.renderSyncCard();
+      saveAuth(); saveGToken(); window.renderSyncCard();
       await syncNow();
       startPolling();
       toast("已連結 Google 雲端");
@@ -2730,6 +2883,7 @@ let syncConnected = false, syncEmail = null;
     askConfirm("解除 Google 連結？", "只會停止這台裝置的同步，雲端資料不會被刪除。", function(){
       if (accessToken && window.google && google.accounts && google.accounts.oauth2){ try { google.accounts.oauth2.revoke(accessToken, function(){}); } catch(e){} }
       syncConnected = false; syncEmail = null; accessToken = null; tokenExpiry = 0; fileId = null; lastVersion = null; needReauth = false;
+      clearGToken();
       stopPolling(); saveAuth(); window.renderSyncCard(); refreshLed();
       toast("已解除連結");
     });
@@ -2767,6 +2921,10 @@ let syncConnected = false, syncEmail = null;
     const auth = loadAuth();
     if (auth && auth.connected){
       syncConnected = true; syncEmail = auth.email || null;
+      const gt = loadGToken();   // 重開 App:token 未過期且帳號相符 → 直接沿用,不會閃 Google 視窗
+      if (gt && gt.t && gt.exp && Date.now() < gt.exp - 60000 && (gt.email || "") === (syncEmail || "")){
+        accessToken = gt.t; tokenExpiry = gt.exp;
+      }
       window.renderSyncCard();
       syncNow().then(function(){ if (!needReauth) startPolling(); });
     } else {
