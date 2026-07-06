@@ -351,11 +351,11 @@
   .card.cat-tower .stripe{background:var(--cat-tower);}
   .card.cat-office .stripe{background:var(--cat-office);}
   .card.cat-shop .stripe{background:var(--cat-shop);}
-  /* 緊湊模式:左色條改中性色(類別已在膠囊顯示);到期快到→琥珀、已過期→紅,並比照原本感覺閃爍 */
-  .compact-card .stripe{background:var(--border-2);}
-  .compact-card.due-warn .stripe{background:#E0A11B;animation:duePulse 2.4s ease-in-out infinite;}
-  .compact-card.due-over .stripe{background:#D6452A;animation:duePulse 1.2s ease-in-out infinite;}
-  @media (prefers-reduced-motion: reduce){ .compact-card.due-warn .stripe,.compact-card.due-over .stripe{animation:none;} }
+  /* 到期提醒:卡片右側邊條(正常+緊湊一致)— 快到期=琥珀慢閃、已過期=紅快閃;左色條維持類別色 */
+  .card .due-edge{position:absolute;top:0;right:0;bottom:0;width:6px;display:none;pointer-events:none;}
+  .card.due-warn .due-edge{display:block;background:#E0A11B;animation:duePulse 2.4s ease-in-out infinite;}
+  .card.due-over .due-edge{display:block;background:#D6452A;animation:duePulse 1.2s ease-in-out infinite;}
+  @media (prefers-reduced-motion: reduce){ .card.due-warn .due-edge,.card.due-over .due-edge{animation:none;} }
   .body{padding:16px 16px 14px;flex:1;min-width:0;}
 
   .card-head{display:flex;align-items:flex-start;gap:10px;}
@@ -659,12 +659,24 @@
   @keyframes tSaved{0%{background:#D6EFE6;}100%{background:transparent;}}
   .tcell.tnum{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
   .tcell.tdue{font-variant-numeric:tabular-nums;color:var(--ink-soft);font-weight:600;}
-  .tcell.tdue.warn{color:#B26A00;animation:duePulse 2.4s ease-in-out infinite;}
-  .tcell.tdue.over{color:#C0341A;font-weight:700;animation:duePulse 1.2s ease-in-out infinite;}
-  .tcell.tdue.warn:focus,.tcell.tdue.over:focus{animation:none;}
+  .tcell.tdue.warn{color:#B26A00;font-weight:700;}
+  .tcell.tdue.over{color:#C0341A;font-weight:700;}
   [data-theme="dark"] .tcell.tdue.warn{color:#E6A94A;}
   [data-theme="dark"] .tcell.tdue.over{color:#F0745A;}
-  @media (prefers-reduced-motion: reduce){ .tcell.tdue.warn,.tcell.tdue.over{animation:none;} }
+  /* 到期提醒(方案 D):整列底色呼吸閃爍 — 快到期=琥珀慢閃、已過期=紅快閃;文字保持實心 */
+  .ptable tbody tr.due-warn td{animation:rowPulseWarn 2.4s ease-in-out infinite;}
+  .ptable tbody tr.due-over td{animation:rowPulseOver 1.2s ease-in-out infinite;}
+  @keyframes rowPulseWarn{0%,100%{background:rgba(224,161,27,.05);}50%{background:rgba(224,161,27,.15);}}
+  @keyframes rowPulseOver{0%,100%{background:rgba(214,69,42,.05);}50%{background:rgba(214,69,42,.16);}}
+  [data-theme="dark"] .ptable tbody tr.due-warn td{animation-name:rowPulseWarnD;}
+  [data-theme="dark"] .ptable tbody tr.due-over td{animation-name:rowPulseOverD;}
+  @keyframes rowPulseWarnD{0%,100%{background:rgba(230,169,74,.07);}50%{background:rgba(230,169,74,.20);}}
+  @keyframes rowPulseOverD{0%,100%{background:rgba(240,116,90,.08);}50%{background:rgba(240,116,90,.22);}}
+  @media (prefers-reduced-motion: reduce){
+    .ptable tbody tr.due-warn td,.ptable tbody tr.due-over td{animation:none;}
+    .ptable tbody tr.due-warn td{background:rgba(224,161,27,.10);}
+    .ptable tbody tr.due-over td{background:rgba(214,69,42,.11);}
+  }
   .tcell.tname{font-weight:700;}
   .tcat{padding:7px 9px;text-align:center;}
   .tcat-wrap{display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:4px 7px;}
@@ -1029,7 +1041,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.06 P";
+const APP_VERSION = "2026.07.06 R";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1067,11 +1079,12 @@ function selMark(d){
 function cardHTML(d){
   const color = catColor(d.cat);
   const sel = selected.has(d.id) ? " selected" : "";
+  const ds = dueStatus(d.due);   // 到期狀態:正常/緊湊都用「右側邊條」提醒;左色條維持類別色
   if (density === "compact"){
-    const ds = dueStatus(d.due);   // 緊湊模式:用左側色條當到期提醒(類別已在膠囊顯示)
     return `<article class="card compact-card${sel}${ds ? " due-"+ds : ""}" data-id="${d.id}">
     ${selMark(d)}
-    <div class="stripe"></div>
+    <div class="stripe" style="background:${color}"></div>
+    <div class="due-edge"></div>
     <div class="body">
       <div class="card-head">
         <h3 class="name"><span class="cv" data-copy="${esc(d.name)}">${esc(d.name)}</span></h3>
@@ -1084,9 +1097,10 @@ function cardHTML(d){
     </div>
   </article>`;
   }
-  return `<article class="card${sel}" data-id="${d.id}">
+  return `<article class="card${sel}${ds ? " due-"+ds : ""}" data-id="${d.id}">
     ${selMark(d)}
     <div class="stripe" style="background:${color}"></div>
+    <div class="due-edge"></div>
     <div class="body">
       <div class="card-head">
         <h3 class="name"><span class="cv" data-copy="${esc(d.name)}">${esc(d.name)}</span></h3>
@@ -1100,7 +1114,7 @@ function cardHTML(d){
       <div class="meta">
         <span data-copy="${esc(d.layout)}">格局 ${esc(d.layout)}</span>
         <span data-copy="${esc(d.floor)}">樓層 ${esc(d.floor)}</span>
-        <span class="due ${dueStatus(d.due)}" data-copy="${esc(d.due)}">到期 ${esc(d.due)}</span>
+        <span class="due ${ds}" data-copy="${esc(d.due)}">到期 ${esc(d.due)}</span>
       </div>
       <div class="agent">
         <div class="agent-info">承辦 <b data-copy="${esc(d.agent)}">${esc(d.agent)}</b><br><span data-copy="${esc(d.store)}">${esc(d.store)}</span></div>
@@ -1304,8 +1318,9 @@ function trowHTML(d){
   const delCell = editMode
     ? `<td class="tdel"><button data-act="del" title="刪除此列">${ICON_TRASH}</button></td>`
     : ``;
-  return `<tr data-id="${esc(d.id)}">`+
-    `<td><div class="tcell tdue ${dueStatus(d.due)}" contenteditable="${ce}" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div></td>`+
+  const ds = dueStatus(d.due);   // 方案 D:整列依到期狀態上底色閃爍
+  return `<tr data-id="${esc(d.id)}"${ds ? ` class="due-${ds}"` : ""}>`+
+    `<td><div class="tcell tdue ${ds}" contenteditable="${ce}" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div></td>`+
     catCell +
     `<td><div class="tcell" contenteditable="${ce}" data-field="layout" title="${esc(d.layout)}">${esc(d.layout)}</div></td>`+
     `<td><div class="tcell tname" contenteditable="${ce}" data-field="name" title="${esc(d.name)}">${esc(d.name)}</div></td>`+
