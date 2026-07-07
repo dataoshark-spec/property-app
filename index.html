@@ -601,7 +601,8 @@
   .confirm{background:var(--card);width:100%;max-width:340px;border-radius:18px;padding:26px 24px 18px;
     animation:sheet .2s ease;}
   .confirm-title{font-family:"Noto Serif TC",serif;font-size:1.2rem;font-weight:700;color:var(--ink);
-    line-height:1.55;letter-spacing:.01em;}
+    line-height:1.55;letter-spacing:.01em;overflow-wrap:anywhere;word-break:break-word;
+    display:-webkit-box;-webkit-line-clamp:4;line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
   .confirm-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.75;margin-top:11px;}
   .confirm-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
   .btn-danger{background:var(--danger);color:#fff;border:none;font-family:inherit;font-weight:700;font-size:.95rem;
@@ -669,9 +670,17 @@
   .tbody-wrap::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:999px;border:3px solid transparent;background-clip:padding-box;}
   .tbody-wrap::-webkit-scrollbar-thumb:hover{background:var(--ink-soft);}
   .tbody-wrap::-webkit-scrollbar-corner{background:transparent;}
-  .ptable{border-collapse:separate;border-spacing:0;width:100%;min-width:1080px;table-layout:fixed;font-size:.85rem;}
-  .ptable thead th{background:var(--accent-deep);color:var(--accent-tint);font-weight:700;font-size:.8rem;
+  .ptable{border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed;font-size:.85rem;}
+  .ptable thead th{position:relative;background:var(--accent-deep);color:var(--accent-tint);font-weight:700;font-size:.8rem;
     text-align:center;padding:11px 11px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);}
+  .th-label{display:inline-block;}
+  /* 欄寬把手:置中於欄界(th 右緣),線固定 2px,只變顏色深淺(hover/拖曳變亮),不忽粗忽細、不偏一邊 */
+  .col-resize{position:absolute;top:0;right:-6px;width:12px;height:100%;cursor:col-resize;touch-action:none;user-select:none;z-index:4;}
+  .col-resize::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;
+    background:transparent;transition:background .12s ease;}
+  .col-resize:hover::after,.col-resize.dragging::after{background:rgba(255,255,255,.9);}
+  body.col-resizing{cursor:col-resize !important;}
+  body.col-resizing *{cursor:col-resize !important;user-select:none !important;}
   .ptable .tcell[data-field="due"],
   .ptable .tcell[data-field="layout"],
   .ptable .tcell[data-field="floor"],
@@ -693,6 +702,23 @@
   .tcell:hover{background:var(--surface-2);}
   .tcell:focus{background:var(--card);box-shadow:inset 0 0 0 2px var(--accent);border-radius:5px;overflow:visible;white-space:normal;position:relative;z-index:2;}
   .tcell.saved{animation:tSaved .7s ease;}
+  /* 編輯模式:到期日欄「生成檔名」面板 — 滑到該格最左窄感應帶,面板從左滑入覆蓋整格,點任一處生成 */
+  td.duewrap{position:relative;}
+  .gen-edge{position:absolute;left:0;top:0;bottom:0;width:14px;z-index:3;}   /* 最左窄感應帶,不干擾日期編輯 */
+  .gen-btn{position:absolute;left:0;top:-1px;bottom:-1px;width:calc(100% + 1px);display:inline-flex;align-items:center;justify-content:center;
+    border:none;border-right:1px solid var(--accent-tint-bd);background:var(--accent-tint);color:var(--accent-deep);cursor:pointer;
+    opacity:0;pointer-events:none;transform:translateX(-100%);transition:transform .16s ease, background .12s;z-index:5;box-shadow:2px 0 7px rgba(0,0,0,.16);}
+  .gen-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;flex:none;}
+  .gen-label{font-size:.82rem;font-weight:700;margin-left:5px;letter-spacing:.02em;}
+  .gen-edge:hover ~ .gen-btn, .gen-btn:hover{opacity:1;pointer-events:auto;transform:translateX(0);}
+  .gen-btn:active{filter:brightness(1.05);}
+  .gen-btn.gen-flash{animation:genFlash .5s ease;}
+  @keyframes genFlash{0%{background:var(--accent-deep);}100%{background:var(--accent-tint);}}
+  @media (hover:none){   /* 手機無 hover:改左側小圓鈕、不覆蓋,日期仍看得到 */
+    .gen-btn{left:4px;top:50%;bottom:auto;width:26px;height:26px;border-radius:50%;border-right:none;box-shadow:none;
+      transform:translateY(-50%);opacity:.92;pointer-events:auto;}
+    .gen-label{display:none;}
+  }
   @keyframes tSaved{0%{background:#D6EFE6;}100%{background:transparent;}}
   .tcell.tnum{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
   .tcell.tdue{font-variant-numeric:tabular-nums;color:var(--ink-soft);font-weight:600;}
@@ -1078,7 +1104,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.07 P";
+const APP_VERSION = "2026.07.07 Y";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1136,6 +1162,33 @@ function normalizeName(name){
   return s;
 }
 // 案名分段:依分隔符號(／ / ＊ * ＠ @)切成多段,每段包成可點複製的 .cv(複製該段文字、不含符號),符號本身為純文字
+// 生成檔名:到期日-行政區-案名(去符號)-售價承辦。空欄自動略過
+function districtFromAddr(addr){
+  const s = String(addr == null ? "" : addr).trim();
+  // 台中市(台/臺皆可):取「區」名(北屯、西屯、大里…)
+  if (/[台臺]中市/.test(s)){
+    const m = s.match(/[台臺]中市([^市縣區]{1,4})區/);
+    if (m) return m[1];
+    const m2 = s.match(/([^市縣區]{1,4})區/);
+    return m2 ? m2[1] : "台中";
+  }
+  // 非台中:取開頭的「縣/市」名(彰化縣→彰化、彰化市→彰化、台北市→台北、南投縣→南投)
+  const c = s.match(/^\s*([\u4e00-\u9fa5]{2,3})[縣市]/);
+  if (c) return c[1];
+  // 退路:仍抓「區」前
+  const m3 = s.match(/([^市縣區]{1,4})區/);
+  return m3 ? m3[1] : "";
+}
+// 生成面板圖示(文件)
+const GEN_ICON = '<svg viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>';
+function buildFileName(d){
+  const due = String(d.due == null ? "" : d.due).trim();
+  const dist = districtFromAddr(d.addr);
+  const name = String(d.name == null ? "" : d.name).replace(/[／\/＊*＠@]/g, "");   // 案名去符號
+  const price = (d.price === "" || d.price == null) ? "" : String(d.price).trim();
+  const agent = String(d.agent == null ? "" : d.agent).trim();
+  return [due, dist, name, price + agent].filter(x => x !== "").join("-");
+}
 function nameSegmentsHTML(name){
   const s = String(name == null ? "" : name);
   const parts = s.split(/([／\/＊*＠@])/);   // 捕獲群組:分隔符號也保留在陣列裡
@@ -1379,6 +1432,37 @@ function setViewMode(vm){ viewMode = (vm==="table") ? "table" : "card"; saveView
 
 // ---- table rendering ----
 const T_COLS = ["到期日","類別","格局","案名","地址","樓層","售價","連結","承辦","電話","門市"];
+// ---- 表格欄寬調整(拖曳 + 雙擊自適應 + 記憶/同步)。門市(store,最後一欄)為彈性欄:不放把手、不給固定寬,自動吸收剩餘空間;其餘欄(含地址)皆可調 ----
+const T_FIELDS = ["due","cat","layout","name","addr","floor","price","links","agent","tel","store"];
+const FLEX_FIELD = "store";
+const DEFAULT_COLW = {due:78,cat:80,layout:64,name:150,addr:200,floor:68,price:76,links:128,agent:78,tel:112};
+const COLW_MIN = 48, COLW_MAX = 640, FLEX_MIN = 160, DEL_W = 40;
+function loadColW(){ if (storageOK){ try { const s = JSON.parse(localStorage.getItem("property_app_colw_v1") || "null"); if (s && typeof s === "object") return {...DEFAULT_COLW, ...s}; } catch(e){} } return {...DEFAULT_COLW}; }
+function saveColW(){ if (storageOK){ try { localStorage.setItem("property_app_colw_v1", JSON.stringify(colW)); } catch(e){} } }
+let colW = loadColW();
+// 最小總寬 = 各固定欄總和 + 彈性欄最小 +(編輯模式再加刪除欄)
+function colSumMinWidth(){ let s = 0; for (const f in DEFAULT_COLW) s += (colW[f] || DEFAULT_COLW[f]); return s + FLEX_MIN + (editMode ? DEL_W : 0); }
+// 產生 colgroup:固定欄用 colW(px)、彈性欄不給寬、編輯模式尾端加刪除欄
+function colGroupHTML(){
+  return T_FIELDS.map(f => f === FLEX_FIELD
+    ? `<col data-field="${f}">`
+    : `<col data-field="${f}" style="width:${colW[f] || DEFAULT_COLW[f]}px">`
+  ).join("") + (editMode ? `<col data-field="_del" style="width:${DEL_W}px">` : "");
+}
+// 產生表頭:每個 th 包 .th-label(供量測欄名)+ 可調欄加 .col-resize 把手(彈性欄/刪除欄不加)
+function tHeadHTML(){
+  return T_COLS.map((h,i) => {
+    const f = T_FIELDS[i];
+    const rz = (f && f !== FLEX_FIELD) ? `<span class="col-resize" data-field="${f}"></span>` : "";
+    return `<th><span class="th-label">${h}</span>${rz}</th>`;
+  }).join("") + (editMode ? `<th></th>` : "");
+}
+// 同時把某欄寬度套到「表頭 table」與「表身 table」兩邊的 <col>,並同步兩表 min-width
+function setColWidth(field, w){
+  tableWrap.querySelectorAll(`col[data-field="${field}"]`).forEach(c => c.style.width = w + "px");
+  const mw = colSumMinWidth() + "px";
+  tableWrap.querySelectorAll(".ptable").forEach(t => t.style.minWidth = mw);
+}
 function tchip(url, label, cls){
   const on = url && String(url).trim();
   const u = on ? String(url) : "";
@@ -1397,7 +1481,7 @@ function trowHTML(d){
   const ds = dueStatus(d.due);   // 方案 D:整列依到期狀態上底色閃爍
   const nameInner = editMode ? esc(d.name) : nameSegmentsHTML(d.name);   // 正常模式:案名依符號分段可點複製;編輯模式維持純文字可編輯
   return `<tr data-id="${esc(d.id)}"${ds ? ` class="due-${ds}"` : ""}>`+
-    `<td><div class="tcell tdue ${ds}" contenteditable="${ce}" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div></td>`+
+    `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button><div class="tcell tdue ${ds}" contenteditable="${ce}" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div></td>`+
     catCell +
     `<td><div class="tcell" contenteditable="${ce}" data-field="layout" title="${esc(d.layout)}">${esc(d.layout)}</div></td>`+
     `<td><div class="tcell tname" contenteditable="${ce}" data-field="name" title="${esc(d.name)}">${nameInner}</div></td>`+
@@ -1416,19 +1500,16 @@ function trowHTML(d){
 function renderTable(list){
   const oldScroll = tableWrap.querySelector(".tbody-wrap");
   const sTop = oldScroll ? oldScroll.scrollTop : 0, sLeft = oldScroll ? oldScroll.scrollLeft : 0;
-  const T = editMode ? T_COLS.concat("") : T_COLS;
-  const head = T.map(h => `<th>${h}</th>`).join("");
-  const cols = (editMode
-    ? ["5.5%","6%","5%","12.5%","21.5%","5.5%","5.5%","11%","5.5%","8.5%","10%","3.5%"]
-    : ["5.5%","6%","5%","12.5%","21.5%","5.5%","5.5%","11%","5.5%","8.5%","13.5%"]
-  ).map(w => `<col style="width:${w}">`).join("");
+  const head = tHeadHTML();
+  const cols = colGroupHTML();
+  const mw = colSumMinWidth();
   const rows = list.length ? list.map(trowHTML).join("")
-    : `<tr><td colspan="${T.length}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，點右上「＋ 新增物件」開始建立。"}</td></tr>`;
+    : `<tr><td colspan="${T_FIELDS.length + (editMode?1:0)}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，點右上「＋ 新增物件」開始建立。"}</td></tr>`;
   const cls = editMode ? "" : "ro";
-  // 表頭與表身分成上下兩層:表頭獨立固定(天生填滿到圓角),捲軸只長在表身層(只在資料列出現)
+  // 表頭與表身分成上下兩層:表頭獨立固定(天生填滿到圓角),捲軸只長在表身層(只在資料列出現)。兩表共用同一份 colgroup 與 min-width,欄位才對齊
   tableWrap.innerHTML =
-    `<div class="thead-wrap"><table class="ptable ${cls}"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead></table></div>`+
-    `<div class="tbody-wrap"><table class="ptable ${cls}"><colgroup>${cols}</colgroup><tbody>${rows}</tbody></table></div>`;
+    `<div class="thead-wrap"><table class="ptable ${cls}" style="min-width:${mw}px"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead></table></div>`+
+    `<div class="tbody-wrap"><table class="ptable ${cls}" style="min-width:${mw}px"><colgroup>${cols}</colgroup><tbody>${rows}</tbody></table></div>`;
   const headWrap = tableWrap.querySelector(".thead-wrap");
   const bodyWrap = tableWrap.querySelector(".tbody-wrap");
   if (bodyWrap){ bodyWrap.scrollTop = sTop; bodyWrap.scrollLeft = sLeft; }
@@ -1450,6 +1531,81 @@ function syncTableChrome(){
   const sbw = Math.max(0, bw.offsetWidth - bw.clientWidth);
   tableWrap.style.setProperty("--sbw", sbw + "px");
 }
+// ---- 欄寬:量測欄名最小寬、雙擊自適應、拖曳 ----
+function _measText(text, srcEl){
+  if (!window._measEl){
+    const m = document.createElement("span");
+    m.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;top:-9999px;left:-9999px;pointer-events:none;padding:0;margin:0;border:0;";
+    document.body.appendChild(m); window._measEl = m;
+  }
+  const m = window._measEl, cs = getComputedStyle(srcEl);
+  ["fontFamily","fontSize","fontWeight","fontStyle","letterSpacing","fontVariantNumeric","textTransform"].forEach(p => { m.style[p] = cs[p]; });
+  m.textContent = text || "";
+  return m.getBoundingClientRect().width;
+}
+function colHeaderMin(idx){
+  const tbl = tableWrap.querySelector(".thead-wrap .ptable");
+  const th = tbl && tbl.querySelectorAll("thead th")[idx];
+  if (!th) return COLW_MIN;
+  const label = th.querySelector(".th-label");
+  const cs = getComputedStyle(th);
+  const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
+  const lw = label ? label.getBoundingClientRect().width : 0;   // 量 .th-label 內容寬,不受欄寬影響
+  return Math.max(COLW_MIN, Math.ceil(lw + pad + 6));
+}
+// 雙擊自適應:量「欄名 + 最長內容」的實際文字寬(用隱藏元素量,不可用 scrollWidth)
+function autoFitColumn(field){
+  if (field === FLEX_FIELD) return;                 // 彈性欄不自適應
+  const idx = T_FIELDS.indexOf(field); if (idx < 0) return;
+  const headTbl = tableWrap.querySelector(".thead-wrap .ptable");
+  const bodyTbl = tableWrap.querySelector(".tbody-wrap .ptable");
+  if (!headTbl || !bodyTbl) return;
+  let maxW = 0;
+  const th = headTbl.querySelectorAll("thead th")[idx];
+  const label = th && th.querySelector(".th-label");
+  if (label){
+    const cs = getComputedStyle(th);
+    const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
+    maxW = _measText(label.textContent, label) + pad;
+  }
+  const hMin = Math.max(COLW_MIN, Math.ceil(maxW));
+  bodyTbl.querySelectorAll("tbody tr").forEach(tr => {
+    const td = tr.children[idx]; if (!td) return;
+    const cell = td.querySelector(".tcell");
+    if (cell){
+      const cs = getComputedStyle(cell);
+      const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
+      const w = _measText(cell.textContent, cell) + pad;
+      if (w > maxW) maxW = w;
+    } else {
+      const sp = td.querySelector(".tcat-badge, .tcat-trigger, .tchips");  // 類別膠囊 / 連結膠囊組:本身即內容寬
+      if (sp && sp.offsetWidth > maxW) maxW = sp.offsetWidth;
+    }
+  });
+  const w = Math.max(hMin, Math.min(COLW_MAX, Math.ceil(maxW) + 10));
+  colW[field] = w; setColWidth(field, w); saveColW(); onLocalChange("settings");
+}
+// 拖曳 + 雙擊偵測(滑鼠/手機皆可)
+let _rz = null, _lastRzField = null, _lastRzTime = 0;
+tableWrap.addEventListener("pointerdown", e => {
+  const h = e.target.closest(".col-resize"); if (!h) return;
+  e.preventDefault(); e.stopPropagation();
+  const field = h.dataset.field, now = Date.now();
+  if (field === _lastRzField && (now - _lastRzTime) < 350){ _lastRzTime = 0; _lastRzField = null; autoFitColumn(field); return; }  // 350ms 內同欄再按=雙擊自適應
+  _lastRzField = field; _lastRzTime = now;
+  const th = h.closest("th"), idx = T_FIELDS.indexOf(field);
+  _rz = { field, startX: e.clientX, startW: th.offsetWidth, hMin: colHeaderMin(idx), h, moved: false };
+  h.classList.add("dragging"); document.body.classList.add("col-resizing");
+});
+window.addEventListener("pointermove", e => {
+  if (!_rz) return;
+  _rz.moved = true;
+  const w = Math.max(_rz.hMin, Math.min(COLW_MAX, _rz.startW + (e.clientX - _rz.startX)));  // 下限=欄名寬
+  colW[_rz.field] = w; setColWidth(_rz.field, w);
+});
+function _rzEnd(){ if (!_rz) return; const moved = _rz.moved; _rz.h.classList.remove("dragging"); document.body.classList.remove("col-resizing"); _rz = null; if (moved){ saveColW(); onLocalChange("settings"); } }
+window.addEventListener("pointerup", _rzEnd);
+window.addEventListener("pointercancel", _rzEnd);
 // 編輯中(格子聚焦、連結框或類別選單開啟)時,暫停同步重繪,避免游標被打斷、畫面跳動
 window.isTableBusy = function(){
   const a = document.activeElement;
@@ -1485,6 +1641,21 @@ tableWrap.addEventListener("keydown", e=>{
   } else if (e.key === "Escape"){ c.blur(); }
 });
 tableWrap.addEventListener("click", e=>{
+  // 編輯模式:到期日欄「生成檔名」面板 → 生成並複製
+  const genBtn = e.target.closest(".gen-btn");
+  if (genBtn){
+    e.stopPropagation();
+    const it = tFindItem(genBtn);
+    if (it){
+      const fn = buildFileName(it);
+      if (fn){
+        const done = () => { genBtn.classList.remove("gen-flash"); void genBtn.offsetWidth; genBtn.classList.add("gen-flash"); setTimeout(() => genBtn.classList.remove("gen-flash"), 500); toast("已複製檔名：" + fn); };
+        if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(fn).then(done).catch(() => { if (legacyCopy(fn)) done(); }); }
+        else if (legacyCopy(fn)){ done(); }
+      } else { toast("此物件資料不足，無法生成檔名"); }
+    }
+    return;
+  }
   // 類別下拉(僅編輯模式有觸發鈕)
   const trig = e.target.closest(".tcat-trigger");
   if (trig){ e.stopPropagation(); openCatMenu(trig); return; }
@@ -1499,7 +1670,7 @@ tableWrap.addEventListener("click", e=>{
     }
     return;
   }
-  // 正常模式:點欄位自動複製內容(類別與連結除外)
+  // 正常模式:點欄位自動複製內容(連結除外;類別欄不再生成檔名,改用到期日的生成面板)
   if (!editMode){
     const seg = e.target.closest(".tcell [data-copy]");   // 案名依符號分段:點哪段複製哪段
     if (seg){ copyCellText(seg.closest(".tcell"), seg.dataset.copy); return; }
@@ -2214,7 +2385,7 @@ document.getElementById("themePicker").addEventListener("click", e=>{
 
 // ===== 設定的收集 / 套用(供備份、匯入、雲端同步共用;含 到期提醒 與 外觀主題) =====
 function collectSettings(){
-  return { density: density, sort: currentSort, dueDays: dueSoonDays, theme: theme };
+  return { density: density, sort: currentSort, dueDays: dueSoonDays, theme: theme, colw: colW };
 }
 function applySettings(s){
   if (!s || typeof s !== "object") return;
@@ -2232,6 +2403,7 @@ function applySettings(s){
   if (s.theme === "dark" || s.theme === "light"){
     theme = s.theme; saveTheme(); applyTheme();
   }
+  if (s.colw && typeof s.colw === "object"){ colW = {...DEFAULT_COLW, ...s.colw}; saveColW(); }
   applyFilter();
 }
 // ===== 外觀主題設定結束 =====
@@ -2820,7 +2992,7 @@ let syncConnected = false, syncEmail = null;
       rev: 0, lastWriteBy: deviceId, updatedAt: Date.now(),
       data: { properties: items.map(function(x){ return Object.assign({}, x); }) },
       cats: { list: cats.map(function(c){ return Object.assign({}, c); }), _updatedAt: window.__catsTs },
-      settings: { density: density, sort: currentSort, dueDays: dueSoonDays, theme: theme, _updatedAt: window.__settingsTs },
+      settings: { density: density, sort: currentSort, dueDays: dueSoonDays, theme: theme, colw: colW, _updatedAt: window.__settingsTs },
       deleted: Object.assign({}, deleted)
     };
   }
@@ -2869,6 +3041,7 @@ let syncConnected = false, syncEmail = null;
       if (s.sort){ currentSort = s.sort; saveSort(); }
       if (typeof s.dueDays === "number"){ dueSoonDays = s.dueDays; saveDueDays(); if (typeof renderDueDays === "function") renderDueDays(); }
       if (s.theme === "dark" || s.theme === "light"){ theme = s.theme; saveTheme(); applyTheme(); }
+      if (s.colw && typeof s.colw === "object"){ colW = {...DEFAULT_COLW, ...s.colw}; saveColW(); }
       window.__settingsTs = s._updatedAt || window.__settingsTs; saveTs("settings", window.__settingsTs);
     }
     // re-render UI to reflect merged state
