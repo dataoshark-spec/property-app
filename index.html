@@ -1078,7 +1078,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.07 O";
+const APP_VERSION = "2026.07.07 P";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1395,11 +1395,12 @@ function trowHTML(d){
     ? `<td class="tdel"><button data-act="del" title="刪除此列">${ICON_TRASH}</button></td>`
     : ``;
   const ds = dueStatus(d.due);   // 方案 D:整列依到期狀態上底色閃爍
+  const nameInner = editMode ? esc(d.name) : nameSegmentsHTML(d.name);   // 正常模式:案名依符號分段可點複製;編輯模式維持純文字可編輯
   return `<tr data-id="${esc(d.id)}"${ds ? ` class="due-${ds}"` : ""}>`+
     `<td><div class="tcell tdue ${ds}" contenteditable="${ce}" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div></td>`+
     catCell +
     `<td><div class="tcell" contenteditable="${ce}" data-field="layout" title="${esc(d.layout)}">${esc(d.layout)}</div></td>`+
-    `<td><div class="tcell tname" contenteditable="${ce}" data-field="name" title="${esc(d.name)}">${esc(d.name)}</div></td>`+
+    `<td><div class="tcell tname" contenteditable="${ce}" data-field="name" title="${esc(d.name)}">${nameInner}</div></td>`+
     `<td><div class="tcell" contenteditable="${ce}" data-field="addr" title="${esc(d.addr)}">${esc(d.addr)}</div></td>`+
     `<td><div class="tcell" contenteditable="${ce}" data-field="floor" title="${esc(d.floor)}">${esc(d.floor)}</div></td>`+
     `<td><div class="tcell tnum" contenteditable="${ce}" data-field="price" title="${esc(d.price)}">${esc(d.price)}</div></td>`+
@@ -1500,6 +1501,8 @@ tableWrap.addEventListener("click", e=>{
   }
   // 正常模式:點欄位自動複製內容(類別與連結除外)
   if (!editMode){
+    const seg = e.target.closest(".tcell [data-copy]");   // 案名依符號分段:點哪段複製哪段
+    if (seg){ copyCellText(seg.closest(".tcell"), seg.dataset.copy); return; }
     const cell = e.target.closest(".tcell");
     if (cell){ copyCellText(cell); return; }
   }
@@ -1518,8 +1521,8 @@ tableWrap.addEventListener("click", e=>{
 });
 
 // ---- 正常模式:點格子複製內容 ----
-function copyCellText(cell){
-  const text = (cell.textContent || "").replace(/\s+/g, " ").trim();
+function copyCellText(cell, overrideText){
+  const text = (overrideText != null ? overrideText : (cell.textContent || "")).replace(/\s+/g, " ").trim();
   if (!text) return;
   const ok = () => {
     cell.classList.remove("saved"); void cell.offsetWidth; cell.classList.add("saved");
