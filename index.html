@@ -339,6 +339,9 @@
     transition:background .15s ease,color .15s ease,border-color .15s ease;}
   .tab:hover{border-color:var(--border-2);}
   .tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  /* 類別篩選膠囊:未選純文字、選中=類別色實心+自適應字;「全部」維持中性 */
+  .cat-tab.active{background:var(--tc);color:var(--tctext,#fff);border-color:var(--tc);}
+  [data-theme="dark"] .cat-tab.active{background:var(--tc);color:var(--tctext,#fff);border-color:var(--tc);}
 
   .cards{padding:14px 18px 40px;display:flex;flex-direction:column;gap:14px;}
 
@@ -359,22 +362,21 @@
   .body{padding:16px 16px 14px;flex:1;min-width:0;}
 
   .card-head{display:flex;align-items:flex-start;gap:10px;}
-  .name{font-family:"Noto Serif TC",serif;font-weight:700;font-size:1.16rem;line-height:1.25;flex:1;}
-  .badge{flex:none;font-size:.74rem;font-weight:700;color:#fff;background:var(--bc,var(--accent));padding:4px 9px;border-radius:7px;letter-spacing:.05em;}
-  [data-theme="dark"] .badge{background:color-mix(in srgb,var(--bc,var(--accent)) 74%,#04070A);}
-  .cat-tower .badge{background:var(--cat-tower);}
-  .cat-office .badge{background:var(--cat-office);}
-  .cat-shop .badge{background:var(--cat-shop);}
+  .name{font-family:"Noto Serif TC",serif;font-weight:700;font-size:1.48rem;line-height:1.25;flex:1;}
+  /* 類別:純文字顯示(左側已有類別色條區分,右上角不再膠囊化) */
+  .badge{flex:none;font-size:.8rem;font-weight:700;color:var(--ink-soft);letter-spacing:.03em;}
   .addr{font-size:.86rem;color:var(--ink-soft);margin-top:6px;}
 
   .price{margin:13px 0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .price-value{display:flex;align-items:baseline;gap:5px;min-width:0;}
-  .price .num{font-size:1.85rem;font-weight:900;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--accent-deep);}
+  .price .num{font-size:1.36rem;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--accent-deep);}
   .price .unit{font-size:.92rem;font-weight:700;color:var(--ink-soft);}
 
   .meta{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px;}
-  .meta span{font-size:.8rem;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);
+  .meta span{font-size:.8rem;font-weight:700;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);
     padding:5px 10px;border-radius:8px;}
+  .meta .ml{color:var(--text-faint);font-style:normal;font-weight:600;}   /* 標籤低調、數值(粗)為重點 */
+  .meta .due.warn .ml,.meta .due.over .ml{color:inherit;opacity:.72;}     /* 到期警示時標籤跟隨警示色,不變灰 */
   .meta .due{color:var(--ink);background:var(--surface-2);border-color:var(--line);}
   .meta .due.warn{color:#8A5200;background:#FCEBCF;border-color:#F1D49B;font-weight:700;
     animation:duePulse 2.4s ease-in-out infinite;}
@@ -386,17 +388,20 @@
   .agent{display:flex;align-items:center;gap:10px;padding-top:13px;border-top:1px dashed var(--line);}
   .agent-info{font-size:.82rem;color:var(--ink-soft);flex:1;min-width:0;line-height:1.4;}
   .agent-info b{color:var(--ink);font-weight:700;}
-  .tel{flex:none;text-decoration:none;font-size:.88rem;font-weight:700;color:#fff;
-    background:var(--accent);border:1px solid var(--accent);padding:9px 14px;border-radius:10px;
-    display:inline-flex;align-items:center;gap:6px;transition:filter .15s ease;white-space:nowrap;}
-  .tel:hover{filter:brightness(1.08);}
-  .tel svg{width:15px;height:15px;flex:none;}
+  /* 電話:改中性低調樣式(非最重要功能,與綠色「新增物件」區隔) */
+  .tel{flex:none;text-decoration:none;font-size:.88rem;font-weight:700;color:var(--ink);
+    background:var(--surface-2);border:1px solid var(--border-2);padding:9px 14px;border-radius:10px;
+    display:inline-flex;align-items:center;gap:6px;transition:background .15s ease,border-color .15s ease;white-space:nowrap;}
+  .tel:hover{background:var(--surface-3);border-color:var(--ink-soft);}
+  .tel:active{background:var(--surface-3);}
+  .tel svg{width:15px;height:15px;flex:none;fill:var(--ink-soft);}
 
   .links{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;}
   .chip{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:700;letter-spacing:.04em;color:var(--ink-soft);
     border:1px solid var(--line);background:var(--surface-1);padding:8px 13px;border-radius:999px;}
   .chip.on{color:var(--accent-deep);border-color:var(--accent-tint-bd);background:var(--accent-tint);}
   .chip.off{color:var(--text-faint);background:#F4F6F7;border-color:#EAEEF0;}
+  [data-theme="dark"] .chip.off{color:var(--text-faint);background:var(--surface-2);border-color:var(--line);}
   a.chip{text-decoration:none;cursor:pointer;transition:background .15s ease,border-color .15s ease;}
   a.chip:hover{background:var(--accent-tint);border-color:var(--accent-tint-bd);}
   a.chip:active{background:var(--accent-tint);}
@@ -438,7 +443,7 @@
   .compact-card{cursor:pointer;}
   .compact-card .body{padding:13px 15px;}
   .compact-card .card-head{align-items:center;gap:10px;}
-  .compact-card .name{font-size:1.04rem;}
+  .compact-card .name{font-size:1.24rem;}
   .compact-card .price-tag{flex:none;white-space:nowrap;font-variant-numeric:tabular-nums;
     font-size:1.2rem;font-weight:900;color:var(--accent-deep);}
   .compact-card .price-tag small{font-size:.72rem;font-weight:700;color:var(--ink-soft);margin-left:2px;}
@@ -648,15 +653,24 @@
   #app.table-mode .list-header{flex:none;}
   #app.table-mode .table-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;margin-bottom:12px;}
   #app.table-mode .ttop,#app.table-mode .tbar{flex:none;}
-  #app.table-mode .table-scroll{flex:1 1 auto;min-height:0;max-height:none;}
-  .table-scroll{overflow:auto;max-height:max(220px, calc(100dvh - var(--lh,240px) - 140px));scrollbar-width:thin;scrollbar-color:var(--border-2) transparent;}
-  .table-scroll::-webkit-scrollbar{height:10px;width:10px;}
-  .table-scroll::-webkit-scrollbar-track{background:transparent;}
-  .table-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:999px;border:3px solid transparent;background-clip:padding-box;}
-  .table-scroll::-webkit-scrollbar-thumb:hover{background:var(--ink-soft);}
+  #app.table-mode .tbody-wrap{flex:1 1 auto;min-height:0;max-height:none;}
+  /* 表頭層:固定不動、天生填滿到圓角;右側留出捲軸等寬並以同色綠填滿;可左右捲動但隱藏自身捲軸(與表身同步) */
+  .thead-wrap{flex:none;overflow-x:auto;overflow-y:hidden;background:var(--accent-deep);padding-right:var(--sbw,0px);
+    scrollbar-width:none;}
+  .thead-wrap::-webkit-scrollbar{display:none;}
+  [data-theme="dark"] .thead-wrap{background:#1E3A31;}
+  /* 表身層:垂直+水平捲動都在這裡,捲軸只出現在資料列範圍 */
+  .tbody-wrap{overflow:auto;max-height:max(220px, calc(100dvh - var(--lh,240px) - 178px));scrollbar-width:thin;scrollbar-color:var(--border-2) transparent;}
+  .tbody-wrap::-webkit-scrollbar{height:12px;width:12px;}
+  .tbody-wrap::-webkit-scrollbar-track{background:transparent;}
+  .tbody-wrap::-webkit-scrollbar-track:vertical{margin:0 0 12px 0;}     /* 底部避開圓角 */
+  .tbody-wrap::-webkit-scrollbar-track:horizontal{margin:0 12px;}       /* 左右避開圓角 */
+  .tbody-wrap::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:999px;border:3px solid transparent;background-clip:padding-box;}
+  .tbody-wrap::-webkit-scrollbar-thumb:hover{background:var(--ink-soft);}
+  .tbody-wrap::-webkit-scrollbar-corner{background:transparent;}
   .ptable{border-collapse:separate;border-spacing:0;width:100%;min-width:1080px;table-layout:fixed;font-size:.85rem;}
-  .ptable thead th{position:sticky;top:0;background:var(--accent-deep);color:var(--accent-tint);font-weight:700;font-size:.8rem;
-    text-align:center;padding:11px 11px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);z-index:1;}
+  .ptable thead th{background:var(--accent-deep);color:var(--accent-tint);font-weight:700;font-size:.8rem;
+    text-align:center;padding:11px 11px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);}
   .ptable .tcell[data-field="due"],
   .ptable .tcell[data-field="layout"],
   .ptable .tcell[data-field="floor"],
@@ -1063,7 +1077,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.06 T";
+const APP_VERSION = "2026.07.07 J";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1098,6 +1112,41 @@ function selMark(d){
   const on = selected.has(d.id) ? " on" : "";
   return `<span class="selbox${on}" aria-hidden="true"></span>`;
 }
+// 案名正規化:英文字母一律大寫、半形符號一律轉全形(數字與中文不動),例如「the精銳/7d」→「THE精銳／7D」
+// 相對亮度(WCAG)與類別膠囊自適應字色:對「白字/黑字」哪個對比高就用哪個,並考慮深色模式會把類別色調暗
+// → 使用者挑淺色也不會白字糊掉、挑深色也不會黑字看不到
+function relLum(rgb){
+  const c = rgb.map(v => { v = Math.max(0, Math.min(255, v)) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+function badgeTextColor(hex){
+  const raw = hexToRgb(hex) || [132, 148, 160];
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  const K = [4, 7, 10];   // 深色模式底色 = 類別色與 #04070A 以 74% 混色(與 CSS 一致)
+  const bg = dark ? raw.map((v, i) => v * 0.74 + K[i] * 0.26) : raw;
+  const L = relLum(bg);
+  const cW = 1.05 / (L + 0.05);      // 對白字的對比
+  const cB = (L + 0.05) / 0.05;      // 對黑字的對比
+  return cW >= cB ? "#FFFFFF" : "#1A2026";
+}
+function normalizeName(name){
+  let s = String(name == null ? "" : name).toUpperCase();
+  s = s.replace(/[\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]/g, ch => String.fromCharCode(ch.charCodeAt(0) + 0xFEE0));
+  return s;
+}
+// 案名分段:依分隔符號(／ / ＊ * ＠ @)切成多段,每段包成可點複製的 .cv(複製該段文字、不含符號),符號本身為純文字
+function nameSegmentsHTML(name){
+  const s = String(name == null ? "" : name);
+  const parts = s.split(/([／\/＊*＠@])/);   // 捕獲群組:分隔符號也保留在陣列裡
+  let html = "";
+  for (const p of parts){
+    if (p === "") continue;
+    if (/^[／\/＊*＠@]$/.test(p)){ html += esc(p); continue; }   // 分隔符號:純文字
+    const val = p.trim();
+    html += val ? `<span class="cv" data-copy="${esc(val)}">${esc(p)}</span>` : esc(p);
+  }
+  return html || esc(s);
+}
 function cardHTML(d){
   const color = catColor(d.cat);
   const sel = selected.has(d.id) ? " selected" : "";
@@ -1109,11 +1158,11 @@ function cardHTML(d){
     <div class="due-edge"></div>
     <div class="body">
       <div class="card-head">
-        <h3 class="name"><span class="cv" data-copy="${esc(d.name)}">${esc(d.name)}</span></h3>
+        <h3 class="name">${nameSegmentsHTML(d.name)}</h3>
         <span class="price-tag" data-copy="${esc(d.price)}">${money(d.price)}<small>萬</small></span>
       </div>
       <div class="sub-row">
-        <span class="badge" style="--bc:${color}">${esc(d.cat)}</span>
+        <span class="badge">${esc(d.cat)}</span>
         <span class="addr" data-copy="${esc(d.addr)}">${esc(d.addr)}</span>
       </div>
     </div>
@@ -1125,8 +1174,8 @@ function cardHTML(d){
     <div class="due-edge"></div>
     <div class="body">
       <div class="card-head">
-        <h3 class="name"><span class="cv" data-copy="${esc(d.name)}">${esc(d.name)}</span></h3>
-        <span class="badge" style="--bc:${color}">${esc(d.cat)}</span>
+        <h3 class="name">${nameSegmentsHTML(d.name)}</h3>
+        <span class="badge">${esc(d.cat)}</span>
       </div>
       <div class="addr"><span class="cv" data-copy="${esc(d.addr)}">${esc(d.addr)}</span></div>
       <div class="price">
@@ -1134,9 +1183,9 @@ function cardHTML(d){
         <div class="links">${linkChip(d.url591, "591")}${linkChip(d.urlLeju, "樂居")}${linkChip(d.urlI, "永慶")}</div>
       </div>
       <div class="meta">
-        <span data-copy="${esc(d.layout)}">格局 ${esc(d.layout)}</span>
-        <span data-copy="${esc(d.floor)}">樓層 ${esc(d.floor)}</span>
-        <span class="due ${ds}" data-copy="${esc(d.due)}">到期 ${esc(d.due)}</span>
+        <span data-copy="${esc(d.layout)}"><i class="ml">格局</i> ${esc(d.layout)}</span>
+        <span data-copy="${esc(d.floor)}"><i class="ml">樓層</i> ${esc(d.floor)}</span>
+        <span class="due ${ds}" data-copy="${esc(d.due)}"><i class="ml">到期</i> ${esc(d.due)}</span>
       </div>
       <div class="agent">
         <div class="agent-info">承辦 <b data-copy="${esc(d.agent)}">${esc(d.agent)}</b><br><span data-copy="${esc(d.store)}">${esc(d.store)}</span></div>
@@ -1226,10 +1275,14 @@ function renderCover(){
   document.getElementById("coverCount").textContent = items.length;
 }
 function renderTabs(){
-  document.getElementById("tabs").innerHTML =
-    `<button class="tab" data-cat="">全部</button>` +
-    cats.map(c => `<button class="tab" data-cat="${esc(c.key)}">${esc(c.key)}</button>`).join("");
-  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.cat === currentCat));
+  const allActive = currentCat === "";
+  let html = `<button class="tab${allActive ? " active" : ""}" data-cat="">全部</button>`;
+  html += cats.map(c => {
+    const col = c.color || "#8494A0";
+    const active = c.key === currentCat;
+    return `<button class="tab cat-tab${active ? " active" : ""}" data-cat="${esc(c.key)}" style="--tc:${col};--tctext:${badgeTextColor(col)}">${esc(c.key)}</button>`;
+  }).join("");
+  document.getElementById("tabs").innerHTML = html;
 }
 function refreshCategories(){
   saveCats();
@@ -1359,7 +1412,7 @@ function trowHTML(d){
   `</tr>`;
 }
 function renderTable(list){
-  const oldScroll = tableWrap.querySelector(".table-scroll");
+  const oldScroll = tableWrap.querySelector(".tbody-wrap");
   const sTop = oldScroll ? oldScroll.scrollTop : 0, sLeft = oldScroll ? oldScroll.scrollLeft : 0;
   const T = editMode ? T_COLS.concat("") : T_COLS;
   const head = T.map(h => `<th>${h}</th>`).join("");
@@ -1369,12 +1422,31 @@ function renderTable(list){
   ).map(w => `<col style="width:${w}">`).join("");
   const rows = list.length ? list.map(trowHTML).join("")
     : `<tr><td colspan="${T.length}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，點右上「＋ 新增物件」開始建立。"}</td></tr>`;
-  const bottom = "";
+  const cls = editMode ? "" : "ro";
+  // 表頭與表身分成上下兩層:表頭獨立固定(天生填滿到圓角),捲軸只長在表身層(只在資料列出現)
   tableWrap.innerHTML =
-    `<div class="table-scroll"><table class="ptable ${editMode?'':'ro'}"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`+
-    bottom;
-  const ns = tableWrap.querySelector(".table-scroll");
-  if (ns){ ns.scrollTop = sTop; ns.scrollLeft = sLeft; }
+    `<div class="thead-wrap"><table class="ptable ${cls}"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead></table></div>`+
+    `<div class="tbody-wrap"><table class="ptable ${cls}"><colgroup>${cols}</colgroup><tbody>${rows}</tbody></table></div>`;
+  const headWrap = tableWrap.querySelector(".thead-wrap");
+  const bodyWrap = tableWrap.querySelector(".tbody-wrap");
+  if (bodyWrap){ bodyWrap.scrollTop = sTop; bodyWrap.scrollLeft = sLeft; }
+  if (headWrap) headWrap.scrollLeft = sLeft;
+  // 左右捲動雙向同步(表頭↔表身),用旗標避免互相觸發成迴圈
+  if (headWrap && bodyWrap){
+    let syncing = false;
+    const link = (from, to) => from.addEventListener("scroll", () => {
+      if (syncing) return; syncing = true; to.scrollLeft = from.scrollLeft; syncing = false;
+    });
+    link(bodyWrap, headWrap); link(headWrap, bodyWrap);
+  }
+  requestAnimationFrame(syncTableChrome);
+}
+// 量測表身垂直捲軸實際寬度→設 CSS 變數,讓表頭右側留出等寬(對齊欄位、並以同色綠填滿到圓角)。手機懸浮式捲軸為 0,表頭直接滿版
+function syncTableChrome(){
+  const bw = tableWrap.querySelector(".tbody-wrap");
+  if (!bw) return;
+  const sbw = Math.max(0, bw.offsetWidth - bw.clientWidth);
+  tableWrap.style.setProperty("--sbw", sbw + "px");
 }
 // 編輯中(格子聚焦、連結框或類別選單開啟)時,暫停同步重繪,避免游標被打斷、畫面跳動
 window.isTableBusy = function(){
@@ -1392,7 +1464,9 @@ function tCommitCell(cell){
   const it = tFindItem(cell); if (!it) return;
   const field = cell.dataset.field;
   let val = cell.textContent.trim();
+  if (field === "name") val = normalizeName(val);
   if (field === "price") val = (val === "") ? "" : (parseInt(val.replace(/[^\d]/g,""),10) || 0);
+  if (field === "name" && cell.textContent.trim() !== val) cell.textContent = val;   // 顯示同步為正規化後的案名
   if (it[field] !== val){ it[field] = val; it.updatedAt = Date.now(); saveItems(); onLocalChange("data"); }
 }
 function caretEnd(el){ try{ const r=document.createRange(); r.selectNodeContents(el); r.collapse(false); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
@@ -1845,7 +1919,7 @@ function openForm(id){
 function closeForm(){ modalBg.classList.remove("open"); editingId = null; }
 
 function saveForm(){
-  const name = F.name.value.trim();
+  const name = normalizeName(F.name.value.trim());
   if (!name){ toast("請輸入案名"); F.name.focus(); return; }
   const isEdit = !!editingId;
   const rec = {
@@ -2009,7 +2083,7 @@ document.addEventListener("keydown", e => {
 
 // ---- Backup / Import / Cloud / Reset ----
 function backupData(){
-  return { version: 4, exportedAt: new Date().toISOString(), deviceId, cats, items, deleted };
+  return { version: 5, exportedAt: new Date().toISOString(), deviceId, cats, items, deleted, settings: collectSettings() };
 }
 function backupFileName(){
   const d = new Date(), p = n => String(n).padStart(2,"0");
@@ -2040,6 +2114,7 @@ function applyBackup(parsed){
   if (newDeleted) { deleted = newDeleted; saveDeleted(); }
   saveItems(); renderCover();
   onLocalChange("data");
+  if (parsed && parsed.settings){ applySettings(parsed.settings); if (window.touchSettings) window.touchSettings(); }
   toast(`已匯入 ${items.length} 筆物件`);
 }
 // 「匯入備份檔」的來源選擇(手機 / Google 雲端)綁定在下方 Google 雲端 IIFE 內
@@ -2128,8 +2203,34 @@ function applyTheme(){
 document.getElementById("themePicker").addEventListener("click", e=>{
   const b = e.target.closest("button"); if (!b) return;
   theme = b.dataset.themeVal; saveTheme(); applyTheme();
+  renderTabs();                // 重繪篩選膠囊:選中類別的字色依新主題重算
+  applyFilter();               // 重繪:類別膠囊字色會依新主題底色重新判斷
+  onLocalChange("settings");   // 改主題也即時同步到雲端
 });
-applyTheme();
+
+// ===== 設定的收集 / 套用(供備份、匯入、雲端同步共用;含 到期提醒 與 外觀主題) =====
+function collectSettings(){
+  return { density: density, sort: currentSort, dueDays: dueSoonDays, theme: theme };
+}
+function applySettings(s){
+  if (!s || typeof s !== "object") return;
+  if (s.density === "compact" || s.density === "normal"){
+    density = s.density; saveDensity();
+    if (cardsEl) cardsEl.classList.toggle("compact", density === "compact");
+  }
+  if (typeof s.sort === "string" && SORTS.some(x => x.key === s.sort)){
+    currentSort = s.sort; saveSort();
+    if (typeof sortTxt !== "undefined" && sortTxt) sortTxt.textContent = (SORTS.find(x => x.key === currentSort) || SORTS[0]).label;
+  }
+  if (typeof s.dueDays === "number" && s.dueDays >= 0 && s.dueDays <= 3650){
+    dueSoonDays = s.dueDays; saveDueDays(); renderDueDays();
+  }
+  if (s.theme === "dark" || s.theme === "light"){
+    theme = s.theme; saveTheme(); applyTheme();
+  }
+  applyFilter();
+}
+// ===== 外觀主題設定結束 =====
 
 // ===== 安裝橫幅 (自訂安裝提示) =====
 (function(){
@@ -2298,6 +2399,7 @@ document.addEventListener("pointerdown", e => {
 }, true);
 document.addEventListener("scroll", e => { if (!palettePop.contains(e.target)) closePalette(); }, true);
 window.addEventListener("resize", () => closePalette());
+window.addEventListener("resize", () => { if (viewMode === "table" && listView.classList.contains("active")) syncTableChrome(); });
 document.getElementById("catManage").addEventListener("click", openCatManager);
 document.getElementById("catCloseX").addEventListener("click", closeCatManager);
 document.getElementById("catDone").addEventListener("click", closeCatManager);
@@ -2714,7 +2816,7 @@ let syncConnected = false, syncEmail = null;
       rev: 0, lastWriteBy: deviceId, updatedAt: Date.now(),
       data: { properties: items.map(function(x){ return Object.assign({}, x); }) },
       cats: { list: cats.map(function(c){ return Object.assign({}, c); }), _updatedAt: window.__catsTs },
-      settings: { density: density, sort: currentSort, dueDays: dueSoonDays, _updatedAt: window.__settingsTs },
+      settings: { density: density, sort: currentSort, dueDays: dueSoonDays, theme: theme, _updatedAt: window.__settingsTs },
       deleted: Object.assign({}, deleted)
     };
   }
@@ -2759,9 +2861,10 @@ let syncConnected = false, syncEmail = null;
     }
     if (merged.settings && merged.settings._updatedAt){
       const s = merged.settings;
-      if (s.density){ density = s.density; if (storageOK){ try { localStorage.setItem("property_app_density_v1", density); } catch(e){} } }
+      if (s.density){ density = s.density; if (storageOK){ try { localStorage.setItem("property_app_density_v1", density); } catch(e){} } if (cardsEl) cardsEl.classList.toggle("compact", density === "compact"); }
       if (s.sort){ currentSort = s.sort; saveSort(); }
-      if (typeof s.dueDays === "number"){ dueSoonDays = s.dueDays; saveDueDays(); }
+      if (typeof s.dueDays === "number"){ dueSoonDays = s.dueDays; saveDueDays(); if (typeof renderDueDays === "function") renderDueDays(); }
+      if (s.theme === "dark" || s.theme === "light"){ theme = s.theme; saveTheme(); applyTheme(); }
       window.__settingsTs = s._updatedAt || window.__settingsTs; saveTs("settings", window.__settingsTs);
     }
     // re-render UI to reflect merged state
