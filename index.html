@@ -642,6 +642,7 @@
   }
   /* 手機版表格更舒服:連結按鈕縮小、欄距收緊、總寬略降(只在 <820px 生效,桌機不受影響) */
   @media (max-width:819px){
+    .table-wrap{margin-left:24px;margin-right:24px;}   /* 左右留較寬的非捲動邊,讓螢幕邊緣「滑動返回」手勢不被表格捲動吃掉 */
     .ptable{min-width:1000px;}
     .ptable thead th{padding:11px 7px;}
     .tcell{padding:9px 7px;}
@@ -717,10 +718,13 @@
   .gen-btn:active{filter:brightness(1.05);}
   .gen-btn.gen-flash{animation:genFlash .5s ease;}
   @keyframes genFlash{0%{background:var(--accent-deep);}100%{background:var(--accent-tint);}}
-  @media (hover:none){   /* 手機無 hover:改左側小圓鈕、不覆蓋,日期仍看得到 */
-    .gen-btn{left:4px;top:50%;bottom:auto;width:26px;height:26px;border-radius:50%;border-right:none;box-shadow:none;
-      transform:translateY(-50%);opacity:.92;pointer-events:auto;}
-    .gen-label{display:none;}
+  /* 手機:點「到期日」表頭 → 切換 gen-open,所有列的生成面板一起滑出覆蓋(再點關閉) */
+  .gen-open .gen-btn{opacity:1;pointer-events:auto;transform:translateX(0);}
+  .gen-caret{display:none;margin-left:5px;font-size:.72em;opacity:.75;transition:transform .18s ease;}
+  .gen-open th[data-col="due"] .gen-caret{transform:rotate(180deg);}
+  @media (hover:none){
+    .gen-caret{display:inline-block;}
+    th[data-col="due"]{cursor:pointer;}
   }
   @keyframes tSaved{0%{background:#D6EFE6;}100%{background:transparent;}}
   .tcell.tnum{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
@@ -1107,7 +1111,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.08 D";
+const APP_VERSION = "2026.07.08 E";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1457,7 +1461,8 @@ function tHeadHTML(){
   return T_COLS.map((h,i) => {
     const f = T_FIELDS[i];
     const rz = (f && f !== FLEX_FIELD) ? `<span class="col-resize" data-field="${f}"></span>` : "";
-    return `<th><span class="th-label">${h}</span>${rz}</th>`;
+    const mark = (f === "due") ? '<span class="gen-caret" aria-hidden="true">▾</span>' : "";   // 手機:點到期日表頭開/關生成面板的提示
+    return `<th data-col="${f}"><span class="th-label">${h}${mark}</span>${rz}</th>`;
   }).join("") + (editMode ? `<th></th>` : "");
 }
 // 同時把某欄寬度套到「表頭 table」與「表身 table」兩邊的 <col>,並同步兩表 min-width
@@ -1677,6 +1682,12 @@ tableWrap.addEventListener("input", e => {
   }
 });
 tableWrap.addEventListener("click", e=>{
+  // 手機:點「到期日」表頭 → 切換所有列的生成面板開/關(電腦版維持滑到左緣才出現)
+  const dueHead = e.target.closest('th[data-col="due"]');
+  if (dueHead && !e.target.closest(".col-resize") && window.matchMedia && window.matchMedia("(hover: none)").matches){
+    tableWrap.classList.toggle("gen-open");
+    return;
+  }
   // 編輯模式:到期日欄「生成檔名」面板 → 生成並複製
   const genBtn = e.target.closest(".gen-btn");
   if (genBtn){
