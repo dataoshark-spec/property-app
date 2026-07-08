@@ -506,9 +506,12 @@
     transition:border-color .15s ease,box-shadow .15s ease;}
   .modal-body input:focus,.modal-body select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
   .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
-  .row2.name-row{grid-template-columns:minmax(0,4fr) minmax(0,1fr);}
+  .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}   /* 格局/樓層/售價 各 1/3 */
+  .row2.store-row{grid-template-columns:minmax(0,2fr) minmax(0,1fr);}          /* 門市 2/3、到期日 1/3(與格局同寬) */
+  .row2.name-row{grid-template-columns:repeat(3,minmax(0,1fr));}                /* 與三欄排同格線:案名跨前兩欄、類別佔第三欄,與樓層左右對齊 */
+  .row2.name-row > label:first-child{grid-column:1 / span 2;}
   .row2.name-row select{padding:10px 8px;font-size:.95rem;}
-  .row2.tel-row{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);}
+  .row2.tel-row{grid-template-columns:minmax(0,1fr) minmax(0,2fr);}            /* 承辦:電話 = 1:2 */
 
   /* Custom category dropdown */
   .cselect{position:relative;}
@@ -1001,7 +1004,7 @@
       </div>
       <div class="modal-body">
         <div class="row2 name-row">
-          <label>案名 *<input id="f_name"></label>
+          <label>案名<input id="f_name"></label>
           <label>類別
           <div class="cselect" id="catSel">
             <button type="button" class="cselect-btn" id="catSelBtn" aria-haspopup="listbox" aria-expanded="false">
@@ -1012,20 +1015,20 @@
           </div>
         </label>
         </div>
-        <div class="row2">
+        <div class="row3">
+          <label>售價（萬）<input id="f_price" type="number" inputmode="numeric"></label>
           <label>格局<input id="f_layout"></label>
           <label>樓層<input id="f_floor"></label>
-        </div>
-        <div class="row2">
-          <label>售價（萬元）<input id="f_price" type="number" inputmode="numeric"></label>
-          <label>到期日<input id="f_due"></label>
         </div>
         <label>地址<input id="f_addr"></label>
         <div class="row2 tel-row">
           <label>承辦<input id="f_agent"></label>
           <label>電話<input id="f_tel" inputmode="tel"></label>
         </div>
-        <label>門市<input id="f_store"></label>
+        <div class="row2 store-row">
+          <label>門市<input id="f_store"></label>
+          <label>到期日<input id="f_due"></label>
+        </div>
         <label>591 連結<input id="f_591"></label>
         <label>樂居 連結<input id="f_leju"></label>
         <label>永慶 連結<input id="f_i"></label>
@@ -1104,7 +1107,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.07 Y";
+const APP_VERSION = "2026.07.08 D";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1639,6 +1642,39 @@ tableWrap.addEventListener("keydown", e=>{
     const tr = c.closest("tr"), nextTr = tr.nextElementSibling;
     if (nextTr){ const nc = nextTr.querySelector(`.tcell[data-field="${c.dataset.field}"]`); if (nc){ nc.focus(); caretEnd(nc); } }
   } else if (e.key === "Escape"){ c.blur(); }
+});
+// 貼上時只保留純文字,剝掉來源的顏色/字體/樣式,避免欄位變形(多行/定位點轉空白)
+tableWrap.addEventListener("paste", e => {
+  const cell = (e.target && e.target.closest) ? e.target.closest(".tcell") : null;
+  if (!cell || cell.getAttribute("contenteditable") !== "true") return;
+  e.preventDefault();
+  const cd = e.clipboardData || window.clipboardData;
+  let text = "";
+  try { text = (cd && cd.getData("text/plain")) || ""; } catch(err){}
+  if (!text && cd){   // 來源只給 HTML、沒給純文字時:把標籤剝掉只留文字
+    try { const html = cd.getData("text/html") || ""; if (html){ const tmp = document.createElement("div"); tmp.innerHTML = html; text = tmp.textContent || tmp.innerText || ""; } } catch(err){}
+  }
+  text = text.replace(/[\r\n\t]+/g, " ");
+  let ok = false;
+  try { ok = document.execCommand("insertText", false, text); } catch(err){}
+  if (!ok){   // 後備:手動於游標處插入純文字節點
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount){
+      const r = sel.getRangeAt(0); r.deleteContents();
+      const n = document.createTextNode(text); r.insertNode(n);
+      r.setStartAfter(n); r.collapse(true); sel.removeAllRanges(); sel.addRange(r);
+    }
+  }
+});
+// 防線:若任何方式(貼上/拖入)讓格子帶進了格式(出現子元素),立即攤平成純文字,避免顯示變形
+tableWrap.addEventListener("input", e => {
+  const cell = (e.target && e.target.closest) ? e.target.closest(".tcell") : null;
+  if (!cell || cell.getAttribute("contenteditable") !== "true") return;
+  if (cell.querySelector("*")){                 // 有子元素=帶了格式
+    const txt = cell.textContent;
+    cell.textContent = txt;
+    try { const r = document.createRange(); r.selectNodeContents(cell); r.collapse(false); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch(err){}
+  }
 });
 tableWrap.addEventListener("click", e=>{
   // 編輯模式:到期日欄「生成檔名」面板 → 生成並複製
