@@ -99,7 +99,6 @@
     --cover-text:#16222A;
     --cover-grid:rgba(16,74,60,.06);
   }
-  [data-theme="light"] .cover .sub{color:var(--ink-soft);}
   [data-theme="light"] .cat-btn{background:var(--card);border-color:var(--line);}
   [data-theme="light"] .cat-btn:hover{background:var(--surface-2);border-color:var(--border-2);}
   [data-theme="light"] .cat-main small{color:var(--text-faint);}
@@ -157,10 +156,6 @@
     -webkit-mask-image:radial-gradient(ellipse 120% 80% at 70% 15%,#000 30%,transparent 75%);
   }
   .cover>*{position:relative;z-index:1;}
-  .cover .eyebrow{
-    font-size:.78rem;letter-spacing:.32em;font-weight:500;
-    color:var(--accent);text-transform:uppercase;
-  }
   .cover .spacer{flex:1;}
   .cover-body{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;}
   .cover-body::-webkit-scrollbar{display:none;}
@@ -171,9 +166,6 @@
     font-size:clamp(1.7rem,6.5vw,2.05rem);
     line-height:1.15;letter-spacing:.01em;
   }
-  .cover .rule{width:46px;height:3px;background:var(--accent);margin-bottom:18px;}
-  .cover .sub{font-size:1rem;color:rgba(243,241,233,.72);max-width:30ch;}
-
   .cats{display:flex;flex-direction:column;gap:10px;margin-top:24px;flex:none;}
   .cat-btn{
     display:flex;align-items:center;gap:14px;width:100%;text-align:left;
@@ -510,7 +502,6 @@
   .row2.store-row{grid-template-columns:minmax(0,2fr) minmax(0,1fr);}          /* 門市 2/3、到期日 1/3(與格局同寬) */
   .row2.name-row{grid-template-columns:repeat(3,minmax(0,1fr));}                /* 與三欄排同格線:案名跨前兩欄、類別佔第三欄,與樓層左右對齊 */
   .row2.name-row > label:first-child{grid-column:1 / span 2;}
-  .row2.name-row select{padding:10px 8px;font-size:.95rem;}
   .row2.tel-row{grid-template-columns:minmax(0,1fr) minmax(0,2fr);}            /* 承辦:電話 = 1:2 */
 
   /* Custom category dropdown */
@@ -642,6 +633,11 @@
   }
   /* 手機版表格更舒服:連結按鈕縮小、欄距收緊、總寬略降(只在 <820px 生效,桌機不受影響) */
   @media (max-width:819px){
+    /* 手機:編輯/新增物件表單改「整頁滿版」,不留頂部空白(桌機維持底部面板) */
+    .modal-bg{align-items:stretch;}
+    .modal{max-width:none;max-height:none;height:100dvh;border-radius:0;animation:modalUp .22s ease;}
+    .modal-body{flex:1;min-height:0;}
+    @keyframes modalUp{from{transform:translateY(14px);opacity:.6;}to{transform:translateY(0);opacity:1;}}
     .table-wrap{margin-left:24px;margin-right:24px;}   /* 左右留較寬的非捲動邊,讓螢幕邊緣「滑動返回」手勢不被表格捲動吃掉 */
     .ptable{min-width:1000px;}
     .ptable thead th{padding:11px 7px;}
@@ -956,7 +952,7 @@
 
       <div class="set-card">
         <div class="set-card-title">到期提醒</div>
-        <p class="set-card-desc">物件到期前幾天開始，用膠囊閃爍提醒你。已過期會以紅色、較快的速度閃爍。</p>
+        <p class="set-card-desc">物件到期前幾天開始提醒：卡片以右側色條、表格以整列底色閃爍提示；已過期會以紅色、較快的速度閃爍。</p>
         <div class="set-line">
           <span class="set-line-label">即將到期天數</span>
           <div class="stepper">
@@ -1111,7 +1107,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.08 E";
+const APP_VERSION = "2026.07.08 I";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1192,7 +1188,7 @@ function buildFileName(d){
   const due = String(d.due == null ? "" : d.due).trim();
   const dist = districtFromAddr(d.addr);
   const name = String(d.name == null ? "" : d.name).replace(/[／\/＊*＠@]/g, "");   // 案名去符號
-  const price = (d.price === "" || d.price == null) ? "" : String(d.price).trim();
+  const price = d.price ? String(d.price).trim() : "";   // 空值或 0 皆視為未填,該段略過
   const agent = String(d.agent == null ? "" : d.agent).trim();
   return [due, dist, name, price + agent].filter(x => x !== "").join("-");
 }
@@ -1224,7 +1220,7 @@ function cardHTML(d){
       </div>
       <div class="sub-row">
         <span class="addr"><span class="cv" data-copy="${esc(d.addr)}">${esc(d.addr)}</span></span>
-        <span class="price-tag" data-copy="${esc(d.price)}">${money(d.price)}<small>萬</small></span>
+        ${d.price ? `<span class="price-tag" data-copy="${esc(d.price)}">${money(d.price)}<small>萬</small></span>` : `<span class="price-tag"></span>`}
       </div>
     </div>
   </article>`;
@@ -1240,7 +1236,7 @@ function cardHTML(d){
       </div>
       <div class="addr"><span class="cv" data-copy="${esc(d.addr)}">${esc(d.addr)}</span></div>
       <div class="price">
-        <span class="price-value" data-copy="${esc(d.price)}"><span class="num">${money(d.price)}</span><span class="unit">萬</span></span>
+        ${d.price ? `<span class="price-value" data-copy="${esc(d.price)}"><span class="num">${money(d.price)}</span><span class="unit">萬</span></span>` : `<span class="price-value"></span>`}
         <div class="links">${linkChip(d.url591, "591")}${linkChip(d.urlLeju, "樂居")}${linkChip(d.urlI, "永慶")}</div>
       </div>
       <div class="meta">
@@ -1633,7 +1629,15 @@ function tCommitCell(cell){
   if (field === "name") val = normalizeName(val);
   if (field === "price") val = (val === "") ? "" : (parseInt(val.replace(/[^\d]/g,""),10) || 0);
   if (field === "name" && cell.textContent.trim() !== val) cell.textContent = val;   // 顯示同步為正規化後的案名
-  if (it[field] !== val){ it[field] = val; it.updatedAt = Date.now(); saveItems(); onLocalChange("data"); }
+  if (it[field] !== val){
+    it[field] = val; it.updatedAt = Date.now(); saveItems(); onLocalChange("data");
+    if (field === "due"){   // 到期日改完即時更新該列/該格的到期底色(離線也即時,不用等重繪)
+      const tr = cell.closest("tr");
+      const ds = dueStatus(val);
+      if (tr){ tr.classList.remove("due-warn","due-over"); if (ds) tr.classList.add("due-" + ds); }
+      cell.classList.remove("warn","over"); if (ds) cell.classList.add(ds);
+    }
+  }
 }
 function caretEnd(el){ try{ const r=document.createRange(); r.selectNodeContents(el); r.collapse(false); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
 
@@ -1818,6 +1822,7 @@ catmenu.addEventListener("click", e=>{
 });
 function addTableRow(){
   if (!editMode){ editMode = true; saveEditMode(); }
+  if (searchEl.value){ searchEl.value = ""; }   // 清除搜尋:否則新增的空白列會被搜尋過濾掉、看不到也無法輸入
   const cat = currentCat || (cats[0] && cats[0].key) || "";
   const it = { id: uid(), name:"", cat, layout:"", floor:"", price:"", addr:"", due:"", agent:"", tel:"", store:"", url591:null, urlLeju:null, urlI:null, updatedAt: Date.now() };
   items.push(it); saveItems(); onLocalChange("data");
@@ -1886,6 +1891,7 @@ document.getElementById("listVT").addEventListener("click", e=>{
     editMode = false; saveEditMode();   // 切換檢視一律恢復正常模式
     exitSelectMode();                    // 並退出卡片多選(修復:避免刪除列殘留浮在表格上)
     closeCatMenu(); closeLinkPop();      // 關閉表格的類別/連結浮層,避免懸浮殘留
+    tableWrap.classList.remove("gen-open");   // 收起手機的生成面板,避免狀態殘留
   }
   setViewMode(vm);
 });
@@ -1930,6 +1936,7 @@ function openList(cat){
   editMode = false; saveEditMode();     // 進入列表一律預設「正常」模式;要編輯需先選檢視再點編輯
   currentCat = cat || "";
   searchEl.value = "";
+  tableWrap.classList.remove("gen-open");   // 重新進列表:收起手機生成面板
   applyFilter();
   cover.style.display = "none";
   listView.classList.add("active");
@@ -2147,7 +2154,7 @@ function saveForm(){
   const rec = {
     name, cat: formCat,
     layout: F.layout.value.trim(), floor: F.floor.value.trim(),
-    price: parseInt(F.price.value, 10) || 0,
+    price: F.price.value.trim() === "" ? "" : (parseInt(F.price.value, 10) || 0),
     addr: F.addr.value.trim(), due: F.due.value.trim(),
     agent: F.agent.value.trim(), tel: F.tel.value.trim(), store: F.store.value.trim(),
     url591: F.u591.value.trim() || null, urlLeju: F.uleju.value.trim() || null, urlI: F.ui.value.trim() || null,
@@ -3098,7 +3105,24 @@ let syncConnected = false, syncEmail = null;
     setDensity(density);
   }
 
-  // ---- daily snapshot (insurance; keeps one per day) ----
+  // ---- daily snapshot (insurance; keeps one per day, 自動只保留最近 30 天) ----
+  const SNAP_KEEP_DAYS = 30;
+  async function pruneSnapshots(){
+    try {
+      const q = encodeURIComponent("name contains 'sync-backup-' and trashed=false");
+      const res = await dfetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&spaces=appDataFolder&fields=files(id,name)&pageSize=1000");
+      const data = await res.json();
+      const files = (data.files || []);
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - SNAP_KEEP_DAYS);
+      const cutoffStr = cutoff.toISOString().slice(0,10);   // YYYY-MM-DD 同格式,字串比較即可
+      for (const f of files){
+        const m = /^sync-backup-(\d{4}-\d{2}-\d{2})\.json$/.exec(f.name || "");   // 只認快照檔名,絕不動 sync-main.json
+        if (m && m[1] < cutoffStr){
+          try { await dfetch("https://www.googleapis.com/drive/v3/files/" + f.id, { method: "DELETE" }); } catch(e){}
+        }
+      }
+    } catch(e){}
+  }
   async function maybeSnapshot(obj){
     try {
       const day = new Date().toISOString().slice(0,10);
@@ -3107,6 +3131,7 @@ let syncConnected = false, syncEmail = null;
       if (existing) return;
       const id = await createFile(name);
       await upload(id, obj);
+      pruneSnapshots();   // 建立當天新快照後,順手清掉 30 天前的舊快照(一天最多跑一次)
     } catch(e){}
   }
 
