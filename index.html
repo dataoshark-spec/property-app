@@ -592,6 +592,48 @@
 
   /* Confirm dialog (centered) + toast */
   .modal-bg.center{align-items:center;padding:24px;}
+  /* ---- 到期日:自製日曆(民國年顯示;與客戶總覽同一套) ---- */
+  #f_due{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='%2394a0ac' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='4.5' width='18' height='16' rx='2.5'/%3E%3Cpath d='M3 9.5h18M8 2.5v4M16 2.5v4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;background-size:18px;padding:10px 40px 10px 12px;cursor:pointer;}
+  /* 日曆彈窗:一般情況維持標準遮罩;只有疊在「編輯物件」表單上時才用近乎不透明的底,避免疊視窗感 */
+  #calBg{z-index:60;}
+  #calBg.over-modal{background:rgba(255,255,255,.99);}
+  [data-theme="dark"] #calBg.over-modal{background:rgba(6,10,13,.99);}
+  .cal{background:var(--card);width:100%;max-width:420px;border-radius:26px;padding:20px 22px 22px;box-shadow:0 22px 60px rgba(22,34,42,.32);}
+  .cal-fmt{display:flex;justify-content:flex-end;margin-bottom:2px;}
+  .cal-fmt button{border:1px solid var(--line);background:var(--surface-1);color:var(--ink-soft);font-size:.82rem;font-weight:700;padding:8px 14px;border-radius:999px;cursor:pointer;}
+  .cal-fmt button:active{background:var(--surface-2);}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin:4px 0 14px;}
+  .cal-title{font-weight:800;font-size:1.35rem;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.02em;}
+  .cal-nav{width:44px;height:44px;border-radius:14px;border:0;background:transparent;color:var(--ink-soft);font-size:1.5rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .cal-nav:active{background:var(--surface-1);}
+  .cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;}
+  .cal-week span{text-align:center;font-size:.9rem;font-weight:600;color:var(--text-faint);padding:4px 0;}
+  .cal-week span:first-child,.cal-week span:last-child{color:#C4737B;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px 2px;}
+  .cal-day{aspect-ratio:1;min-height:46px;border:0;background:transparent;border-radius:50%;font-size:1.12rem;font-weight:600;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;padding:0;}
+  .cal-day.wkend{color:#C4737B;}
+  .cal-day.today{background:var(--accent);color:#fff;font-weight:700;}
+  .cal-day.sel:not(.today){box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent-deep);}
+  .cal-day:active{background:var(--surface-2);}
+  .cal-day.today:active{background:var(--accent-deep);}
+  .cal-day.empty{visibility:hidden;cursor:default;}
+  .cal-foot{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+  .cal-fbtn{width:100%;padding:15px;border-radius:16px;font-weight:700;font-size:1.05rem;cursor:pointer;}
+  .cal-fbtn.cal-today{background:var(--accent);border:1px solid var(--accent);color:#fff;}
+  .cal-fbtn.cal-today:active{background:var(--accent-deep);}
+  .cal-fbtn.cal-cancel{background:transparent;border:1px solid #D9A0A6;color:#C4737B;}
+  .cal-fbtn.cal-cancel:active{background:var(--surface-1);}
+  .cal-fbtn.cal-clear{background:transparent;border:1px solid var(--line);color:var(--ink-soft);}
+  .cal-fbtn.cal-clear:active{background:var(--surface-1);}
+  /* 表格編輯模式:到期日改為按鈕(點擊開日曆),外觀比照原本的到期日格 */
+  .tdue-btn{width:100%;border:0;background:transparent;padding:9px 10px;min-height:40px;line-height:22px;cursor:pointer;text-align:center;
+    font-family:inherit;font-size:.66rem;font-weight:600;color:var(--ink-soft);font-variant-numeric:tabular-nums;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tdue-btn:active{background:var(--surface-1);}
+  .tdue-btn.warn{color:#B26A00;font-weight:700;}
+  .tdue-btn.over{color:#C0341A;font-weight:700;}
+  [data-theme="dark"] .tdue-btn.warn{color:#E6A94A;}
+  [data-theme="dark"] .tdue-btn.over{color:#F0745A;}
   .confirm{background:var(--card);width:100%;max-width:340px;border-radius:18px;padding:26px 24px 18px;
     animation:sheet .2s ease;}
   .confirm-title{font-family:"Noto Serif TC",serif;font-size:1.2rem;font-weight:700;color:var(--ink);
@@ -642,6 +684,7 @@
     .ptable{min-width:1000px;}
     .ptable thead th{padding:11px 7px;}
     .tcell{padding:9px 7px;}
+    .tdue-btn{padding:9px 7px;}
     .tcat{padding:7px 6px;}
     .tlinks{padding:7px 6px;}
     .tchips{gap:4px;}
@@ -1063,6 +1106,25 @@
     </div>
   </div>
 
+  <!-- ===== 到期日日曆(卡片表單 / 表格編輯模式 共用) ===== -->
+  <div class="modal-bg center" id="calBg">
+    <div class="cal">
+      <div class="cal-fmt"><button type="button" id="calFmt">日期格式切換</button></div>
+      <div class="cal-head">
+        <button type="button" class="cal-nav" id="calPrev" aria-label="上個月">‹</button>
+        <div class="cal-title" id="calTitle"></div>
+        <button type="button" class="cal-nav" id="calNext" aria-label="下個月">›</button>
+      </div>
+      <div class="cal-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-foot">
+        <button type="button" class="cal-fbtn cal-today" id="calToday">回到今天</button>
+        <button type="button" class="cal-fbtn cal-clear" id="calClear">清除日期</button>
+        <button type="button" class="cal-fbtn cal-cancel" id="calCancel">取消</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== Confirm dialog ===== -->
   <div class="modal-bg center" id="confirmBg">
     <div class="confirm">
@@ -1107,7 +1169,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.13 A";
+const APP_VERSION = "2026.07.15 A";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1484,8 +1546,11 @@ function trowHTML(d){
     : ``;
   const ds = dueStatus(d.due);   // 方案 D:整列依到期狀態上底色閃爍
   const nameInner = editMode ? esc(d.name) : nameSegmentsHTML(d.name);   // 正常模式:案名依符號分段可點複製;編輯模式維持純文字可編輯
+  const dueInner = editMode      // 編輯模式:到期日改為日曆選擇(不用鍵盤輸入);正常模式維持可點複製
+    ? `<button type="button" class="tdue-btn ${ds}" data-duecal="1" title="${esc(d.due)}">${esc(d.due)}</button>`
+    : `<div class="tcell tdue ${ds}" contenteditable="false" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div>`;
   return `<tr data-id="${esc(d.id)}"${ds ? ` class="due-${ds}"` : ""}>`+
-    `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button><div class="tcell tdue ${ds}" contenteditable="${ce}" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div></td>`+
+    `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button>${dueInner}</td>`+
     catCell +
     `<td><div class="tcell" contenteditable="${ce}" data-field="layout" title="${esc(d.layout)}">${esc(d.layout)}</div></td>`+
     `<td><div class="tcell tname" contenteditable="${ce}" data-field="name" title="${esc(d.name)}">${nameInner}</div></td>`+
@@ -1582,7 +1647,7 @@ function autoFitColumn(field){
       const w = _measText(cell.textContent, cell) + pad;
       if (w > maxW) maxW = w;
     } else {
-      const sp = td.querySelector(".tcat-badge, .tcat-trigger, .tchips");  // 類別膠囊 / 連結膠囊組:本身即內容寬
+      const sp = td.querySelector(".tcat-badge, .tcat-trigger, .tchips, .tdue-btn");  // 類別膠囊 / 連結膠囊組 / 到期日鈕:本身即內容寬
       if (sp && sp.offsetWidth > maxW) maxW = sp.offsetWidth;
     }
   });
@@ -1622,6 +1687,25 @@ window.isTableBusy = function(){
 // ---- inline editing ----
 function tFindItem(el){ const tr = el.closest("tr"); return tr ? items.find(x => x.id === tr.dataset.id) : null; }
 function tFlash(el){ el.classList.add("saved"); setTimeout(()=>el.classList.remove("saved"), 700); }
+// 表格編輯模式:到期日 → 開共用日曆(與卡片表單同一個);就地更新不重排,並即時更新到期色
+function openTableDueCal(trigger){
+  const it = tFindItem(trigger); if (!it) return;
+  closeCatMenu(); closeLinkPop();                       // 先關其他浮層
+  if (typeof window.openCalFor !== "function") return;
+  window.openCalFor({
+    get: () => it.due || "",
+    set: v => {
+      const nv = String(v||"").trim();
+      if ((it.due||"") === nv) return;
+      it.due = nv; it.updatedAt = Date.now(); saveItems(); onLocalChange("data");
+      trigger.textContent = nv; trigger.title = nv;
+      const ds = dueStatus(nv);                          // 即時更新到期色:按鈕本身 + 整列閃爍
+      trigger.classList.remove("warn","over"); if (ds) trigger.classList.add(ds);
+      const tr = trigger.closest("tr");
+      if (tr){ tr.classList.remove("due-warn","due-over"); if (ds) tr.classList.add("due-" + ds); }
+    }
+  });
+}
 function tCommitCell(cell){
   const it = tFindItem(cell); if (!it) return;
   const field = cell.dataset.field;
@@ -1707,6 +1791,9 @@ tableWrap.addEventListener("click", e=>{
     }
     return;
   }
+  // 編輯模式:到期日 → 開日曆選擇(不用鍵盤輸入)
+  const dueBtn = e.target.closest(".tdue-btn[data-duecal]");
+  if (dueBtn){ e.stopPropagation(); openTableDueCal(dueBtn); return; }
   // 類別下拉(僅編輯模式有觸發鈕)
   const trig = e.target.closest(".tcat-trigger");
   if (trig){ e.stopPropagation(); openCatMenu(trig); return; }
@@ -2094,6 +2181,72 @@ const F = {
   tel:document.getElementById("f_tel"), store:document.getElementById("f_store"),
   u591:document.getElementById("f_591"), uleju:document.getElementById("f_leju"), ui:document.getElementById("f_i"),
 };
+
+// ---- 到期日:自製日曆選擇(民國年顯示 + 西元/民國轉換;與客戶總覽同一套) ----
+function todayROC(){
+  const d = new Date();
+  return String(d.getFullYear() - 1911) + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0");
+}
+(function(){
+  const calBg = document.getElementById("calBg");
+  const calTitle = document.getElementById("calTitle");
+  const calGrid = document.getElementById("calGrid");
+  let calY, calM;
+  function rocToDate(roc){
+    const s = String(roc||"").replace(/\D/g,"");
+    if (s.length < 5) return null;
+    const day = +s.slice(-2), mon = +s.slice(-4,-2), ry = +s.slice(0,-4);
+    const dt = new Date(ry + 1911, mon-1, day);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+  function dateToRoc(dt){
+    return String(dt.getFullYear()-1911) + String(dt.getMonth()+1).padStart(2,"0") + String(dt.getDate()).padStart(2,"0");
+  }
+  let calFmtROC = true;
+  const FORM_TARGET = { get: () => F.due.value, set: v => { F.due.value = v; } };   // 預設目標:卡片表單的到期日
+  let calTarget = FORM_TARGET;
+  function render(){
+    calTitle.textContent = calFmtROC
+      ? "民國 " + (calY-1911) + " 年 " + (calM+1) + " 月"
+      : calY + " 年 " + (calM+1) + " 月";
+    const first = new Date(calY, calM, 1).getDay();
+    const days = new Date(calY, calM+1, 0).getDate();
+    const today = dateToRoc(new Date());
+    const sel = String(calTarget.get()||"").replace(/\D/g,"");
+    let h = "";
+    for (let i=0;i<first;i++) h += '<button type="button" class="cal-day empty" tabindex="-1"></button>';
+    for (let dd=1;dd<=days;dd++){
+      const dt = new Date(calY, calM, dd);
+      const roc = dateToRoc(dt);
+      const wd = dt.getDay();
+      let c = "cal-day";
+      if (wd === 0 || wd === 6) c += " wkend";
+      if (roc === today) c += " today";
+      if (roc === sel) c += " sel";
+      h += '<button type="button" class="' + c + '" data-roc="' + roc + '">' + dd + '</button>';
+    }
+    calGrid.innerHTML = h;
+  }
+  function openCal(target){
+    if (calBg.classList.contains("open")) return;
+    calTarget = target || FORM_TARGET;
+    calBg.classList.toggle("over-modal", modalBg.classList.contains("open"));   // 只有疊在編輯表單上時才用不透明遮罩
+    const cur = rocToDate(calTarget.get()) || new Date();
+    calY = cur.getFullYear(); calM = cur.getMonth();
+    render(); calBg.classList.add("open");
+  }
+  function closeCal(){ calBg.classList.remove("open"); calTarget = FORM_TARGET; }
+  document.getElementById("calPrev").addEventListener("click", () => { calM--; if (calM<0){calM=11;calY--;} render(); });
+  document.getElementById("calNext").addEventListener("click", () => { calM++; if (calM>11){calM=0;calY++;} render(); });
+  calGrid.addEventListener("click", e => { const b = e.target.closest(".cal-day[data-roc]"); if (b){ calTarget.set(b.dataset.roc); closeCal(); } });
+  document.getElementById("calToday").addEventListener("click", () => { calTarget.set(todayROC()); closeCal(); });
+  document.getElementById("calClear").addEventListener("click", () => { calTarget.set(""); closeCal(); });
+  document.getElementById("calCancel").addEventListener("click", closeCal);
+  document.getElementById("calFmt").addEventListener("click", () => { calFmtROC = !calFmtROC; render(); });
+  calBg.addEventListener("click", e => { if (e.target === calBg) closeCal(); });
+  if (F.due){ F.due.setAttribute("readonly",""); F.due.addEventListener("click", () => openCal(FORM_TARGET)); }
+  window.openCalFor = openCal;   // 供表格編輯模式的到期日共用同一個日曆
+})();
 
 // ---- Custom category dropdown (styled) ----
 const catSel = document.getElementById("catSel");
