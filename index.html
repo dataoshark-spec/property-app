@@ -350,10 +350,6 @@
     overflow:hidden;display:flex;
     box-shadow:0 1px 2px rgba(22,34,42,.04);
   }
-  .stripe{width:6px;flex:none;}
-  .card.cat-tower .stripe{background:var(--cat-tower);}
-  .card.cat-office .stripe{background:var(--cat-office);}
-  .card.cat-shop .stripe{background:var(--cat-shop);}
   /* 到期提醒:卡片右側邊條(正常+緊湊一致)— 快到期=琥珀慢閃、已過期=紅快閃;左色條維持類別色 */
   .card .due-edge{position:absolute;top:0;right:0;bottom:0;width:6px;display:none;pointer-events:none;}
   .card.due-warn .due-edge{display:block;background:#E0A11B;animation:duePulse 2.4s ease-in-out infinite;}
@@ -454,6 +450,39 @@
 
   /* Selection mode (long-press to multi-select) */
   .card{position:relative;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+  /* 編輯模式長按「進度描邊」:整圈邊框沿周長逐步畫滿(單一 SVG 路徑 + pathLength 正規化,與元素尺寸無關,
+     四邊隨時都看得到目前進度,兼作長按進度指示);淡色軌道先鋪滿整圈,accent 描邊再沿軌道畫滿(與客戶總覽同款) */
+  .lp-ring{position:absolute;inset:0;width:100%;height:100%;z-index:6;opacity:0;pointer-events:none;overflow:visible;transition:opacity .15s;}
+  .lp-ring rect{x:1px;y:1px;width:calc(100% - 2px);height:calc(100% - 2px);rx:var(--lp-rx,15px);fill:none;}
+  .lp-ring .lp-track{stroke:var(--accent);stroke-opacity:.14;stroke-width:2;}
+  /* 起頭「長」出來:前 16% 線寬 0.5→2、前 9% 透明度 0→1;領頭光點跑在描邊最前端,收尾滑回起點同步溶解;
+     dasharray 101(比路徑長 1):終點多描 1 單位蓋過接縫 */
+  .lp-ring .lp-draw{stroke:var(--accent);stroke-width:2;stroke-linecap:butt;stroke-dasharray:101 101;stroke-dashoffset:101;
+    filter:drop-shadow(0 0 3px color-mix(in srgb, var(--accent) 40%, transparent));}
+  .lp-ring .lp-tip{stroke:color-mix(in srgb, var(--accent) 55%, #fff);stroke-width:3;stroke-linecap:round;fill:none;
+    stroke-dasharray:2.5 98.5;stroke-dashoffset:101;opacity:0;
+    filter:drop-shadow(0 0 4px var(--accent));}
+  .lp-run .lp-ring{opacity:1;}
+  .lp-run .lp-draw{animation:lpDraw var(--lp-ms,1200ms) linear forwards;}
+  .lp-run .lp-tip{animation:lpTip var(--lp-ms,1200ms) linear forwards;}
+  @keyframes lpDraw{
+    0%{stroke-dashoffset:101;opacity:0;stroke-width:.5;}
+    9%{opacity:1;}
+    16%{stroke-width:2;}
+    100%{stroke-dashoffset:0;opacity:1;stroke-width:2;}
+  }
+  @keyframes lpTip{
+    0%{stroke-dashoffset:101;opacity:0;}
+    6%{opacity:1;}
+    94%{opacity:1;}
+    100%{stroke-dashoffset:0;opacity:0;}
+  }
+  /* 畫滿(長按成立)瞬間:整圈亮一下再淡出,當作完成回饋 */
+  .lp-done .lp-ring{opacity:1;}
+  .lp-done .lp-draw{stroke-dashoffset:0;animation:lpDoneGlow .45s ease-out forwards;}
+  .lp-done .lp-tip{opacity:0;}
+  @keyframes lpDoneGlow{0%{opacity:1;stroke-width:2.4;}100%{opacity:0;stroke-width:1.2;}}
+  @media (prefers-reduced-motion: reduce){ .lp-run .lp-draw,.lp-done .lp-draw{animation:none;stroke-dashoffset:0;opacity:.7;} .lp-run .lp-tip,.lp-done .lp-tip{animation:none;opacity:0;} }
   .selbox{position:absolute;top:13px;right:13px;z-index:4;width:22px;height:22px;border-radius:50%;
     border:2px solid var(--border-2);background:rgba(255,255,255,.92);
     display:none;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.14);
@@ -807,6 +836,18 @@
   .tdel{padding:7px;text-align:center;}
   .tdel button{width:32px;height:32px;vertical-align:middle;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);font-size:.9rem;cursor:pointer;transition:all .15s;}
   .tdel button:hover{border-color:var(--danger-tint-bd);color:#B4472E;background:var(--danger-tint);}
+  /* ---- 表格批次刪除選取模式(垃圾桶長按 600ms 進入;與客戶總覽同款) ---- */
+  .table-wrap.tsel-on tbody tr{cursor:pointer;}
+  .table-wrap.tsel-on tbody{user-select:none;-webkit-user-select:none;}
+  /* 選取中一律只做「點列切換」:所有互動元素關閉命中,點擊落到列上由 capture 處理器統一接管 */
+  .table-wrap.tsel-on .tcell,.table-wrap.tsel-on .tcat-trigger,.table-wrap.tsel-on .tdel button,
+  .table-wrap.tsel-on .tdue-btn,.table-wrap.tsel-on .gen-btn,.table-wrap.tsel-on .gen-edge,.table-wrap.tsel-on .tchip{pointer-events:none;}
+  .table-wrap.tsel-on tbody tr.tsel-row td{background:color-mix(in srgb, var(--accent) 10%, var(--card))!important;}
+  /* 垃圾桶按鈕在選取模式化身為圓形勾選框:未選=空圈,已選=accent 實心打勾 */
+  .table-wrap.tsel-on .tdel button svg{display:none;}
+  .table-wrap.tsel-on .tdel button{border-color:transparent;background:transparent;}
+  .table-wrap.tsel-on .tdel button::after{content:"";display:inline-block;width:18px;height:18px;border-radius:50%;border:2px solid var(--border-2);box-sizing:border-box;vertical-align:middle;line-height:14px;transition:background .15s,border-color .15s;}
+  .table-wrap.tsel-on tr.tsel-row .tdel button::after{content:"✓";border-color:var(--accent);background:var(--accent);color:#fff;font-size:11px;font-weight:700;text-align:center;}
   .tempty{padding:40px 20px;text-align:center;color:var(--ink-soft);font-size:.9rem;}
   tr.trow-removing{opacity:0;transform:translateX(8px);transition:opacity .22s,transform .22s;}
 
@@ -1163,7 +1204,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.17 A";
+const APP_VERSION = "2026.07.17 B";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1263,13 +1304,11 @@ function nameSegmentsHTML(name){
   return html || esc(s);
 }
 function cardHTML(d){
-  const color = catColor(d.cat);
   const sel = selected.has(d.id) ? " selected" : "";
-  const ds = dueStatus(d.due);   // 到期狀態:正常/緊湊都用「右側邊條」提醒;左色條維持類別色
+  const ds = dueStatus(d.due);   // 到期狀態:正常/緊湊都用「右側邊條」提醒;左側類別色條已退役(類別以右上灰字呈現)
   if (density === "compact"){
-    return `<article class="card compact-card${sel}${ds ? " due-"+ds : ""}" data-id="${d.id}">
+    return `<article class="card compact-card${sel}${ds ? " due-"+ds : ""}" data-id="${d.id}"><svg class="lp-ring" aria-hidden="true"><rect class="lp-track"/><rect class="lp-draw" pathLength="100"/><rect class="lp-tip" pathLength="100"/></svg>
     ${selMark(d)}
-    <div class="stripe" style="background:${safeColor(color)}"></div>
     <div class="due-edge"></div>
     <div class="body">
       <div class="card-head">
@@ -1283,9 +1322,8 @@ function cardHTML(d){
     </div>
   </article>`;
   }
-  return `<article class="card${sel}${ds ? " due-"+ds : ""}" data-id="${d.id}">
+  return `<article class="card${sel}${ds ? " due-"+ds : ""}" data-id="${d.id}"><svg class="lp-ring" aria-hidden="true"><rect class="lp-track"/><rect class="lp-draw" pathLength="100"/><rect class="lp-tip" pathLength="100"/></svg>
     ${selMark(d)}
-    <div class="stripe" style="background:${safeColor(color)}"></div>
     <div class="due-edge"></div>
     <div class="body">
       <div class="card-head">
@@ -1426,6 +1464,7 @@ renderCover();
 let currentCat = "";
 let selectMode = false;
 const selected = new Set();
+let tselMode = false;   // 表格批次刪除選取模式(宣告在前段:trowHTML 初次渲染就會讀到,放後段會踩 TDZ 使初始化中斷)
 const SORTS = [
   {key:"default",    label:"－預設順序－"},
   {key:"price_desc", label:"售價額 高→低"},
@@ -1567,7 +1606,8 @@ function trowHTML(d){
   const dueInner = editMode      // 編輯模式:到期日改為日曆選擇(不用鍵盤輸入);正常模式維持可點複製
     ? `<button type="button" class="tdue-btn ${ds}" data-duecal="1" title="${esc(d.due)}">${esc(d.due)}</button>`
     : `<div class="tcell tdue ${ds}" contenteditable="false" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div>`;
-  return `<tr data-id="${esc(d.id)}"${ds ? ` class="due-${ds}"` : ""}>`+
+  const _trCls = ((ds ? "due-"+ds : "") + ((tselMode && selected.has(d.id)) ? " tsel-row" : "")).trim();
+  return `<tr data-id="${esc(d.id)}"${_trCls ? ` class="${_trCls}"` : ""}>`+
     `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button>${dueInner}</td>`+
     catCell +
     `<td><div class="tcell" contenteditable="${ce}" data-field="layout" title="${esc(d.layout)}">${esc(d.layout)}</div></td>`+
@@ -1699,6 +1739,7 @@ window.isTableBusy = function(){
   if (a && a.classList && a.classList.contains("tcell")) return true;
   const lp = document.getElementById("linkpop"); if (lp && lp.classList.contains("show")) return true;
   const cm = document.getElementById("catmenu"); if (cm && cm.classList.contains("show")) return true;
+  if (tselMode) return true;   // 批次選取中:延後同步重繪(重繪雖會保留選取,但避免點選當下列順序變動)
   const cb = document.getElementById("calBg"); if (cb && cb.classList.contains("open")) return true;   // 日曆開啟中:延後同步,避免底下表格被重繪
   return false;
 };
@@ -2364,7 +2405,7 @@ const selbar = document.getElementById("selbar");
 const selCount = document.getElementById("selCount");
 const selDelete = document.getElementById("selDelete");
 const selCancel = document.getElementById("selCancel");
-let pressTimer = null, pressX = 0, pressY = 0, longPressed = false, pressId = null;
+let pressTimer = null, pressX = 0, pressY = 0, longPressed = false, pressId = null, pressCard = null;
 let suppressClick = false; // set by swipe-back to swallow the trailing ghost click
 const isLink = t => t.closest("a, .chip, .tel");
 
@@ -2381,6 +2422,7 @@ function enterSelectMode(){
   updateSelbar();
 }
 function exitSelectMode(){
+  exitTselMode();                        // 單一出口:切檢視/切模式/開列表/備份還原…所有呼叫點一併退出表格批次選取
   if (!selectMode) return;
   selectMode = false;
   selected.clear();
@@ -2401,26 +2443,30 @@ function toggleSelect(id){
   }
   updateSelbar();
 }
-function endPress(){ clearTimeout(pressTimer); pressTimer = null; }
+function endPress(){ clearTimeout(pressTimer); pressTimer = null; if (pressCard){ pressCard.classList.remove("lp-run"); pressCard = null; } }
 
 cardsEl.addEventListener("pointerdown", e => {
   const card = e.target.closest("[data-id]");
   if (!card) return;
   if (!selectMode && isLink(e.target)) return;
-  pressId = card.dataset.id; pressX = e.clientX; pressY = e.clientY; longPressed = false;
+  pressId = card.dataset.id; pressX = e.clientX; pressY = e.clientY; longPressed = false; pressCard = card;
   clearTimeout(pressTimer);
+  const holdMs = editMode ? 1200 : 480;   // 編輯模式長按較久(1.2秒)才進刪除多選,避免誤觸
+  if (editMode && !selectMode){                                  // 編輯模式:長按跑「進度描邊」,整圈畫滿即成立
+    card.classList.add("lp-run");
+    card.querySelectorAll(".lp-draw, .lp-tip").forEach(el => {
+      el.style.animation = "none"; void el.getBoundingClientRect(); el.style.animation = "";
+    });   // 描邊與領頭光點一起歸零,每次都從頭(左上)開始
+  }
   pressTimer = setTimeout(() => {
+    card.classList.remove("lp-run");
+    if (editMode && !selectMode){ card.classList.add("lp-done"); setTimeout(() => card.classList.remove("lp-done"), 460); }   // 畫滿後整圈亮一下作完成回饋
+    if (selectMode) return;
     longPressed = true;
-    if (navigator.vibrate){ try { navigator.vibrate(15); } catch (err){} }
-    if (editMode || selectMode){
-      // 編輯模式:長按進多選批量刪除
-      if (!selectMode) enterSelectMode();
-      toggleSelect(pressId);
-    } else {
-      // 正常模式:長按切換 正常 ↔ 緊湊(以這張卡片為錨點,切換後停在原位)
-      toggleDensity(pressId);
-    }
-  }, 480);
+    if (navigator.vibrate){ try { navigator.vibrate(editMode ? 20 : 15); } catch (err){} }
+    if (editMode){ enterSelectMode(); toggleSelect(pressId); }   // 編輯模式:長按進刪除多選,並選取這張
+    else { toggleDensity(pressId); }                             // 正常模式:長按切換 正常 ↔ 緊湊(以這張卡片為錨點,切換後停在原位)
+  }, holdMs);
 });
 cardsEl.addEventListener("pointermove", e => {
   if (pressTimer && (Math.abs(e.clientX - pressX) > 10 || Math.abs(e.clientY - pressY) > 10)) endPress();
@@ -2429,6 +2475,89 @@ cardsEl.addEventListener("pointerup", endPress);
 cardsEl.addEventListener("pointercancel", endPress);
 cardsEl.addEventListener("pointerleave", endPress);
 cardsEl.addEventListener("contextmenu", e => { if (longPressed) e.preventDefault(); });
+
+// ---- 表格:垃圾桶長按(600ms) → 批次刪除選取模式(與客戶總覽同款) ----
+// 進入後:點任一列切換選取(所有互動元素暫停命中,由 capture 處理器統一接管),
+// 垃圾桶化身圓形勾選框,底部共用 selbar(已選 N 筆/取消/刪除)。刪除流程與卡片多選共用同一顆按鈕。
+let _tselSwallow = false;   // 長按成立後緊接的那一下 click 要吞掉,否則會把剛選起來的列又切掉
+function _mkLpRing(host, ms, rx){
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "lp-ring"); svg.setAttribute("aria-hidden", "true");
+  svg.style.setProperty("--lp-ms", ms + "ms"); svg.style.setProperty("--lp-rx", rx + "px");
+  ["lp-track", "lp-draw", "lp-tip"].forEach(c => {
+    const r = document.createElementNS(NS, "rect");
+    r.setAttribute("class", c); if (c !== "lp-track") r.setAttribute("pathLength", "100");
+    svg.appendChild(r);
+  });
+  host.appendChild(svg); return svg;
+}
+function enterTselMode(seedId){
+  if (tselMode) return;
+  closeCatMenu(); closeLinkPop();        // 先關表格浮層
+  exitSelectMode();                      // 防禦性互斥(卡片多選理論上在不同檢視)
+  tselMode = true; selected.clear();
+  tableWrap.classList.add("tsel-on");
+  fabEl.style.display = "none";
+  selbar.classList.add("show");
+  const tr = tableWrap.querySelector(`tr[data-id="${seedId}"]`);
+  if (tr){ selected.add(seedId); tr.classList.add("tsel-row"); }
+  updateSelbar();
+}
+function exitTselMode(){
+  if (!tselMode) return;
+  tselMode = false; selected.clear(); _tselSwallow = false;
+  tableWrap.classList.remove("tsel-on");
+  tableWrap.querySelectorAll("tr.tsel-row").forEach(r => r.classList.remove("tsel-row"));
+  fabEl.style.display = "";
+  selbar.classList.remove("show");
+}
+function toggleTselRow(tr){
+  const id = tr.dataset.id;
+  if (selected.has(id)){ selected.delete(id); tr.classList.remove("tsel-row"); }
+  else { selected.add(id); tr.classList.add("tsel-row"); }
+  updateSelbar();
+}
+// 選取模式下,所有點擊在 capture 階段統一接管(同時阻斷原本的單筆刪除/編輯/生成處理器)
+tableWrap.addEventListener("click", e => {
+  if (!tselMode) return;
+  e.stopPropagation(); e.preventDefault();
+  if (_tselSwallow){ _tselSwallow = false; return; }
+  const tr = e.target.closest("tr[data-id]");
+  if (tr) toggleTselRow(tr);
+}, true);
+// 垃圾桶長按偵測 + 按鈕上的進度描邊
+let _tdelLp = { t: null, btn: null, x: 0, y: 0 };
+function _tdelLpCancel(){
+  clearTimeout(_tdelLp.t); _tdelLp.t = null;
+  if (_tdelLp.btn){
+    const b = _tdelLp.btn; _tdelLp.btn = null;
+    b.classList.remove("lp-run");
+    const g = b.querySelector(".lp-ring"); if (g) setTimeout(() => g.remove(), 160);   // 等淡出再移除
+  }
+}
+tableWrap.addEventListener("pointerdown", e => {
+  const btn = e.target.closest('button[data-act="del"]');
+  if (!btn || tselMode) return;
+  _tdelLp.btn = btn; _tdelLp.x = e.clientX; _tdelLp.y = e.clientY;
+  _mkLpRing(btn, 600, 7);
+  btn.classList.add("lp-run");
+  clearTimeout(_tdelLp.t);
+  _tdelLp.t = setTimeout(() => {
+    _tdelLp.t = null; _tdelLp.btn = null; _tselSwallow = true;
+    const tr = btn.closest("tr[data-id]");
+    btn.classList.remove("lp-run"); btn.classList.add("lp-done");
+    setTimeout(() => { btn.classList.remove("lp-done"); const g = btn.querySelector(".lp-ring"); if (g) g.remove(); }, 460);
+    try { navigator.vibrate && navigator.vibrate(18); } catch (_){}
+    if (tr) enterTselMode(tr.dataset.id);
+  }, 600);
+});
+tableWrap.addEventListener("pointermove", e => {
+  if (_tdelLp.t && (Math.abs(e.clientX - _tdelLp.x) > 8 || Math.abs(e.clientY - _tdelLp.y) > 8)) _tdelLpCancel();
+});
+tableWrap.addEventListener("pointerup", _tdelLpCancel);
+tableWrap.addEventListener("pointercancel", _tdelLpCancel);
+// ---- 表格批次刪除主體結束 ----
 cardsEl.addEventListener("click", e => {
   if (suppressClick){ suppressClick = false; return; }
   if (longPressed){ longPressed = false; e.preventDefault(); e.stopPropagation(); return; }
