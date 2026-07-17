@@ -834,7 +834,9 @@
   .tchip.on.n591{background:#2C6FB0;border-color:#2C6FB0;}
   .tchip:not(.on):hover::after{content:"＋";position:absolute;top:-5px;right:-5px;width:14px;height:14px;font-size:.6rem;line-height:14px;text-align:center;border-radius:50%;background:var(--ink-soft);color:#fff;}
   .tdel{padding:7px;text-align:center;}
-  .tdel button{width:32px;height:32px;vertical-align:middle;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);font-size:.9rem;cursor:pointer;transition:all .15s;}
+  .tdel button{position:relative;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);cursor:pointer;transition:all .15s;
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}   /* relative:長按描邊(lp-ring)要以按鈕自身定位;flex:圖示真置中;touch-action:手機長按不被捲動手勢攔走 */
+  .tdel button svg{display:block;}
   .tdel button:hover{border-color:var(--danger-tint-bd);color:#B4472E;background:var(--danger-tint);}
   /* ---- 表格批次刪除選取模式(垃圾桶長按 600ms 進入;與客戶總覽同款) ---- */
   .table-wrap.tsel-on tbody tr{cursor:pointer;}
@@ -1204,7 +1206,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.17 B";
+const APP_VERSION = "2026.07.17 C";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
