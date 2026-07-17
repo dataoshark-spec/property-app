@@ -350,8 +350,10 @@
     overflow:hidden;display:flex;
     box-shadow:0 1px 2px rgba(22,34,42,.04);
   }
-  /* 到期提醒:卡片右側邊條(正常+緊湊一致)— 快到期=琥珀慢閃、已過期=紅快閃;左色條維持類別色 */
-  .card .due-edge{position:absolute;top:0;right:0;bottom:0;width:6px;display:none;pointer-events:none;}
+  /* 到期提醒:卡片左側邊條(正常+緊湊一致)— 快到期=琥珀慢閃、已過期=紅快閃
+     (左側原本的類別色條已退役,類別改以右上角灰字呈現,這裡不會打架;
+      長按描邊 .lp-ring 的 z-index:6 高於此條,描邊起點不會被蓋住) */
+  .card .due-edge{position:absolute;top:0;left:0;bottom:0;width:6px;display:none;pointer-events:none;}
   .card.due-warn .due-edge{display:block;background:#E0A11B;animation:duePulse 2.4s ease-in-out infinite;}
   .card.due-over .due-edge{display:block;background:#D6452A;animation:duePulse 1.2s ease-in-out infinite;}
   @media (prefers-reduced-motion: reduce){ .card.due-warn .due-edge,.card.due-over .due-edge{animation:none;} }
@@ -498,11 +500,13 @@
   .cards.selecting .card:not(.selected){opacity:.72;}
 
   .selbar{position:fixed;z-index:41;left:50%;bottom:18px;width:min(444px,calc(100% - 28px));
-    transform:translateX(-50%) translateY(160%);
+    --vvx:0px;--vvy:0px;--vvs:1;   /* 雙指放大時由 JS 校正:把工具列拉回實際看得到的範圍(見 visualViewport 段) */
+    transform:translate(calc(-50% + var(--vvx)), calc(160% + var(--vvy))) scale(var(--vvs));
+    transform-origin:50% 100%;
     display:flex;align-items:center;gap:10px;
     background:var(--ink);color:#fff;border-radius:16px;padding:10px 12px 10px 18px;
     box-shadow:0 12px 32px rgba(0,0,0,.3);transition:transform .26s cubic-bezier(.2,.75,.3,1);}
-  .selbar.show{transform:translateX(-50%) translateY(0);}
+  .selbar.show{transform:translate(calc(-50% + var(--vvx)), var(--vvy)) scale(var(--vvs));}
   .sel-count{flex:1;font-size:.92rem;font-weight:700;letter-spacing:.01em;}
   .selbar button{font-family:inherit;font-weight:700;cursor:pointer;border:none;border-radius:11px;padding:11px 16px;font-size:.9rem;transition:background .15s ease,filter .15s ease,opacity .15s ease;}
   .sel-cancel{background:rgba(255,255,255,.15);color:#fff;}
@@ -1206,7 +1210,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.17 C";
+const APP_VERSION = "2026.07.18 B";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2445,12 +2449,19 @@ function toggleSelect(id){
   }
   updateSelbar();
 }
-function endPress(){ clearTimeout(pressTimer); pressTimer = null; if (pressCard){ pressCard.classList.remove("lp-run"); pressCard = null; } }
+function endPress(){
+  clearTimeout(pressTimer); pressTimer = null;
+  if (pressCard){ pressCard.classList.remove("lp-run"); pressCard = null; }
+  // 保險:多指觸控(雙指縮放)時 pressCard 會被後按的那指覆蓋,前一張卡的描邊沒人負責清 → 會卡住變成一圈綠框
+  cardsEl.querySelectorAll(".lp-run").forEach(el => el.classList.remove("lp-run"));
+}
 
 cardsEl.addEventListener("pointerdown", e => {
   const card = e.target.closest("[data-id]");
   if (!card) return;
   if (!selectMode && isLink(e.target)) return;
+  if (e.isPrimary === false){ endPress(); return; }   // 第二根手指(雙指縮放):取消長按,不另起新的
+  endPress();                                          // 先清乾淨上一輪(含別張卡沒清到的描邊)
   pressId = card.dataset.id; pressX = e.clientX; pressY = e.clientY; longPressed = false; pressCard = card;
   clearTimeout(pressTimer);
   const holdMs = editMode ? 1200 : 480;   // 編輯模式長按較久(1.2秒)才進刪除多選,避免誤觸
@@ -2531,16 +2542,18 @@ tableWrap.addEventListener("click", e => {
 // 垃圾桶長按偵測 + 按鈕上的進度描邊
 let _tdelLp = { t: null, btn: null, x: 0, y: 0 };
 function _tdelLpCancel(){
-  clearTimeout(_tdelLp.t); _tdelLp.t = null;
-  if (_tdelLp.btn){
-    const b = _tdelLp.btn; _tdelLp.btn = null;
+  clearTimeout(_tdelLp.t); _tdelLp.t = null; _tdelLp.btn = null;
+  // 統一清掉所有進行中的描邊(含多指觸控時被覆蓋、沒人負責的那些;否則會卡住變成一圈綠框)
+  tableWrap.querySelectorAll('button[data-act="del"].lp-run').forEach(b => {
     b.classList.remove("lp-run");
-    const g = b.querySelector(".lp-ring"); if (g) setTimeout(() => g.remove(), 160);   // 等淡出再移除
-  }
+    b.querySelectorAll(".lp-ring").forEach(g => setTimeout(() => g.remove(), 160));   // 等淡出再移除
+  });
 }
 tableWrap.addEventListener("pointerdown", e => {
   const btn = e.target.closest('button[data-act="del"]');
   if (!btn || tselMode) return;
+  if (e.isPrimary === false){ _tdelLpCancel(); return; }   // 第二根手指(雙指縮放):取消長按
+  _tdelLpCancel();                                          // 先清乾淨上一輪殘留的描邊
   _tdelLp.btn = btn; _tdelLp.x = e.clientX; _tdelLp.y = e.clientY;
   _mkLpRing(btn, 600, 7);
   btn.classList.add("lp-run");
@@ -2581,6 +2594,34 @@ cardsEl.addEventListener("click", e => {
 });
 
 selCancel.addEventListener("click", exitSelectMode);
+// ---- 底部「已選 N 筆/刪除」工具列:跟著「視覺視窗」走 ----
+// 手機雙指放大後,position:fixed 貼的是「版面視窗」而不是你看到的那塊,工具列會被推到畫面外,
+// 看起來就變成「卡片選起來了、卻沒有刪除列」。這裡用 visualViewport 把它拉回可視範圍底部,
+// 並抵銷縮放倍率讓它維持原本大小。未縮放時完全不干預(維持原定位)。
+(function(){
+  const vv = window.visualViewport;
+  if (!vv || !selbar) return;
+  let raf = null;
+  function apply(){
+    raf = null;
+    const s = vv.scale || 1;
+    if (Math.abs(s - 1) < 0.01){   // 沒放大:不做任何校正
+      selbar.style.setProperty("--vvx", "0px");
+      selbar.style.setProperty("--vvy", "0px");
+      selbar.style.setProperty("--vvs", "1");
+      return;
+    }
+    const dx = vv.offsetLeft + vv.width / 2 - window.innerWidth / 2;              // 對齊可視範圍的水平中心
+    const dy = (vv.offsetTop + vv.height - 18 / s) - (window.innerHeight - 18);   // 貼齊可視範圍底部(留同樣的 18px 視覺間距)
+    selbar.style.setProperty("--vvx", dx + "px");
+    selbar.style.setProperty("--vvy", dy + "px");
+    selbar.style.setProperty("--vvs", String(1 / s));
+  }
+  const sched = () => { if (raf == null) raf = requestAnimationFrame(apply); };
+  vv.addEventListener("resize", sched);
+  vv.addEventListener("scroll", sched);
+  apply();
+})();
 selDelete.addEventListener("click", () => {
   if (!selected.size) return;
   const n = selected.size;
