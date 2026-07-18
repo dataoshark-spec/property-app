@@ -526,6 +526,9 @@
     background:var(--ink);color:#fff;border-radius:16px;padding:10px 12px 10px 18px;
     box-shadow:0 12px 32px rgba(0,0,0,.3);transition:transform .26s cubic-bezier(.2,.75,.3,1);}
   .selbar.show{transform:translate(calc(-50% + var(--vvx)), var(--vvy)) scale(var(--vvs));}
+  /* 拖曳連選進行中:讓底部工具列/列表頁首/表格表頭「穿透」——
+     手指壓在上面時,底下的卡片/列仍能被偵測並即時打勾(拖曳時本來也按不了這些鈕,穿透零副作用) */
+  body.dragsel .selbar,body.dragsel .list-header,body.dragsel .thead-wrap{pointer-events:none;}
   .sel-count{flex:1;font-size:.92rem;font-weight:700;letter-spacing:.01em;}
   .selbar button{font-family:inherit;font-weight:700;cursor:pointer;border:none;border-radius:11px;padding:11px 16px;font-size:.9rem;transition:background .15s ease,filter .15s ease,opacity .15s ease;}
   .sel-cancel{background:rgba(255,255,255,.15);color:#fff;}
@@ -1290,7 +1293,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.18 L";
+const APP_VERSION = "2026.07.18 M";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2771,6 +2774,7 @@ function _cselDragStart(seedCard){
   if (i < 0 && seedCard && seedCard.dataset) i = arr.findIndex(c => c.dataset.id === seedCard.dataset.id);
   if (i < 0) return;
   cselDrag = { cards: arr, anchor: i, cur: i, added: new Set(), x: 0, y: 0, raf: null };
+  document.body.classList.add("dragsel");   // 拖曳中:覆蓋層穿透(見 CSS 註解)
 }
 function _cselSet(id, on){ if (on !== selected.has(id)) toggleSelect(id); }
 function _cselDragPaint(){
@@ -2809,6 +2813,7 @@ function _cselDragEnd(){
   if (!cselDrag) return;
   if (cselDrag.raf != null) cancelAnimationFrame(cselDrag.raf);
   cselDrag = null;
+  document.body.classList.remove("dragsel");
 }
 document.addEventListener("pointermove", _cselDragMove);
 document.addEventListener("pointerup", _cselDragEnd);
@@ -2911,6 +2916,7 @@ function _tselDragStart(seedTr){
   if (i < 0 && seedTr && seedTr.dataset) i = rows.findIndex(r => r.dataset.id === seedTr.dataset.id);
   if (i < 0) return;
   tselDrag = { rows, anchor: i, cur: i, added: new Set(), x: 0, y: 0, raf: null };
+  document.body.classList.add("dragsel");   // 拖曳中:覆蓋層穿透
 }
 function _tselRowSet(tr, on){ if (on !== selected.has(tr.dataset.id)) toggleTselRow(tr); }
 function _tselDragPaint(){
@@ -2951,6 +2957,7 @@ function _tselDragEnd(){
   if (!tselDrag) return;
   if (tselDrag.raf != null) cancelAnimationFrame(tselDrag.raf);
   tselDrag = null;
+  document.body.classList.remove("dragsel");
 }
 document.addEventListener("pointermove", _tselDragMove);
 document.addEventListener("pointerup", _tselDragEnd);
