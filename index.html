@@ -309,6 +309,17 @@
     font-variant-numeric:tabular-nums;}
 
   .search{display:flex;align-items:center;gap:10px;padding:12px 18px 0;}
+  .search-box{position:relative;flex:1;min-width:0;display:flex;}
+  .search-box input{width:100%;padding-right:38px;}   /* 右側留給清除鈕 */
+  /* 自訂清除鈕:只要有輸入文字就顯示(原生的 X 一失焦就消失,不方便) */
+  .search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:none;
+    width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--text-faint);
+    font-size:.95rem;line-height:1;cursor:pointer;align-items:center;justify-content:center;}
+  .search-clear.show{display:inline-flex;}
+  .search-clear:active{background:var(--surface-2);color:var(--ink-soft);}
+  @media (hover:hover){ .search-clear:hover{background:var(--surface-1);color:var(--ink-soft);} }
+  /* 隱藏瀏覽器原生的搜尋清除鈕,避免出現兩個 X */
+  #search::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;display:none;}
   .search input{
     flex:1;min-width:0;font-family:inherit;font-size:1rem;color:var(--ink);
     background:var(--card);border:1px solid var(--line);border-radius:12px;
@@ -350,13 +361,21 @@
     overflow:hidden;display:flex;
     box-shadow:0 1px 2px rgba(22,34,42,.04);
   }
-  /* 到期提醒:卡片左側邊條(正常+緊湊一致)— 快到期=琥珀慢閃、已過期=紅快閃
-     (左側原本的類別色條已退役,類別改以右上角灰字呈現,這裡不會打架;
-      長按描邊 .lp-ring 的 z-index:6 高於此條,描邊起點不會被蓋住) */
-  .card .due-edge{position:absolute;top:0;left:0;bottom:0;width:6px;display:none;pointer-events:none;}
-  .card.due-warn .due-edge{display:block;background:#E0A11B;animation:duePulse 2.4s ease-in-out infinite;}
-  .card.due-over .due-edge{display:block;background:#D6452A;animation:duePulse 1.2s ease-in-out infinite;}
-  @media (prefers-reduced-motion: reduce){ .card.due-warn .due-edge,.card.due-over .due-edge{animation:none;} }
+  /* 到期提醒:整張卡片底色呼吸閃爍(與表格檢視同一套)— 快到期=琥珀慢閃、已過期=紅快閃。
+     色彩/節奏/深色主題/減少動態備援皆與表格列一致;以 color-mix 疊在卡片底色上,深淺主題自動適配 */
+  .card.due-warn{animation:cardPulseWarn 2.4s ease-in-out infinite;}
+  .card.due-over{animation:cardPulseOver 1.2s ease-in-out infinite;}
+  @keyframes cardPulseWarn{0%,100%{background:color-mix(in srgb,#E0A11B 5%,var(--card));}50%{background:color-mix(in srgb,#E0A11B 15%,var(--card));}}
+  @keyframes cardPulseOver{0%,100%{background:color-mix(in srgb,#D6452A 5%,var(--card));}50%{background:color-mix(in srgb,#D6452A 16%,var(--card));}}
+  [data-theme="dark"] .card.due-warn{animation-name:cardPulseWarnD;}
+  [data-theme="dark"] .card.due-over{animation-name:cardPulseOverD;}
+  @keyframes cardPulseWarnD{0%,100%{background:color-mix(in srgb,#E6A94A 7%,var(--card));}50%{background:color-mix(in srgb,#E6A94A 20%,var(--card));}}
+  @keyframes cardPulseOverD{0%,100%{background:color-mix(in srgb,#F0745A 8%,var(--card));}50%{background:color-mix(in srgb,#F0745A 22%,var(--card));}}
+  @media (prefers-reduced-motion: reduce){
+    .card.due-warn,.card.due-over{animation:none;}
+    .card.due-warn{background:color-mix(in srgb,#E0A11B 10%,var(--card));}
+    .card.due-over{background:color-mix(in srgb,#D6452A 11%,var(--card));}
+  }
   .body{padding:16px 16px 14px;flex:1;min-width:0;}
 
   .card-head{display:flex;align-items:center;gap:10px;}
@@ -626,6 +645,52 @@
 
   /* Confirm dialog (centered) + toast */
   .modal-bg.center{align-items:center;padding:24px;}
+  /* ==== 表格欄位標題篩選(參考客戶總覽:勾選式 + 售價範圍 + 長按拖曳排序) ==== */
+  .th-flt{display:inline-flex;align-items:center;gap:4px;background:none;border:0;padding:2px 7px;margin:-2px -7px;border-radius:7px;color:inherit;font:inherit;cursor:pointer;}
+  .th-flt .fmk{opacity:.55;font-size:.72em;}
+  /* 關鍵字搜尋中(聚焦或已有文字):點亮「會被比對」的欄位標題,讓使用者知道搜尋範圍(連結/電話不在搜尋範圍故不亮) */
+  .thead-wrap th .th-label{transition:color .15s;}
+  .table-wrap.search-hint th[data-col="due"] .th-label,
+  .table-wrap.search-hint th[data-col="cat"] .th-label,
+  .table-wrap.search-hint th[data-col="layout"] .th-label,
+  .table-wrap.search-hint th[data-col="name"] .th-label,
+  .table-wrap.search-hint th[data-col="addr"] .th-label,
+  .table-wrap.search-hint th[data-col="floor"] .th-label,
+  .table-wrap.search-hint th[data-col="price"] .th-label,
+  .table-wrap.search-hint th[data-col="agent"] .th-label,
+  .table-wrap.search-hint th[data-col="store"] .th-label{color:#FFE08A;}
+  .th-flt.on .fmk{opacity:1;color:#FFE08A;}   /* 已套用此欄篩選:標記加亮 */
+  .fpanel{background:var(--card);width:100%;max-width:390px;max-height:80dvh;border-radius:20px;padding:15px 16px 16px;box-shadow:0 18px 50px rgba(22,34,42,.3);display:flex;flex-direction:column;}
+  .fpanel-head{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:1.02rem;color:var(--ink);margin-bottom:8px;}
+  .fpanel-head .fx{border:0;background:var(--surface-1);color:var(--ink-soft);width:34px;height:34px;border-radius:11px;font-size:1rem;cursor:pointer;}
+  .fpanel-body{overflow:auto;min-height:0;display:flex;flex-direction:column;gap:1px;padding:2px 0;}
+  .fopt{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:10px;transition:transform .16s ease;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+  .fopt-main{flex:1;min-width:0;display:flex;align-items:center;gap:11px;padding:5px 2px;font-size:.94rem;color:var(--ink);cursor:pointer;}
+  .fopt-main span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .fopt-drag{flex:none;width:22px;height:32px;display:none;place-items:center;color:var(--text-faint);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;}
+  #fltBody.editing .fopt-drag{display:grid;}
+  #fltBody.editing .fopt-main{pointer-events:none;}
+  #fltBody.editing .fopt input{display:none;}
+  .fopt-drag:active{cursor:grabbing;}
+  .fopt-drag-sp{flex:none;width:22px;display:none;}
+  #fltBody.editing .fopt-drag-sp{display:block;}
+  .fopt.dragging{transition:none;background:var(--card);border:1px solid var(--border-2);position:relative;z-index:5;box-shadow:0 10px 24px rgba(22,34,42,.16);}
+  .fopt:active{background:var(--surface-1);}
+  .fopt input{width:18px;height:18px;accent-color:var(--accent);flex:none;}
+  .fbud{display:flex;align-items:center;gap:8px;padding:8px 2px;}
+  .fbud input{flex:1;min-width:0;font-family:inherit;font-size:1rem;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none;}
+  .fbud-hint{font-size:.78rem;color:var(--text-faint);padding:0 2px 4px;}
+  .bsep{color:var(--ink-soft);flex:none;}
+  .fpanel-foot{display:flex;gap:10px;margin-top:12px;}
+  /* 工具列「清除所有欄位篩選」漏斗鈕:有篩選才出現。
+     實心琥珀底 = 與欄位標題篩選標記(#FFE08A)同色系,形成「黃色=篩選生效中」的一致語言,
+     跟旁邊白底細框的檢視/編輯鈕明確區隔,一眼就能注意到。 */
+  .flt-clear-btn{display:none;}
+  .flt-clear-btn.on{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border:1px solid #E3AE3D;border-radius:9px;background:#FFD666;color:#6B4C00;cursor:pointer;flex:none;box-shadow:0 1px 4px rgba(227,174,61,.35);transition:background .15s,transform .1s;animation:fcIn .18s ease;}
+  .flt-clear-btn svg{width:17px;height:17px;}
+  @media (hover:hover){ .flt-clear-btn.on:hover{background:#FFCB47;} }
+  .flt-clear-btn.on:active{transform:scale(.94);}
+  @keyframes fcIn{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:scale(1);}}
   /* ---- 到期日:自製日曆(民國年顯示;與客戶總覽同一套) ---- */
   #f_due{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='%2394a0ac' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='4.5' width='18' height='16' rx='2.5'/%3E%3Cpath d='M3 9.5h18M8 2.5v4M16 2.5v4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;background-size:18px;padding:10px 40px 10px 12px;cursor:pointer;}
   /* 日曆彈窗:一般情況維持標準遮罩;只有疊在「編輯物件」表單上時才用近乎不透明的底,避免疊視窗感 */
@@ -713,7 +778,7 @@
   /* ===== editable table ===== */
   @media (min-width:820px){
     #app.table-mode{max-width:min(1280px,96vw);}
-    #app.table-mode .search input{max-width:460px;}
+    #app.table-mode .search-box{max-width:460px;}   /* 上限放外框:清除鈕以外框定位,X 才會貼在輸入框內側 */
   }
   /* 手機版表格更舒服:連結按鈕縮小、欄距收緊、總寬略降(只在 <820px 生效,桌機不受影響) */
   @media (max-width:819px){
@@ -746,7 +811,7 @@
   .thead-wrap::-webkit-scrollbar{display:none;}
   [data-theme="dark"] .thead-wrap{background:#1E3A31;}
   /* 表身層:垂直+水平捲動都在這裡,捲軸只出現在資料列範圍 */
-  .tbody-wrap{overflow:auto;max-height:max(220px, calc(100dvh - var(--lh,240px) - 178px));scrollbar-width:thin;scrollbar-color:var(--border-2) transparent;}
+  .tbody-wrap{overflow:auto;scrollbar-gutter:stable;max-height:max(220px, calc(100dvh - var(--lh,240px) - 178px));scrollbar-width:thin;scrollbar-color:var(--border-2) transparent;}   /* gutter:捲軸空間常駐,筆數變化時最後一欄不會左右跳(與客戶總覽一致) */
   .tbody-wrap::-webkit-scrollbar{height:12px;width:12px;}
   .tbody-wrap::-webkit-scrollbar-track{background:transparent;}
   .tbody-wrap::-webkit-scrollbar-track:vertical{margin:0 0 12px 0;}     /* 底部避開圓角 */
@@ -777,7 +842,6 @@
     white-space:nowrap;vertical-align:middle;}
   .ptable tbody td:last-child{border-right:none;}
   .ptable tbody tr:hover td{background:var(--surface-1);}
-  .ptable tbody tr:last-child td{border-bottom:none;}
   .tcell{padding:9px 10px;min-height:40px;line-height:22px;outline:none;cursor:text;transition:background .12s,box-shadow .12s;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .tcell[data-field="due"],.tcell[data-field="addr"],.tcell[data-field="tel"],.tcell[data-field="store"]{font-size:.77rem;}
@@ -968,7 +1032,10 @@
         <button class="cat-manage" id="catManage" aria-label="管理類別" title="管理類別">＋</button>
       </div>
       <div class="search">
-        <input id="search" type="search" placeholder="搜尋案名、地址、售價、格局、樓層…" aria-label="搜尋" title="可用「／」分隔多個條件,全部符合才顯示。例:北屯／大樓／322">
+        <div class="search-box">
+          <input id="search" type="search" placeholder="搜尋案名、地址、售價、格局、樓層…" aria-label="搜尋" title="可用「／」分隔多個條件,全部符合才顯示。例:北屯／大樓／322">
+          <button type="button" class="search-clear" id="searchClear" aria-label="清除搜尋" title="清除搜尋">✕</button>
+        </div>
         <button class="add-obj" id="fab">＋ 新增物件</button>
       </div>
       <div class="controls">
@@ -981,6 +1048,7 @@
           <div class="cselect-menu" id="sortMenu" role="listbox"></div>
         </div>
         <div class="ctrl-right">
+          <button type="button" class="flt-clear-btn" id="fltClearAll" title="清除所有欄位篩選" aria-label="清除所有欄位篩選"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5h14l-5.4 6.4V18l-3.2 1.6v-8.2L3.5 5Z"/><path d="m17 16 4.5 4.5M21.5 16 17 20.5"/></svg></button>
           <button type="button" class="view-btn" id="viewBtn" title="切換檢視" aria-label="切換檢視"></button>
           <button type="button" class="mode-btn" id="modeBtn" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5V20Z"/><path d="m13.5 7.5 3.5 3.5"/></svg></button>
         </div>
@@ -1166,6 +1234,18 @@
     </div>
   </div>
 
+  <!-- ===== 表格欄位標題篩選 ===== -->
+  <div class="modal-bg center" id="fltBg">
+    <div class="fpanel">
+      <div class="fpanel-head"><span id="fltTitle"></span><button type="button" class="fx" id="fltX">✕</button></div>
+      <div class="fpanel-body" id="fltBody"></div>
+      <div class="fpanel-foot">
+        <button type="button" class="cal-fbtn cal-clear" id="fltClear">清除此欄篩選</button>
+        <button type="button" class="cal-fbtn cal-today" id="fltDone">完成</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== Confirm dialog ===== -->
   <div class="modal-bg center" id="confirmBg">
     <div class="confirm">
@@ -1210,7 +1290,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.18 C";
+const APP_VERSION = "2026.07.18 L";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1227,6 +1307,8 @@ function searchHay(d){
   s += layoutText(d.layout) + "\u001F";   // 格局展開字(322 → 3房2廳2衛)也能搜
   return s.toLowerCase();
 }
+
+
 const money = n => Number(n||0).toLocaleString("en-US");
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 const safeColor = v => { const s = String(v == null ? "" : v).trim(); return /^#[0-9A-Fa-f]{3,8}$/.test(s) ? s : "#8494A0"; };   // 只接受 HEX:避免匯入資料把任意字串插進 style 屬性
@@ -1323,7 +1405,6 @@ function cardHTML(d){
   if (density === "compact"){
     return `<article class="card compact-card${sel}${ds ? " due-"+ds : ""}" data-id="${d.id}"><svg class="lp-ring" aria-hidden="true"><rect class="lp-track"/><rect class="lp-draw" pathLength="100"/><rect class="lp-tip" pathLength="100"/></svg>
     ${selMark(d)}
-    <div class="due-edge"></div>
     <div class="body">
       <div class="card-head">
         <h3 class="name">${nameSegmentsHTML(d.name)}</h3>
@@ -1338,7 +1419,6 @@ function cardHTML(d){
   }
   return `<article class="card${sel}${ds ? " due-"+ds : ""}" data-id="${d.id}"><svg class="lp-ring" aria-hidden="true"><rect class="lp-track"/><rect class="lp-draw" pathLength="100"/><rect class="lp-tip" pathLength="100"/></svg>
     ${selMark(d)}
-    <div class="due-edge"></div>
     <div class="body">
       <div class="card-head">
         <h3 class="name">${nameSegmentsHTML(d.name)}</h3>
@@ -1515,6 +1595,167 @@ const countEl  = document.getElementById("listCount");
 const titleEl  = document.getElementById("listTitle");
 const searchEl = document.getElementById("search");
 
+// ---- 記住上次畫面(封面或列表+分類) ----
+// PWA 切到背景太久、或切去 Chrome 開連結時,系統可能把 App 回收;回來時整頁重新載入,預設會落在封面。
+// 這裡記住「上次在哪」,重載後自動回去,體感上就像沒被中斷。
+const NAV_KEY = "property_app_lastview_v1";
+function saveNav(screen, cat){ if (storageOK){ try { localStorage.setItem(NAV_KEY, JSON.stringify({ screen: screen, cat: cat || "" })); } catch(e){} } }
+
+// ==== 表格欄位標題篩選(參考客戶總覽:類別/格局/樓層/承辦/門市=勾選;售價=範圍) ====
+const colFilter = { cat:null, layout:null, floor:null, agent:null, store:null };
+const fltP = { lo:null, hi:null };   // 售價範圍(比照客戶總覽「預算」)
+let fltField = null;
+const FLT_NAME = { cat:"類別", layout:"格局", floor:"樓層", price:"售價（萬）", agent:"承辦", store:"門市" };
+const numOrNull = v => { if (v == null) return null; v = String(v).replace(/[^\d.]/g,""); if (!v) return null; const n = parseFloat(v); return isNaN(n) ? null : n; };
+function anyColFilter(){
+  if (fltP.lo != null || fltP.hi != null) return true;
+  return Object.keys(colFilter).some(k => colFilter[k] && colFilter[k].size);
+}
+function clearAllColFilters(){
+  Object.keys(colFilter).forEach(k => colFilter[k] = null);
+  fltP.lo = null; fltP.hi = null;
+}
+function colFilterOn(f){ return f === "price" ? (fltP.lo != null || fltP.hi != null) : !!(colFilter[f] && colFilter[f].size); }
+function applyColFilters(list){
+  ["cat","layout","floor","agent","store"].forEach(f => { const st = colFilter[f]; if (st && st.size) list = list.filter(d => st.has(String(d[f]||"").trim() || "__EMPTY__")); });
+  if (fltP.lo != null || fltP.hi != null){
+    const flo = fltP.lo != null ? fltP.lo : 0, fhi = fltP.hi != null ? fltP.hi : Infinity;
+    list = list.filter(d => { const n = numOrNull(d.price); return n != null && n >= flo && n <= fhi; });   // 售價落在範圍內
+  }
+  return list;
+}
+// 篩選選項的自訂順序(每欄一份);長按拖曳調整後記住並同步。新值自動補後面(照筆劃)。
+function loadFltOrder(){ if (storageOK){ try { const s = JSON.parse(localStorage.getItem("property_app_fltorder_v1") || "null"); if (s && typeof s === "object") return s; } catch(e){} } return {}; }
+let filterOrder = null;   // 延遲載入:此段程式在 storageOK 定義之前執行,第一次用到時(開篩選/拖曳)才讀,避免撞上暫時性死區
+function ensureFltOrder(){ if (filterOrder === null) filterOrder = loadFltOrder(); return filterOrder; }
+function saveFltOrder(){ if (storageOK){ try { localStorage.setItem("property_app_fltorder_v1", JSON.stringify(filterOrder || {})); } catch(e){} } }
+function orderedFilterVals(f){
+  const ord = ensureFltOrder();
+  const present = [...new Set(items.map(d => String(d[f]||"").trim()).filter(Boolean))];
+  const saved = (ord[f] || []).filter(v => present.includes(v));
+  const rest = present.filter(v => !saved.includes(v)).sort((a,b)=>a.localeCompare(b,"zh-Hant"));
+  return saved.concat(rest);
+}
+const fltBg = document.getElementById("fltBg");
+function openColFlt(f){
+  closeCatMenu(); closeLinkPop(); tableWrap.classList.remove("gen-open");   // 關其他浮層
+  fltField = f;
+  document.getElementById("fltTitle").textContent = "篩選：" + (FLT_NAME[f]||f);
+  document.getElementById("fltBody").classList.remove("editing"); document.getElementById("fltClear").textContent = "清除此欄篩選";
+  renderFltBody();
+  fltBg.classList.add("open");
+}
+function closeColFlt(){ fltBg.classList.remove("open"); fltField = null; }
+window.closeColFlt = closeColFlt;
+function renderFltBody(){
+  const body = document.getElementById("fltBody");
+  if (fltField === "price"){
+    body.innerHTML = `<div class="fbud-hint">顯示售價落在此範圍內的物件(單位：萬)</div>
+      <div class="fbud"><input id="fltLo" inputmode="numeric" placeholder="下限" value="${fltP.lo != null ? fltP.lo : ""}"><span class="bsep">–</span><input id="fltHi" inputmode="numeric" placeholder="上限" value="${fltP.hi != null ? fltP.hi : ""}"></div>`;
+    const lo = document.getElementById("fltLo"), hi = document.getElementById("fltHi");
+    const upd = () => { fltP.lo = numOrNull(lo.value); fltP.hi = numOrNull(hi.value); applyFilter(); };
+    lo.addEventListener("input", upd); hi.addEventListener("input", upd);
+    return;
+  }
+  const f = fltField;
+  const vals = orderedFilterVals(f);
+  const hasEmpty = items.some(d => !String(d[f]||"").trim());
+  const st = colFilter[f];
+  const GRIP = `<span class="fopt-drag" aria-label="拖曳排序" title="拖曳排序"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><g stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><line x1="3.5" y1="5" x2="12.5" y2="5"/><line x1="3.5" y1="8" x2="12.5" y2="8"/><line x1="3.5" y1="11" x2="12.5" y2="11"/></g></svg></span>`;
+  const row = (v, label, drag) => `<div class="fopt${drag ? " fopt-draggable" : ""}" data-val="${esc(v)}">${drag ? GRIP : `<span class="fopt-drag-sp"></span>`}<label class="fopt-main"><input type="checkbox" value="${esc(v)}"${st && st.has(v) ? " checked" : ""}><span>${esc(label)}</span></label></div>`;
+  body.innerHTML = vals.map(v => row(v, layoutText && f === "layout" ? v : v, true)).join("") + (hasEmpty ? row("__EMPTY__","（空白）", false) : "");
+  body.querySelectorAll("input[type=checkbox]").forEach(cb => cb.addEventListener("change", () => {
+    let stt = colFilter[f] || new Set();
+    if (cb.checked) stt.add(cb.value); else stt.delete(cb.value);
+    colFilter[f] = stt.size ? stt : null;
+    applyFilter();
+  }));
+}
+document.getElementById("fltX").addEventListener("click", closeColFlt);
+document.getElementById("fltDone").addEventListener("click", closeColFlt);
+document.getElementById("fltClear").addEventListener("click", () => {
+  if (document.getElementById("fltBody").classList.contains("editing")){ exitFltEditing(); return; }
+  if (fltField === "price"){ fltP.lo = null; fltP.hi = null; } else if (fltField){ colFilter[fltField] = null; }
+  renderFltBody(); applyFilter();
+});
+fltBg.addEventListener("click", e => { if (e.target === fltBg) closeColFlt(); });
+document.getElementById("fltClearAll").addEventListener("click", () => { clearAllColFilters(); applyFilter(); });
+tableWrap.addEventListener("click", e => { const b = e.target.closest(".th-flt"); if (b){ e.stopPropagation(); openColFlt(b.dataset.flt); } });
+
+// 篩選清單:長按進排序模式(才顯示握把),拖曳調整順序(手機可用)
+let fltDrag = null;
+function enterFltEditing(){ const fb=document.getElementById("fltBody"); if(fb) fb.classList.add("editing"); const c=document.getElementById("fltClear"); if(c) c.textContent="返回"; }
+function exitFltEditing(){ const fb=document.getElementById("fltBody"); if(fb) fb.classList.remove("editing"); const c=document.getElementById("fltClear"); if(c) c.textContent="清除此欄篩選"; }
+(function(){
+  const fb = document.getElementById("fltBody");
+  let lpTimer=null, lpRow=null, lpX=0, lpY=0;
+  fb.addEventListener("pointerdown", e => {
+    fb.__lp = false;
+    if (e.target.closest(".fopt-drag")) return;
+    const row = e.target.closest(".fopt.fopt-draggable"); if (!row) return;
+    lpRow = row; lpX = e.clientX; lpY = e.clientY; clearTimeout(lpTimer);
+    lpTimer = setTimeout(() => { fb.__lp = true; lpRow = null; enterFltEditing(); try{navigator.vibrate&&navigator.vibrate(12);}catch(_){} }, 400);
+  });
+  fb.addEventListener("pointermove", e => { if (lpRow && (Math.abs(e.clientX-lpX)>10||Math.abs(e.clientY-lpY)>10)){ clearTimeout(lpTimer); lpRow=null; } });
+  const lpEnd = () => { clearTimeout(lpTimer); lpRow=null; };
+  fb.addEventListener("pointerup", lpEnd);
+  fb.addEventListener("pointercancel", lpEnd);
+  fb.addEventListener("click", e => { if (fb.__lp){ fb.__lp = false; e.preventDefault(); e.stopPropagation(); } }, true);
+})();
+document.getElementById("fltBody").addEventListener("pointerdown", e => {
+  const handle = e.target.closest(".fopt-drag");
+  if (!handle) return;
+  const row = handle.closest(".fopt.fopt-draggable");
+  if (!row) return;
+  e.preventDefault();
+  const body = document.getElementById("fltBody");
+  const rows = Array.from(body.querySelectorAll(".fopt.fopt-draggable"));
+  const index = rows.indexOf(row);
+  const rowH = rows.length > 1
+    ? (rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().top)
+    : row.offsetHeight + 1;
+  fltDrag = { row, index, target: index, startY: e.clientY, rowH, rows, f: fltField };
+  row.classList.add("dragging");
+  document.body.style.userSelect = "none";
+});
+document.addEventListener("pointermove", e => {
+  if (!fltDrag) return;
+  const dy = e.clientY - fltDrag.startY;
+  fltDrag.row.style.transform = `translateY(${dy}px)`;
+  let target = fltDrag.index + Math.round(dy / fltDrag.rowH);
+  target = Math.max(0, Math.min(fltDrag.rows.length - 1, target));
+  if (target !== fltDrag.target){
+    fltDrag.target = target;
+    const from = fltDrag.index;
+    fltDrag.rows.forEach((r, j) => {
+      if (r === fltDrag.row) return;
+      let shift = 0;
+      if (from < target && j > from && j <= target) shift = -fltDrag.rowH;
+      else if (from > target && j >= target && j < from) shift = fltDrag.rowH;
+      r.style.transform = shift ? `translateY(${shift}px)` : "";
+    });
+  }
+});
+function endFltDrag(){
+  if (!fltDrag) return;
+  const from = fltDrag.index, to = fltDrag.target, rows = fltDrag.rows, row = fltDrag.row, f = fltDrag.f;
+  rows.forEach(r => { r.style.transform = ""; r.classList.remove("dragging"); });
+  row.style.transform = "";
+  document.body.style.userSelect = "";
+  fltDrag = null;
+  if (from !== to && f){
+    const order = rows.map(r => r.dataset.val);
+    const moved = order.splice(from, 1)[0];
+    order.splice(to, 0, moved);
+    ensureFltOrder()[f] = order;
+    saveFltOrder();
+    onLocalChange("settings");
+    renderFltBody();
+  }
+}
+document.addEventListener("pointerup", endFltDrag);
+document.addEventListener("pointercancel", endFltDrag);
+
 document.getElementById("storeNote").textContent = storageOK
   ? ""
   : "預覽模式不會保存變更——下載檔案後於自己的瀏覽器開啟即可自動儲存（或用「設定」裡的備份）。";
@@ -1586,12 +1827,16 @@ function colGroupHTML(){
   ).join("") + (editMode ? `<col data-field="_del" style="width:${DEL_W}px">` : "");
 }
 // 產生表頭:每個 th 包 .th-label(供量測欄名)+ 可調欄加 .col-resize 把手(彈性欄/刪除欄不加)
+const FILTERABLE = { cat:1, layout:1, floor:1, price:1, agent:1, store:1 };   // 這些欄可點標題篩選(price 用範圍,其餘勾選)
 function tHeadHTML(){
   return T_COLS.map((h,i) => {
     const f = T_FIELDS[i];
     const rz = (f && f !== FLEX_FIELD) ? `<span class="col-resize" data-field="${f}"></span>` : "";
     const mark = (f === "due") ? '<span class="gen-caret" aria-hidden="true">▾</span>' : "";   // 手機:點到期日表頭開/關生成面板的提示
-    return `<th data-col="${f}"><span class="th-label">${h}${mark}</span>${rz}</th>`;
+    const lab = (f && FILTERABLE[f])
+      ? `<button type="button" class="th-flt${colFilterOn(f) ? " on" : ""}" data-flt="${f}"><span class="th-label">${h}</span><span class="fmk">▾</span></button>`
+      : `<span class="th-label">${h}${mark}</span>`;
+    return `<th data-col="${f}">${lab}${rz}</th>`;
   }).join("") + (editMode ? `<th></th>` : "");
 }
 // 同時把某欄寬度套到「表頭 table」與「表身 table」兩邊的 <col>,並同步兩表 min-width
@@ -1755,6 +2000,7 @@ window.isTableBusy = function(){
   const cm = document.getElementById("catmenu"); if (cm && cm.classList.contains("show")) return true;
   if (tselMode) return true;   // 批次選取中:延後同步重繪(重繪雖會保留選取,但避免點選當下列順序變動)
   const cb = document.getElementById("calBg"); if (cb && cb.classList.contains("open")) return true;   // 日曆開啟中:延後同步,避免底下表格被重繪
+  const fb = document.getElementById("fltBg"); if (fb && fb.classList.contains("open")) return true;   // 欄位篩選開啟中:同上
   return false;
 };
 
@@ -2059,8 +2305,12 @@ function applyFilter(){
   // 例:「北屯/大樓/322」= 同時符合這三個條件的物件;「/」本身只是分隔符,不參與比對。
   // 沒打「/」時行為與原本完全相同(單一關鍵字)。與客戶總覽同一套做法。
   const terms = searchEl.value.toLowerCase().split(/[\/／]/).map(t => t.trim()).filter(Boolean);
+  { const sc = document.getElementById("searchClear"); if (sc) sc.classList.toggle("show", !!searchEl.value); }   // 清除鈕:有字才顯示
+  tableWrap.classList.toggle("search-hint", !!searchEl.value || document.activeElement === searchEl);   // 搜尋中:點亮可搜尋的欄位標題
   let list = currentCat ? items.filter(d => d.cat === currentCat) : items.slice();
   if (terms.length) list = list.filter(d => { const hay = searchHay(d); return terms.every(t => hay.includes(t)); });
+  list = applyColFilters(list);   // 套用欄位標題篩選(類別/格局/樓層/售價/承辦/門市)
+  const fca = document.getElementById("fltClearAll"); if (fca) fca.classList.toggle("on", anyColFilter());   // 有篩選才顯示漏斗清除鈕
   list = sortList(list);
   countEl.textContent = `${list.length} 筆`;
   titleEl.textContent = currentCat ? currentCat + "物件" : "全部物件";
@@ -2091,6 +2341,7 @@ function openList(cat){
   exitSelectMode();
   editMode = false; saveEditMode();     // 進入列表一律預設「正常」模式;要編輯需先選檢視再點編輯
   currentCat = cat || "";
+  saveNav("list", currentCat);   // 記住:目前在列表(含分類)
   searchEl.value = "";
   tableWrap.classList.remove("gen-open");   // 重新進列表:收起手機生成面板
   applyFilter();
@@ -2102,6 +2353,7 @@ function openList(cat){
 }
 function showCover(){
   exitSelectMode();
+  saveNav("cover");   // 記住:目前在封面
   listView.classList.remove("active");
   syncTableMode();
   cover.style.display = "flex";
@@ -2120,6 +2372,12 @@ document.getElementById("tabs").addEventListener("click", e => {
   if (btn) { exitSelectMode(); currentCat = btn.dataset.cat; applyFilter(); }
 });
 searchEl.addEventListener("input", applyFilter);
+// 自訂搜尋清除鈕:有字就顯示(不受聚焦影響);點了清空並更新列表
+document.getElementById("searchClear").addEventListener("click", () => { searchEl.value = ""; applyFilter(); });
+// 搜尋提示:點進搜尋框就點亮可搜尋欄位;離開時若沒有文字才熄滅
+const syncSearchHint = () => tableWrap.classList.toggle("search-hint", !!searchEl.value || document.activeElement === searchEl);
+searchEl.addEventListener("focus", syncSearchHint);
+searchEl.addEventListener("blur", syncSearchHint);
 document.getElementById("backBtn").addEventListener("click", showCover);
 (function(){
   const led = document.getElementById("listLed");
@@ -2234,9 +2492,12 @@ document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
   const isOn = (id, cls) => { const el = document.getElementById(id); return el && el.classList.contains(cls); };
   if (isOn("calBg","open")){ if (window.closeCal) window.closeCal(); return; }        // 日曆(最上層)
+  if (isOn("fltBg","open")){ if (window.closeColFlt) window.closeColFlt(); return; }    // 欄位篩選彈窗
   if (isOn("confirmBg","open")){ closeConfirm(); return; }                            // 確認框
   if (isOn("catmenu","show")){ closeCatMenu(); return; }                              // 表格類別選單
   if (isOn("linkpop","show")){ closeLinkPop(); return; }                              // 連結編輯框
+  if (typeof tselMode !== "undefined" && tselMode){ exitTselMode(); return; }         // 表格批次選取(Esc=取消)
+  if (typeof selectMode !== "undefined" && selectMode){ exitSelectMode(); return; }   // 卡片多選(Esc=取消)
   if (isOn("sortSel","open")){ closeSortSel(); return; }                              // 排序下拉
   if (isOn("catSel","open")){ closeCatSel(); return; }                                // 表單類別下拉
   if (isOn("catBg","open")){ closeCatManager(); return; }                             // 管理類別
@@ -2488,7 +2749,7 @@ cardsEl.addEventListener("pointerdown", e => {
     if (selectMode) return;
     longPressed = true;
     if (navigator.vibrate){ try { navigator.vibrate(editMode ? 20 : 15); } catch (err){} }
-    if (editMode){ enterSelectMode(); toggleSelect(pressId); }   // 編輯模式:長按進刪除多選,並選取這張
+    if (editMode){ enterSelectMode(); toggleSelect(pressId); _cselDragStart(card); }   // 編輯模式:長按進刪除多選,並選取這張;不放手可直接拖曳連選
     else { toggleDensity(pressId); }                             // 正常模式:長按切換 正常 ↔ 緊湊(以這張卡片為錨點,切換後停在原位)
   }, holdMs);
 });
@@ -2497,6 +2758,63 @@ cardsEl.addEventListener("pointermove", e => {
 });
 cardsEl.addEventListener("pointerup", endPress);
 cardsEl.addEventListener("pointercancel", endPress);
+
+// ---- 卡片多選強化:長按啟動後「不放手直接上下拖」= 掃過的卡片連續選取 ----
+// 範圍式(與表格相同):永遠選「長按起點 ~ 目前指到的卡」;拖過頭再拉回來,多掃到的自動取消;
+// 拖曳前就已勾選的卡不受影響。卡片佔畫面較大,指標拖到「視窗」上/下邊緣時會自動慢速捲動整頁,
+// 一路邊捲邊選到畫面外的卡片(手機、電腦皆適用)。
+let cselDrag = null;
+function _cselDragStart(seedCard){
+  const arr = [...cardsEl.querySelectorAll(".card[data-id]")];
+  let i = arr.indexOf(seedCard);
+  // 卡片若在長按期間被重繪(例:前景同步套用合併結果),閉包裡的是舊節點 → 改用 id 對回新節點
+  if (i < 0 && seedCard && seedCard.dataset) i = arr.findIndex(c => c.dataset.id === seedCard.dataset.id);
+  if (i < 0) return;
+  cselDrag = { cards: arr, anchor: i, cur: i, added: new Set(), x: 0, y: 0, raf: null };
+}
+function _cselSet(id, on){ if (on !== selected.has(id)) toggleSelect(id); }
+function _cselDragPaint(){
+  const d = cselDrag; if (!d) return;
+  d.raf = null;
+  if (!selectMode){ _cselDragEnd(); return; }
+  if (d.cards.length && !cardsEl.contains(d.cards[0])){   // 拖曳中途卡片被重繪:以 id 對回新節點,續拖不斷線
+    const fresh = [...cardsEl.querySelectorAll(".card[data-id]")];
+    d.cards = d.cards.map(o => fresh.find(n => n.dataset.id === o.dataset.id)).filter(Boolean);
+    if (!d.cards.length){ _cselDragEnd(); return; }
+    d.anchor = Math.min(d.anchor, d.cards.length - 1);
+    d.cur = Math.min(d.cur, d.cards.length - 1);
+  }
+  // 視窗上/下邊緣:自動慢速捲動整頁(卡片檢視是整頁捲動,不是內部捲動層)
+  let nearEdge = false;
+  const se = document.scrollingElement || document.documentElement;
+  if (d.y > window.innerHeight - 90){ nearEdge = true; se.scrollTop += 7; }
+  else if (d.y < 140 && se.scrollTop > 0){ nearEdge = true; se.scrollTop -= 7; }
+  const el = document.elementFromPoint ? document.elementFromPoint(d.x, d.y) : null;
+  const c = el && el.closest ? el.closest(".card[data-id]") : null;
+  if (c && cardsEl.contains(c)){ const i = d.cards.indexOf(c); if (i >= 0) d.cur = i; }
+  const lo = Math.min(d.anchor, d.cur), hi = Math.max(d.anchor, d.cur);
+  for (let i = 0; i < d.cards.length; i++){
+    const id = d.cards[i].dataset.id, inR = (i >= lo && i <= hi);
+    if (inR){ if (!selected.has(id)){ _cselSet(id, true); d.added.add(id); } }
+    else if (d.added.has(id)){ _cselSet(id, false); d.added.delete(id); }
+  }
+  if (nearEdge) d.raf = requestAnimationFrame(_cselDragPaint);   // 靠邊時持續捲動+重算範圍
+}
+function _cselDragMove(e){
+  if (!cselDrag) return;
+  cselDrag.x = e.clientX; cselDrag.y = e.clientY;
+  if (cselDrag.raf == null) cselDrag.raf = requestAnimationFrame(_cselDragPaint);
+}
+function _cselDragEnd(){
+  if (!cselDrag) return;
+  if (cselDrag.raf != null) cancelAnimationFrame(cselDrag.raf);
+  cselDrag = null;
+}
+document.addEventListener("pointermove", _cselDragMove);
+document.addEventListener("pointerup", _cselDragEnd);
+document.addEventListener("pointercancel", _cselDragEnd);
+// 拖曳連選進行中:擋掉瀏覽器的原生捲動手勢,拖曳才不會被中斷(平常的捲動完全不受影響)
+cardsEl.addEventListener("touchmove", e => { if (cselDrag) e.preventDefault(); }, { passive:false });
 cardsEl.addEventListener("pointerleave", endPress);
 cardsEl.addEventListener("contextmenu", e => { if (longPressed) e.preventDefault(); });
 
@@ -2575,12 +2893,68 @@ tableWrap.addEventListener("pointerdown", e => {
     btn.classList.remove("lp-run"); btn.classList.add("lp-done");
     setTimeout(() => { btn.classList.remove("lp-done"); const g = btn.querySelector(".lp-ring"); if (g) g.remove(); }, 460);
     try { navigator.vibrate && navigator.vibrate(18); } catch (_){}
-    if (tr) enterTselMode(tr.dataset.id);
+    if (tr){ enterTselMode(tr.dataset.id); _tselDragStart(tr); }   // 長按不放手 → 可直接上下拖曳連選
   }, 600);
 });
 tableWrap.addEventListener("pointermove", e => {
   if (_tdelLp.t && (Math.abs(e.clientX - _tdelLp.x) > 8 || Math.abs(e.clientY - _tdelLp.y) > 8)) _tdelLpCancel();
 });
+
+// ---- 批次選取強化:長按啟動後「不放手直接上下拖」= 掃過的列連續選取 ----
+// 範圍式:永遠選「長按起點 ~ 目前指到的列」這一段;拖過頭再拉回來,多掃到的會自動取消。
+// 拖曳前就已勾選的列不受影響。指標拖到表格上/下邊緣會自動捲動(手機同樣適用)。
+let tselDrag = null;
+function _tselDragStart(seedTr){
+  const rows = [...tableWrap.querySelectorAll(".tbody-wrap tr[data-id]")];
+  let i = rows.indexOf(seedTr);
+  // 列若在長按期間被重繪(例:前景同步套用合併結果),改用 id 對回新節點
+  if (i < 0 && seedTr && seedTr.dataset) i = rows.findIndex(r => r.dataset.id === seedTr.dataset.id);
+  if (i < 0) return;
+  tselDrag = { rows, anchor: i, cur: i, added: new Set(), x: 0, y: 0, raf: null };
+}
+function _tselRowSet(tr, on){ if (on !== selected.has(tr.dataset.id)) toggleTselRow(tr); }
+function _tselDragPaint(){
+  const d = tselDrag; if (!d) return;
+  d.raf = null;
+  if (!tselMode){ _tselDragEnd(); return; }
+  if (d.rows.length && !tableWrap.contains(d.rows[0])){   // 拖曳中途列被重繪:以 id 對回新節點,續拖不斷線
+    const fresh = [...tableWrap.querySelectorAll(".tbody-wrap tr[data-id]")];
+    d.rows = d.rows.map(o => fresh.find(n => n.dataset.id === o.dataset.id)).filter(Boolean);
+    if (!d.rows.length){ _tselDragEnd(); return; }
+    d.anchor = Math.min(d.anchor, d.rows.length - 1);
+    d.cur = Math.min(d.cur, d.rows.length - 1);
+  }
+  const sc = tableWrap.querySelector(".tbody-wrap");
+  let nearEdge = false;
+  if (sc){
+    const r = sc.getBoundingClientRect();
+    if (d.y > r.bottom - 44){ nearEdge = true; if (sc.scrollTop < sc.scrollHeight - sc.clientHeight) sc.scrollTop += 7; }
+    else if (d.y < r.top + 44){ nearEdge = true; if (sc.scrollTop > 0) sc.scrollTop -= 7; }
+  }
+  const el = document.elementFromPoint ? document.elementFromPoint(d.x, d.y) : null;
+  const tr = el && el.closest ? el.closest("tr[data-id]") : null;
+  if (tr){ const i = d.rows.indexOf(tr); if (i >= 0) d.cur = i; }
+  const lo = Math.min(d.anchor, d.cur), hi = Math.max(d.anchor, d.cur);
+  for (let i = 0; i < d.rows.length; i++){
+    const row = d.rows[i], id = row.dataset.id, inR = (i >= lo && i <= hi);
+    if (inR){ if (!selected.has(id)){ _tselRowSet(row, true); d.added.add(id); } }
+    else if (d.added.has(id)){ _tselRowSet(row, false); d.added.delete(id); }
+  }
+  if (nearEdge) d.raf = requestAnimationFrame(_tselDragPaint);   // 靠邊時持續捲動+重算範圍
+}
+function _tselDragMove(e){
+  if (!tselDrag) return;
+  tselDrag.x = e.clientX; tselDrag.y = e.clientY;
+  if (tselDrag.raf == null) tselDrag.raf = requestAnimationFrame(_tselDragPaint);
+}
+function _tselDragEnd(){
+  if (!tselDrag) return;
+  if (tselDrag.raf != null) cancelAnimationFrame(tselDrag.raf);
+  tselDrag = null;
+}
+document.addEventListener("pointermove", _tselDragMove);
+document.addEventListener("pointerup", _tselDragEnd);
+document.addEventListener("pointercancel", _tselDragEnd);
 tableWrap.addEventListener("pointerup", _tdelLpCancel);
 tableWrap.addEventListener("pointercancel", _tdelLpCancel);
 // ---- 表格批次刪除主體結束 ----
@@ -2760,6 +3134,7 @@ function openSettings(){
   window.scrollTo(0,0);
 }
 function closeSettings(){
+  saveNav("cover");   // 記住:回到封面
   settingsView.classList.remove("active");
   cover.style.display = "flex";
   renderCover();
@@ -2770,6 +3145,16 @@ document.getElementById("coverGear").addEventListener("click", e => { e.stopProp
 document.getElementById("setBack").addEventListener("click", closeSettings);
 renderDueDays();
 (function(){ const v = document.getElementById("verLine"); if (v) v.textContent = "物件總覽 · 更新日 " + APP_VERSION; })();
+// 開機還原上次畫面:上次在列表 → 直接回到該分類的列表(分類已被刪除則回「全部」);上次在封面 → 維持預設
+(function(){
+  if (!storageOK) return;
+  let nav = null;
+  try { nav = JSON.parse(localStorage.getItem(NAV_KEY) || "null"); } catch(err){}
+  if (nav && nav.screen === "list"){
+    const cat = (nav.cat && cats.some(c => c.key === nav.cat)) ? nav.cat : "";
+    openList(cat);
+  }
+})();
 
 // ===== 外觀主題 (淺色 / 深色) =====
 function loadTheme(){ if (storageOK){ try { const t = localStorage.getItem("property_app_theme_v1"); if (t === "dark") return "dark"; } catch(e){} } return "light"; }
@@ -3535,8 +3920,9 @@ let syncConnected = false, syncEmail = null;
         const remote = await download();
         const local = buildLocal();
         const merged = mergeMain(local, remote);
-        applyMerged(merged);
-        const needPush = !remote || canonical(merged) !== canonical(remote);
+        const mergedCanon = canonical(merged);
+        if (mergedCanon !== canonical(local)) applyMerged(merged);   // 內容真的有變才套用+重繪;完全沒變就不動畫面(回前景不會無故跳動)
+        const needPush = !remote || mergedCanon !== canonical(remote);
         if (!needPush){ lastVersion = await getVersion(); break; }
         merged.rev = ((remote && remote.rev) || 0) + 1; merged.lastWriteBy = deviceId; merged.updatedAt = Date.now();
         const newVer = await upload(fileId, merged);
