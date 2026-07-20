@@ -1468,7 +1468,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.20 D";
+const APP_VERSION = "2026.07.20 E";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2285,6 +2285,24 @@ function tCommitCell(cell){
 }
 function caretEnd(el){ try{ const r=document.createRange(); r.selectNodeContents(el); r.collapse(false); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
 
+// 強制把「當前正在編輯、尚未 blur」的格子提交進 items。
+// 表格一般格是靠 blur 才 commit;若使用者游標還停在某格就直接切背景/關 App,那格內容還在 DOM、沒寫進 items,
+// 會導致 flush 同步出去的是舊資料(前一天「漢成六街」那次就是這樣漏掉)。切背景/關閉前先呼叫這個,把在編輯的格先落地。
+function flushEditing(){
+  try {
+    const el = document.activeElement;
+    if (!el || !el.classList) return;
+    if (el.classList.contains("tcell") && el.getAttribute("contenteditable") === "true"){
+      tCommitCell(el);                                   // 一般欄位格(案名/地址/售價…)
+    } else if (el.classList.contains("nseg-ed") && !el.classList.contains("needexp-view")){
+      const w = el.closest(".needexp"); if (w) commitNeedSeg(w.dataset.for, +el.dataset.seg, editToNeed(el));   // 備註三段內容
+    } else if (el.dataset && el.dataset.titleedit){
+      const w = el.closest(".needexp"); if (w) commitNeedTitle(w.dataset.for, +el.dataset.seg, el.textContent); // 備註三段標題
+    }
+  } catch(e){}
+}
+window.flushEditing = flushEditing;
+
 tableWrap.addEventListener("blur", e=>{
   const c = e.target; if (c.classList && c.classList.contains("tcell")){ tCommitCell(c); tFlash(c); }
 }, true);
@@ -2391,6 +2409,10 @@ tableWrap.addEventListener("input", e => {
     cell.textContent = txt;
     try { const r = document.createRange(); r.selectNodeContents(cell); r.collapse(false); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch(err){}
   }
+  // 邊打邊存的保險:一般格原本只在 blur 才 commit,這裡加 debounce 自動落地。
+  // 就算 App 被直接滑掉/強制關閉(visibilitychange、pagehide 未必觸發),資料也已寫進 items,最多只漏最後 ~0.4 秒的字。
+  clearTimeout(cell._saveT);
+  cell._saveT = setTimeout(function(){ if (cell.isConnected) tCommitCell(cell); }, 400);
 });
 tableWrap.addEventListener("click", e=>{
   // 備註展開中:點該列任何位置(展開區內部除外)= 收合
@@ -5093,11 +5115,11 @@ let syncConnected = false, syncEmail = null;
   });
   document.getElementById("cloudImportBtn").addEventListener("click", driveImportBackup);
   document.addEventListener("visibilitychange", function(){
-    if (!syncConnected) return;
-    if (!document.hidden){ syncNow(); }                                             // 回前景:拉取最新(needReauth 時 syncNow 會走 ensureToken 嘗試 silent 重連,成功即自動恢復,不必手動點「重新連結」)
-    else if (!needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(); }  // 切背景/關閉前:把還沒推的變更送出(needReauth 時推不出去,略過)
+    if (!document.hidden){ if (syncConnected) syncNow(); return; }               // 回前景:拉取最新(needReauth 時 syncNow 會走 ensureToken 嘗試 silent 重連)
+    if (window.flushEditing) window.flushEditing();                              // 切背景/關閉前:先把正在編輯、還沒 blur 的格提交進 items(避免漏存)
+    if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(); }  // 再把還沒推的變更送出(needReauth 時推不出去,略過)
   });
-  window.addEventListener("pagehide", function(){ if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(); } });
+  window.addEventListener("pagehide", function(){ if (window.flushEditing) window.flushEditing(); if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(); } });
   // 網路恢復:立即嘗試同步。離線開啟時 GIS 載入不了的那次失敗,回到有網路這裡會馬上再試;
   // 若之前殘留 needReauth,syncNow 會 silent 取得 token,成功即自動清除,使用者不必手動點「重新連結」。
   window.addEventListener("online", function(){
