@@ -109,6 +109,8 @@
   [data-theme="light"] .all-btn:hover{color:var(--ink);}
   [data-theme="light"] .cover-gear{background:var(--card);border-color:var(--line);color:var(--ink-soft);}
   [data-theme="light"] .cover-gear:hover{background:var(--surface-2);color:var(--ink);}
+  [data-theme="light"] .cover-top .cover-led{background:var(--card);border-color:var(--line);}
+  [data-theme="light"] .cover-top .cover-led:hover{background:var(--surface-2);}
   [data-theme="light"] .cover-vt button{background:var(--card);border-color:var(--line);color:var(--ink);box-shadow:0 2px 8px rgba(22,34,42,.07);}
   [data-theme="light"] .cover-vt button:active{background:var(--surface-2);}
 
@@ -169,7 +171,8 @@
   @keyframes catsMoreBob{0%,100%{transform:translateY(0);}50%{transform:translateY(4px);}}
   @media (prefers-reduced-motion:reduce){ .cats-more svg{animation:none;} }
   .cover-body::-webkit-scrollbar{display:none;}
-  .cover-top{display:flex;flex-direction:row-reverse;align-items:center;justify-content:space-between;gap:14px;}
+  .cover-top{display:flex;flex-direction:row-reverse;align-items:center;}
+  .cover-top h1{margin-right:auto;}   /* 標題佔左,把齒輪+燈那組推到最右 */
   .cover h1{
     font-family:"Noto Serif TC",serif;
     font-weight:900;
@@ -211,6 +214,11 @@
   .cover-gear:hover{background:rgba(255,255,255,.16);color:#fff;}
   .cover-gear svg{width:20px;height:20px;}
   .cover-gear:active{transform:scale(.93) rotate(30deg);}
+  .cover-actions{display:flex;flex-direction:row-reverse;align-items:center;gap:8px;}   /* 齒輪+同步燈成一組,兩圈間距 8px */
+  .cover-top .cover-led{flex:none;width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);cursor:pointer;padding:0;transition:background .15s ease;}
+  .cover-top .cover-led:hover{background:rgba(255,255,255,.16);}
+  .cover-top .cover-led .led{width:14px;height:14px;}   /* 封面圓點比列表(12px)略大,跟齒輪圖示較平衡 */
 
   /* ---------- SETTINGS (View 3) ---------- */
   .settings-view{display:none;min-height:100dvh;flex-direction:column;background:var(--paper);}
@@ -279,6 +287,7 @@
   .sync-led.ok .led{background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 24%,transparent);}
   .sync-led.busy .led{background:#D8961F;box-shadow:0 0 0 3px color-mix(in srgb,#D8961F 26%,transparent);animation:duePulse 1.2s ease-in-out infinite;}
   .sync-led.warn .led{background:var(--danger);box-shadow:0 0 0 3px color-mix(in srgb,var(--danger) 26%,transparent);}
+  .sync-led.offline .led{background:var(--text-faint);box-shadow:0 0 0 3px color-mix(in srgb,var(--text-faint) 24%,transparent);}   /* 離線:灰燈(有連結但沒網路,畫面是上次同步資料) */
   .sync-led.pending .led{animation:ledYGled 1.1s steps(1,end) infinite;}
   @keyframes ledYGled{0%,49%{background:#D8961F;box-shadow:0 0 0 3px color-mix(in srgb,#D8961F 26%,transparent);}50%,100%{background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 26%,transparent);}}
   .ver-line{text-align:center;font-size:.76rem;color:var(--ink-soft);opacity:.72;letter-spacing:.02em;margin-top:26px;padding-bottom:6px;}
@@ -556,6 +565,21 @@
   .modal-body input:focus,.modal-body select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
   .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
   .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}   /* 格局/樓層/售價 各 1/3 */
+  /* ===== 表單連結群組:預設收合成一排三欄,可展開成三排 ===== */
+  .link-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;}
+  .link-head-t{font-size:.8rem;font-weight:600;color:var(--ink-soft);}
+  .link-toggle{display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;padding:4px;margin:-4px;cursor:pointer;color:var(--accent-deep);border-radius:6px;}
+  @media (hover:hover){ .link-toggle:hover{background:var(--accent-tint);} }
+  .link-toggle svg{width:14px;height:14px;transition:transform .18s ease;}
+  .link-group:not(.collapsed) .link-toggle svg{transform:rotate(180deg);}   /* 展開時箭頭朝上 */
+  .link-fields{display:grid;gap:10px;}
+  .link-group.collapsed .link-fields{grid-template-columns:repeat(3,minmax(0,1fr));}   /* 收合:三欄一排 */
+  .link-group:not(.collapsed) .link-fields{grid-template-columns:1fr;}                  /* 展開:各佔一排 */
+  .link-f{display:flex;flex-direction:column;gap:5px;min-width:0;}
+  .link-lab{font-size:.8rem;font-weight:600;color:var(--ink-soft);}
+  .link-group.collapsed .link-lab{font-size:.72rem;font-weight:400;color:var(--text-faint);text-align:center;}   /* 收合時:標籤縮小、減粗、上方置中(節省高度且對齊窄欄) */
+  .link-f input{width:100%;box-sizing:border-box;transition:font-size .15s ease;}
+  .link-group.collapsed .link-f input{text-overflow:ellipsis;font-size:.85em;}   /* 收合時窄框:文字縮小、過長網址尾端省略;展開恢復原大小 */
   .row2.store-row{grid-template-columns:minmax(0,2fr) minmax(0,1fr);}          /* 門市 2/3、到期日 1/3(與格局同寬) */
   .row2.name-row{grid-template-columns:repeat(3,minmax(0,1fr));}                /* 與三欄排同格線:案名跨前兩欄、類別佔第三欄,與樓層左右對齊 */
   .row2.name-row > label:first-child{grid-column:1 / span 2;}
@@ -661,7 +685,8 @@
   .table-wrap.search-hint th[data-col="floor"] .th-label,
   .table-wrap.search-hint th[data-col="price"] .th-label,
   .table-wrap.search-hint th[data-col="agent"] .th-label,
-  .table-wrap.search-hint th[data-col="store"] .th-label{color:#FFE08A;}
+  .table-wrap.search-hint th[data-col="store"] .th-label,
+  .table-wrap.search-hint th[data-col="note"] .th-label{color:#FFE08A;}
   .th-flt.on .fmk{opacity:1;color:#FFE08A;}   /* 已套用此欄篩選:標記加亮 */
   .fpanel{background:var(--card);width:100%;max-width:390px;max-height:80dvh;border-radius:20px;padding:15px 16px 16px;box-shadow:0 18px 50px rgba(22,34,42,.3);display:flex;flex-direction:column;}
   .fpanel-head{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:1.02rem;color:var(--ink);margin-bottom:8px;}
@@ -787,6 +812,7 @@
   @media (max-width:819px){
     /* 手機:編輯/新增物件表單改「整頁滿版」,不留頂部空白(桌機維持底部面板) */
     .modal-bg{align-items:stretch;}
+    #detailBg.modal-bg.center{align-items:stretch;padding:0;}   /* 物件明細:手機全畫面(蓋掉 .center 的置中+留白,與編輯表單同樣滿版) */
     .modal{max-width:none;max-height:none;height:100dvh;border-radius:0;animation:modalUp .22s ease;}
     .modal-body{flex:1;min-height:0;}
     @keyframes modalUp{from{transform:translateY(14px);opacity:.6;}to{transform:translateY(0);opacity:1;}}
@@ -967,6 +993,40 @@
   .need-h{font-weight:800;font-size:1.06em;color:var(--accent-deep);}   /* inline 標題:選取範圍包成 span.need-h,序列化為 §..§(與客戶總覽同套) */
   .nseg-btns{display:inline-flex;align-items:center;gap:6px;flex:none;}    /* 刪線+標題群組:.nseg-head 是 space-between,不包起來兩顆會被撐開 */
   .needexp-view{user-select:text;-webkit-user-select:text;cursor:text;}
+  /* ===== 物件明細頁(點卡片開啟的唯讀詳情) ===== */
+  .dtl-body{gap:15px;}
+  .dtl-sec{display:flex;flex-direction:column;gap:8px;}
+  .dtl-h{display:flex;align-items:center;gap:7px;font-size:.86rem;font-weight:800;color:var(--ink);letter-spacing:.02em;}
+  .dtl-h svg{width:15px;height:15px;color:var(--accent);flex:none;}
+  .dtl-card{border:1px solid var(--line);border-radius:12px;background:var(--card);display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+  .dtl-cell{display:flex;align-items:center;gap:8px;padding:11px 13px;min-width:0;}
+  .dtl-cell:nth-child(even){border-left:1px solid var(--line);}
+  .dtl-cell:nth-child(n+3){border-top:1px solid var(--line);}
+  .dtl-cell > svg{width:13px;height:13px;color:var(--text-faint);flex:none;}
+  .dtl-cell.dtl-wide{grid-column:1 / -1;}   /* 地址等長欄位橫跨整列 */
+  /* 基本資料專用三欄佈局:售價|格局|樓層 一排,地址(跨前兩欄)|到期 一排;到期左線與樓層左線垂直對齊 */
+  .dtl-card3{border:1px solid var(--line);border-radius:12px;background:var(--card);display:grid;grid-template-columns:1fr 1fr 1fr;overflow:hidden;}
+  .dtl-card3 > .dtl-cell:nth-child(2),
+  .dtl-card3 > .dtl-cell:nth-child(3){border-left:1px solid var(--line);}   /* 格局、樓層 左線 */
+  .dtl-card3 > .dtl-cell:nth-child(n+4){border-top:1px solid var(--line);}   /* 第二排(地址)上線 */
+  .dtl-card3 > .dtl-addr{grid-column:1 / -1;}                                /* 地址獨佔整排(到期已移到標題列) */
+  .dtl-k{color:var(--text-faint);font-size:.78rem;letter-spacing:.05em;flex:none;font-weight:400;}
+  .dtl-v{color:var(--ink);font-weight:600;font-size:.93rem;min-width:0;word-break:break-word;font-variant-numeric:tabular-nums;}
+  .dtl-empty{color:var(--text-faint);font-weight:500;display:inline-flex;align-items:center;}
+  .dtl-empty::before{content:"";width:.8em;height:2px;background:currentColor;border-radius:1px;}   /* 空值橫桿:畫線垂直置中,永不歪 */
+  #detailTitle{display:flex;align-items:center;gap:9px;min-width:0;}
+  .dtl-due-top{margin-left:auto;flex:none;font-family:-apple-system,"Noto Sans TC",sans-serif;font-size:.78rem;font-weight:400;color:var(--text-faint);white-space:nowrap;letter-spacing:.02em;}   /* 標題列到期:推到最右(X鈕左邊)、淺色細字弱化 */
+  .dtl-cat{flex:none;font-family:"Noto Sans TC",-apple-system,sans-serif;font-size:.8rem;font-weight:800;line-height:1.25;color:var(--accent-deep);background:var(--accent-tint);border:1px solid var(--accent-tint-bd);border-radius:7px;padding:2px 8px;}
+  .dtl-name{min-width:0;}
+  .dtl-copy{cursor:pointer;border-radius:7px;padding:2px 6px;margin:-2px -6px;transition:box-shadow .1s;}
+  @media (hover:hover){ .dtl-copy:hover{box-shadow:inset 0 0 0 100px rgba(15,122,95,.07);} }
+  .dtl-copy.copied{animation:cardCopiedFlash .7s ease;}
+  .dtl-body .needexp-ed{min-height:auto;}
+  .dtl-links{display:flex;flex-wrap:wrap;gap:8px;}
+  .dtl-tel{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--accent-deep);background:var(--accent-tint);border:1px solid var(--accent-tint-bd);border-radius:9px;padding:9px 14px;font-weight:700;font-size:.95rem;}
+  .dtl-tel svg{width:15px;height:15px;flex:none;}
+  .dtl-tellink{color:var(--accent-deep);text-decoration:none;font-variant-numeric:tabular-nums;}   /* 承辦區格內電話:綠色可撥號連結 */
+  @media (hover:hover){ .dtl-tellink:hover{text-decoration:underline;} }
   .nseg-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
   .nseg{min-width:0;}
   .nseg-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
@@ -983,6 +1043,16 @@
   .needexp-ed:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,92,168,.12);}
   .needexp-ed div{min-height:1.25em;}
   .needexp-ed .nh{font-weight:800;font-size:1.06em;color:var(--accent-deep);}
+  /* ===== 編輯表單:備註三段(富文本,與展開列同套但表單版) ===== */
+  .f-need3{display:flex;flex-direction:column;gap:16px;}
+  .fneed-seg{display:flex;flex-direction:column;gap:5px;}
+  .f-need3 .fneed-t{font-family:inherit;font-size:.82rem;font-weight:700;color:var(--text-faint);background:transparent!important;border:0!important;border-radius:0!important;padding:0 2px 3px!important;outline:none;box-shadow:none!important;width:auto;max-width:100%;letter-spacing:.02em;}
+  .f-need3 .fneed-t::placeholder{color:var(--text-faint);opacity:.55;}
+  .f-need3 .fneed-t:focus{color:var(--accent-deep);background:transparent!important;border:0!important;box-shadow:none!important;}
+  .fneed-c{font-family:inherit;font-size:.95rem;line-height:1.6;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 12px;outline:none;resize:vertical;min-height:64px;}
+  .fneed-c:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
+  .fneed-ed{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;cursor:text;}
+  .fneed-ed div{min-height:1.5em;}
   @media (hover:hover){ .tcell:hover{background:var(--surface-2);} }
   @media (hover:hover){ .exp-open .tcell:hover{background:transparent;} }
   #needHover{position:fixed;z-index:220;display:none;width:min(1000px,94vw);pointer-events:none;background:var(--accent-tint);border:1px solid var(--accent-tint-bd);border-top:none;border-radius:0 0 14px 14px;padding:13px 16px 15px;box-shadow:0 16px 44px rgba(22,34,42,.26);}
@@ -1072,7 +1142,10 @@
   <!-- ===== View 1: Cover ===== -->
   <section class="cover" id="cover">
     <header class="cover-top">
+    <div class="cover-actions">
+    <button class="sync-led cover-led" id="coverLed" type="button" aria-label="同步狀態" title="點一下立即同步・長按進入設定"><span class="led"></span></button>
     <button class="cover-gear" id="coverGear" aria-label="設定" title="設定"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/></svg></button>
+    </div>
     <h1>物件總覽</h1>
     </header>
     <button class="cover-search" id="coverSearch" type="button">
@@ -1259,9 +1332,24 @@
           <label>門市<input id="f_store"></label>
           <label>到期日<input id="f_due"></label>
         </div>
-        <label>591 連結<input id="f_591"></label>
-        <label>樂居 連結<input id="f_leju"></label>
-        <label>永慶 連結<input id="f_i"></label>
+        <div class="link-group collapsed" id="linkGroup">
+          <div class="link-head">
+            <span class="link-head-t">連結</span>
+            <button type="button" class="link-toggle" id="linkToggle" aria-expanded="false" aria-label="展開連結欄位">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+          </div>
+          <div class="link-fields">
+            <label class="link-f"><span class="link-lab">591</span><input id="f_591" placeholder="591 連結"></label>
+            <label class="link-f"><span class="link-lab">樂居</span><input id="f_leju" placeholder="樂居 連結"></label>
+            <label class="link-f"><span class="link-lab">永慶</span><input id="f_i" placeholder="永慶 連結"></label>
+          </div>
+        </div>
+        <div class="f-need3">
+          <div class="fneed-seg"><input class="fneed-t" id="f_t1" placeholder="標題"><div class="fneed-c fneed-ed" id="f_note" contenteditable="true" spellcheck="false"></div></div>
+          <div class="fneed-seg"><input class="fneed-t" id="f_t2" placeholder="標題"><div class="fneed-c fneed-ed" id="f_note2" contenteditable="true" spellcheck="false"></div></div>
+          <div class="fneed-seg"><input class="fneed-t" id="f_t3" placeholder="標題"><div class="fneed-c fneed-ed" id="f_note3" contenteditable="true" spellcheck="false"></div></div>
+        </div>
       </div>
       <div class="modal-foot">
         <button class="btn-del" id="modalDelete">刪除</button>
@@ -1269,6 +1357,17 @@
         <button class="btn-ghost" id="modalCancel">取消</button>
         <button class="btn-primary" id="modalSave">儲存</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ===== 物件明細(唯讀,點卡片開啟) ===== -->
+  <div class="modal-bg center" id="detailBg">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <div class="modal-head">
+        <h2 id="detailTitle"></h2>
+        <button class="x" id="detailClose" aria-label="關閉">✕</button>
+      </div>
+      <div class="modal-body dtl-body" id="detailBody"></div>
     </div>
   </div>
 
@@ -1369,7 +1468,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.19 O";
+const APP_VERSION = "2026.07.20 D";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1382,7 +1481,13 @@ const layoutText = g => ({"322":"3房2廳2衛","221":"2房2廳1衛","3改2/22":"
 const SEARCH_FIELDS = ["name","addr","agent","store","cat","due","layout","floor","price","note","note2","note3","t1","t2","t3"];
 function searchHay(d){
   let s = "";
-  for (const k of SEARCH_FIELDS){ const v = d[k]; s += (v == null ? "" : String(v)) + "\u001F"; }
+  const NOTE_KEYS = { note:1, note2:1, note3:1 };
+  for (const k of SEARCH_FIELDS){
+    let v = d[k];
+    v = (v == null) ? "" : String(v);
+    if (NOTE_KEYS[k]) v = v.replace(/[\u00a7\u200b]|~~/g, "");   // 備註三段:去掉 §標題/~~刪線/零寬錨點 等標記,讓「近§捷運§站」也能被「捷運站」搜到(比對貼近顯示文字)
+    s += v + "\u001F";
+  }
   s += layoutText(d.layout) + "\u001F";   // 格局展開字(322 → 3房2廳2衛)也能搜
   return s.toLowerCase();
 }
@@ -1888,7 +1993,7 @@ function syncTableMode(){
 function setViewMode(vm){ viewMode = (vm==="table") ? "table" : "card"; saveViewMode(); applyFilter(); }
 
 // ---- table rendering ----
-const T_COLS = ["到期日","類別","格局","案名","地址","樓層","售價","連結","承辦","電話","門市","備註"];
+const T_COLS = ["到期","類別","格局","案名","地址","樓層","售價","連結","承辦","電話","門市","備註"];
 // ---- 表格欄寬調整(拖曳 + 雙擊自適應 + 記憶/同步)。備註(note,最後一欄)為彈性欄:不放把手、不給固定寬,自動吸收剩餘空間;其餘欄(含門市)皆可調右緣拉桿 ----
 const T_FIELDS = ["due","cat","layout","name","addr","floor","price","links","agent","tel","store","note"];
 const FLEX_FIELD = "note";   // 備註=彈性欄(最後一欄,無拉桿,自動吸收剩餘寬度),與客戶總覽「客戶需求」欄一致。其餘欄固定可調(右緣拉桿),表格 width:100% 撐滿
@@ -2450,7 +2555,7 @@ const lpDot = document.getElementById("lpDot");
 const lpOpenBtn = document.getElementById("lpOpen");
 const CHIP_FIELD = { "591":"url591", "樂居":"urlLeju", "永慶":"urlI" };
 const CHIP_COLOR = { "591":"#2C6FB0", "樂居":"#C6553F", "永慶":"#0F7A5F" };
-let lpChip = null;
+let lpChip = null, lpNeed = null;   // lpNeed:備註欄「連結」標籤的編輯目標 {chip, ed}
 function lpRefresh(){ lpOpenBtn.classList.toggle("disabled", !lpInput.value.trim()); }
 function openLinkPop(chip){
   if (lpChip && lpChip !== chip) commitLink();
@@ -2469,8 +2574,40 @@ function openLinkPop(chip){
   lpRefresh(); lpInput.focus(); lpInput.select();
   setTimeout(()=>document.addEventListener("click", lpOutside), 0);
 }
-function lpOutside(e){ if (e.target.closest("#linkpop") || e.target.closest(".tchip")) return; commitLink(); }
+function lpOutside(e){ if (e.target.closest("#linkpop") || e.target.closest(".tchip") || e.target.closest(".need-link-chip")) return; commitLink(); }
+// 備註欄「連結」標籤(need-link-chip)的編輯面板:貼上/清除/開啟/完成。與表格膠囊 openLinkPop 共用同一個浮層,但寫回路徑不同(靠 commitNeedSeg 重新序列化該段,而非寫 item 欄位)
+function openLinkPopNeed(chip){
+  if (lpChip || (lpNeed && lpNeed.chip !== chip)) commitLink();
+  const ed = chip.closest(".needexp-ed, .fneed-ed");
+  lpNeed = { chip, ed };
+  lpLabel.textContent = "連結";
+  try { lpDot.style.background = (getComputedStyle(document.documentElement).getPropertyValue("--accent") || "#0F7A5F").trim(); } catch(_){ lpDot.style.background = "#0F7A5F"; }
+  lpInput.value = chip.getAttribute("data-url") || "";
+  const r = chip.getBoundingClientRect();
+  lpop.classList.add("show");
+  if (window.refreshLed) window.refreshLed();
+  const w = lpop.offsetWidth;
+  const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;   // clientWidth 不含捲軸;innerWidth 含捲軸會讓面板壓進捲軸底下,看起來跑出視窗外
+  let left = Math.min(r.left, vw - w - 12); left = Math.max(12, left);
+  let top = r.bottom + 6; if (top + lpop.offsetHeight > vh - 8) top = Math.max(8, r.top - lpop.offsetHeight - 6);
+  lpop.style.left = left + "px"; lpop.style.top = top + "px";
+  lpRefresh(); lpInput.focus(); lpInput.select();
+  setTimeout(()=>document.addEventListener("click", lpOutside), 0);
+}
 function commitLink(){
+  if (lpNeed){                                    // 備註欄「連結」標籤:寫回 data-url;清空後完成 = 整顆移除
+    const nd = lpNeed; lpNeed = null;
+    const url = lpInput.value.trim();
+    if (nd.chip && nd.chip.isConnected){
+      if (url){ nd.chip.setAttribute("data-url", url); }
+      else { nd.chip.remove(); }
+      if (nd.ed && nd.ed.isConnected && nd.ed.classList.contains("needexp-ed")){
+        const wx = nd.ed.closest(".needexp");
+        if (wx) commitNeedSeg(wx.dataset.for, +nd.ed.dataset.seg, editToNeed(nd.ed));
+      }
+    }
+    closeLinkPop(); return;
+  }
   if (!lpChip){ closeLinkPop(); return; }
   const url = lpInput.value.trim();
   lpChip.dataset.url = url; lpChip.classList.toggle("on", !!url);
@@ -2478,7 +2615,7 @@ function commitLink(){
   if (it){ const field = CHIP_FIELD[lpChip.dataset.label]; if (field){ const v = url || null; if (it[field] !== v){ it[field] = v; it.updatedAt = Date.now(); saveItems(); onLocalChange("data"); } } }
   closeLinkPop();
 }
-function closeLinkPop(){ document.removeEventListener("click", lpOutside); lpop.classList.remove("show"); lpChip = null; if (window.refreshLed) window.refreshLed(); }
+function closeLinkPop(){ document.removeEventListener("click", lpOutside); lpop.classList.remove("show"); lpChip = null; lpNeed = null; if (window.refreshLed) window.refreshLed(); }
 lpInput.addEventListener("input", lpRefresh);
 lpInput.addEventListener("keydown", e=>{ if (e.key==="Enter"){ e.preventDefault(); commitLink(); } else if (e.key==="Escape"){ closeLinkPop(); } });
 document.getElementById("lpDone").addEventListener("click", commitLink);
@@ -2586,7 +2723,8 @@ searchEl.addEventListener("focus", syncSearchHint);
 searchEl.addEventListener("blur", syncSearchHint);
 document.getElementById("backBtn").addEventListener("click", showCover);
 (function(){
-  const led = document.getElementById("listLed");
+  ["listLed","coverLed"].forEach(function(ledId){
+  const led = document.getElementById(ledId);
   if (!led) return;
   let lpTimer = null, longFired = false;
   function startLP(){
@@ -2605,6 +2743,7 @@ document.getElementById("backBtn").addEventListener("click", showCover);
   led.addEventListener("click", function(e){
     if (longFired){ e.preventDefault(); longFired = false; return; }   // 長按已進設定,吞掉這次點擊
     if (window.ledAction) window.ledAction();
+  });
   });
 })();
 tableWrap.addEventListener("focusin", function(){ if (window.refreshLed) window.refreshLed(); });
@@ -2708,6 +2847,7 @@ document.addEventListener("keydown", e => {
   if (isOn("sortSel","open")){ closeSortSel(); return; }                              // 排序下拉
   if (isOn("catSel","open")){ closeCatSel(); return; }                                // 表單類別下拉
   if (isOn("catBg","open")){ closeCatManager(); return; }                             // 管理類別
+  if (isOn("detailBg","open")){ closeDetail(); return; }                             // 物件明細(唯讀)
   if (isOn("modalBg","open")){ closeForm(); return; }                                 // 編輯/新增表單
 });
 
@@ -2720,6 +2860,8 @@ const F = {
   due:document.getElementById("f_due"), agent:document.getElementById("f_agent"),
   tel:document.getElementById("f_tel"), store:document.getElementById("f_store"),
   u591:document.getElementById("f_591"), uleju:document.getElementById("f_leju"), ui:document.getElementById("f_i"),
+  note:document.getElementById("f_note"), note2:document.getElementById("f_note2"), note3:document.getElementById("f_note3"),
+  t1:document.getElementById("f_t1"), t2:document.getElementById("f_t2"), t3:document.getElementById("f_t3"),
 };
 
 // ---- 到期日:自製日曆選擇(民國年顯示 + 西元/民國轉換;與客戶總覽同一套) ----
@@ -2837,10 +2979,73 @@ function openForm(id){
   F.u591.value   = d ? d.url591||""  : "";
   F.uleju.value  = d ? d.urlLeju||"" : "";
   F.ui.value     = d ? d.urlI||""   : "";
+  F.note.innerHTML  = (d && d.note)  ? needToFormHTML(d.note)  : "<div><br></div>";
+  F.note2.innerHTML = (d && d.note2) ? needToFormHTML(d.note2) : "<div><br></div>";
+  F.note3.innerHTML = (d && d.note3) ? needToFormHTML(d.note3) : "<div><br></div>";
+  F.t1.value = d ? needTitle(d, 1) : "備註";
+  F.t2.value = d ? needTitle(d, 2) : "注意";
+  F.t3.value = d ? needTitle(d, 3) : "其它";
+  { const lg = document.getElementById("linkGroup"), lt = document.getElementById("linkToggle");   // 每次打開表單:連結群組一律預設收合(一排三欄)
+    if (lg){ lg.classList.add("collapsed"); if (lt){ lt.setAttribute("aria-expanded","false"); lt.setAttribute("aria-label","展開連結欄位"); } } }
   modalBg.classList.add("open");
   if (!id) setTimeout(() => F.name.focus(), 50);
 }
 function closeForm(){ modalBg.classList.remove("open"); editingId = null; }
+
+// ===== 物件明細(唯讀,卡片檢視正常模式點卡片開啟) =====
+const detailBg = document.getElementById("detailBg");
+function openDetail(id){
+  const d = items.find(x => x.id === id); if (!d) return;
+  const _cat = d.cat ? `<span class="dtl-cat">${esc(d.cat)}</span>` : "";
+  const _dueTop = d.due ? `<span class="dtl-due-top">到期 ${esc(d.due)}</span>` : "";
+  document.getElementById("detailTitle").innerHTML = `<span class="dtl-name">${nameSegmentsHTML(d.name) || "（未填案名）"}</span>${_cat}${_dueTop}`;
+  // 區段/格內小圖示
+  const IC_INFO  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.6" fill="currentColor"/></svg>';
+  const IC_LINK  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15 15 9"/><path d="M11 6.5 13 4.5a3.5 3.5 0 0 1 5 5l-2 2"/><path d="M13 17.5 11 19.5a3.5 3.5 0 0 1-5-5l2-2"/></svg>';
+  const IC_USER  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.6-3.4 4.3-5 7.5-5s5.9 1.6 7.5 5"/></svg>';
+  const IC_DOC   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="4" width="13" height="16" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg>';
+  const IC_EYE   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12s3.4-6.4 9.5-6.4 9.5 6.4 9.5 6.4-3.4 6.4-9.5 6.4S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6"/></svg>';
+  const IC_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8.3 12.2 2.5 2.5 4.9-5.2"/></svg>';
+  const IC_TEL   = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.53 15.53 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.36 11.36 0 0 0 3.57.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>';
+  const IC_TEL_S = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.62 10.79a15.53 15.53 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.36 11.36 0 0 0 3.57.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>';   // 格內用:線條版小電話,與其他格圖示風格一致
+  // 格:標籤 + 值(可點複製);空值顯示橫桿。wide=橫跨整列
+  const cell = (k, v, ic, wide) => `<div class="dtl-cell${wide?" dtl-wide":""}">${ic||""}<span class="dtl-k">${esc(k)}</span>${v ? `<span class="dtl-v dtl-copy" data-copy="${esc(v)}">${esc(v)}</span>` : `<span class="dtl-v dtl-empty" aria-hidden="true"></span>`}</div>`;
+  // 基本資料:售價/格局、樓層/到期、地址(橫跨)
+  const _price = d.price ? (money(d.price) + " 萬") : "";
+  const cellC = (k, v, extraClass) => `<div class="dtl-cell ${extraClass||""}"><span class="dtl-k">${esc(k)}</span>${v ? `<span class="dtl-v dtl-copy" data-copy="${esc(v)}">${esc(v)}</span>` : `<span class="dtl-v dtl-empty" aria-hidden="true"></span>`}</div>`;
+  const basic = `<div class="dtl-sec">
+    <div class="dtl-h">${IC_INFO}基本資料</div>
+    <div class="dtl-card3">${cellC("售價", _price)}${cellC("格局", d.layout)}${cellC("樓層", d.floor)}${cellC("地址", d.addr, "dtl-addr")}</div>
+  </div>`;
+  // 連結:591/樂居/永慶(可開)
+  const _hasLink = d.url591 || d.urlLeju || d.urlI;
+  const links = _hasLink ? `<div class="dtl-sec">
+    <div class="dtl-h">${IC_LINK}連結</div>
+    <div class="dtl-links">${linkChip(d.url591,"591")}${linkChip(d.urlLeju,"樂居")}${linkChip(d.urlI,"永慶")}</div>
+  </div>` : "";
+  // 承辦:承辦人|電話 一排(電話可撥號),門市獨立一排
+  const _telCell = d.tel
+    ? `<div class="dtl-cell">${IC_TEL_S}<span class="dtl-k">電話</span><a class="dtl-v dtl-tellink" href="tel:${esc(d.tel)}">${esc(d.tel)}</a></div>`
+    : `<div class="dtl-cell">${IC_TEL_S}<span class="dtl-k">電話</span><span class="dtl-v dtl-empty" aria-hidden="true"></span></div>`;
+  const agent = `<div class="dtl-sec">
+    <div class="dtl-h">${IC_USER}承辦</div>
+    <div class="dtl-card">${cell("承辦", d.agent)}${_telCell}${cell("門市", d.store, null, true)}</div>
+  </div>`;
+  // 備註三段(沿用展開內容框,唯讀)
+  const seg = (t, c, ic) => `<div class="dtl-sec"><div class="dtl-h">${ic}${esc(t)}</div><div class="needexp-ed needexp-view">${c ? needToViewHTML(c) : '<span class="tneed-ph">—</span>'}</div></div>`;
+  const segHTML = seg(needTitle(d,1), d.note, IC_DOC) + seg(needTitle(d,2), d.note2, IC_EYE) + seg(needTitle(d,3), d.note3, IC_CHECK);
+  document.getElementById("detailBody").innerHTML = basic + agent + links + segHTML;
+  detailBg.classList.add("open");
+}
+function closeDetail(){ detailBg.classList.remove("open"); }
+document.getElementById("detailClose").addEventListener("click", closeDetail);
+let _dtlDownOnBg = false;
+detailBg.addEventListener("pointerdown", e => { _dtlDownOnBg = (e.target === detailBg); });
+detailBg.addEventListener("click", e => { if (e.target === detailBg && _dtlDownOnBg) closeDetail(); _dtlDownOnBg = false; });
+// 明細頁內點欄位值 → 複製
+document.getElementById("detailBody").addEventListener("click", e => {
+  const cp = e.target.closest(".dtl-copy"); if (cp) copyFieldText(cp);
+});
 
 function saveForm(){
   const name = normalizeName(F.name.value.trim());
@@ -2853,10 +3058,9 @@ function saveForm(){
     addr: F.addr.value.trim(), due: F.due.value.trim(),
     agent: F.agent.value.trim(), tel: F.tel.value.trim(), store: F.store.value.trim(),
     url591: F.u591.value.trim() || null, urlLeju: F.uleju.value.trim() || null, urlI: F.ui.value.trim() || null,
+    note: editToNeed(F.note), note2: editToNeed(F.note2), note3: editToNeed(F.note3),
+    t1: F.t1.value.trim(), t2: F.t2.value.trim(), t3: F.t3.value.trim(),
   };
-  // 備註三段(note/note2/note3)與其標題(t1/t2/t3)不在表單編輯,canonical 編輯入口是表格的展開區。
-  // 編輯既有物件時以 {...items[i], ...rec} 保留原值;新物件則補空欄位,確保結構一致。
-  if (!isEdit){ rec.note = ""; rec.note2 = ""; rec.note3 = ""; rec.t1 = ""; rec.t2 = ""; rec.t3 = ""; }
   if (editingId){
     const i = items.findIndex(x => x.id === editingId);
     if (i > -1) items[i] = {...items[i], ...rec, updatedAt: Date.now()};
@@ -3686,7 +3890,7 @@ function needClipboardHandler(e, isCut){
   if (!sel || !sel.rangeCount || sel.isCollapsed) return;
   const an = sel.anchorNode;
   const anEl = an ? (an.nodeType === 1 ? an : an.parentElement) : null;
-  const ed = anEl && anEl.closest ? anEl.closest(".needexp-ed") : null;
+  const ed = anEl && anEl.closest ? anEl.closest(".needexp-ed, .fneed-ed") : null;
   if (!ed) return;
   const box = document.createElement("div");
   box.appendChild(sel.getRangeAt(0).cloneContents());
@@ -3838,8 +4042,9 @@ cardsEl.addEventListener("click", e => {
   if (editMode){
     openForm(id);                 // 編輯模式:點卡片進編輯表單
   } else {
-    const cp = e.target.closest("[data-copy]");   // 正常模式:點欄位複製內容
+    const cp = e.target.closest("[data-copy]");   // 正常模式:點欄位→複製內容;點卡片其他區域→開唯讀明細
     if (cp) copyFieldText(cp);
+    else openDetail(id);
   }
 });
 
@@ -3889,6 +4094,12 @@ selDelete.addEventListener("click", () => {
 });
 document.getElementById("modalSave").addEventListener("click", saveForm);
 document.getElementById("modalCancel").addEventListener("click", closeForm);
+document.getElementById("linkToggle").addEventListener("click", function(){
+  const lg = document.getElementById("linkGroup");
+  const expanded = lg.classList.toggle("collapsed") === false;   // toggle 後 collapsed 消失=展開
+  this.setAttribute("aria-expanded", expanded ? "true" : "false");
+  this.setAttribute("aria-label", expanded ? "收合連結欄位" : "展開連結欄位");
+});
 document.getElementById("modalClose").addEventListener("click", closeForm);
 document.getElementById("modalDelete").addEventListener("click", () => { if (editingId) deleteItem(editingId); });
 modalBg.addEventListener("click", e => { if (e.target === modalBg) closeForm(); });
@@ -4417,7 +4628,7 @@ let syncConnected = false, syncEmail = null;
 
   let tokenClient = null, accessToken = null, tokenExpiry = 0;
   let fileId = null, lastVersion = null;
-  let inFlight = false, needReauth = false, pollTimer = null;
+  let inFlight = false, needReauth = false, pollTimer = null, retryMs = 5000;
 
   // ---- persistence for auth flag + change timestamps ----
   function saveTs(kind, v){ if (storageOK){ try { localStorage.setItem("property_app_"+kind+"_ts_v1", String(v)); } catch(e){} } }
@@ -4737,20 +4948,26 @@ let syncConnected = false, syncEmail = null;
   }
 
   // ---- status UI ----
+  function setLed(cls){   // 同時更新列表 + 封面兩顆同步燈(封面那顆保留 cover-led 容器樣式)
+    ["listLed","coverLed"].forEach(function(id){
+      const el = document.getElementById(id); if (!el) return;
+      el.className = (id === "coverLed" ? "sync-led cover-led" : "sync-led") + (cls ? " " + cls : "");
+    });
+  }
   function setStatus(text, kind){
     const st = document.getElementById("gStatus"), dot = document.getElementById("gDot");
     if (st) st.textContent = text;
     if (dot) dot.className = "sync-dot" + (kind ? " " + kind : "");
-    const led = document.getElementById("listLed"); if (led) led.className = "sync-led" + (kind ? " " + kind : "");
+    setLed(kind || "");
   }
   function refreshLed(){
-    const led = document.getElementById("listLed"); if (!led) return;
     let cls;
     if (inFlight) cls = "busy";
     else if (window.isTableBusy && window.isTableBusy()) cls = "pending";   // 編輯中、變更尚未落地
+    else if (syncConnected && !navigator.onLine) cls = "offline";           // 已連結但目前沒網路:離線(灰),畫面是上次同步的資料
     else if (syncConnected && !needReauth) cls = "ok";
     else cls = "warn";
-    led.className = "sync-led " + cls;
+    setLed(cls);
   }
   window.refreshLed = refreshLed;
   window.ledAction = function(){ if (!syncConnected || needReauth) connect(); else syncNow(); };
@@ -4793,14 +5010,22 @@ let syncConnected = false, syncEmail = null;
         // else someone wrote concurrently → loop and re-merge
       }
       if (pushed) maybeSnapshot(pushed);
+      needReauth = false;   // 同步成功=授權有效:清掉可能殘留的「需要重新連結」(離線誤設,或 token 未過期沒走到會清旗標的 requestToken)
+      retryMs = 5000;       // 成功→退避歸位
       setStatus("已同步", "ok");
       try { localStorage.setItem("property_app_lastsync_v1", String(Date.now())); } catch(e){}
       window.renderLastSync();
     } catch (e){
-      if (e && (e.error === "access_denied" || e.error === "interaction_required" || e.error === "login_required" || e.message === "gis")){
+      if (e && (e.error === "access_denied" || e.error === "interaction_required" || e.error === "login_required")){
         needReauth = true; setStatus("需要重新連結", "warn"); window.renderSyncCard();
+        clearTimeout(pushTimer); pushTimer = null;   // 真授權失效→停掉可能殘留的退避重試,交給使用者手動或 online/回前景 silent 重連
+        // 真正的授權問題(token 失效且無法 silent 刷新)才不重試、等使用者手動;
+        // GIS 沒載入(離線常見)拋的 Error("gis") 已排除在外,改走下面 else 的重試/等網路恢復自動重連
       } else {
         setStatus("同步失敗，稍後重試", "warn");
+        clearTimeout(pushTimer);
+        pushTimer = setTimeout(function(){ syncNow(); }, retryMs);
+        retryMs = Math.min(retryMs * 2, 60000);   // 指數退避:5s→10s→…→上限 60s
       }
     } finally { inFlight = false; }
   }
@@ -4868,17 +5093,28 @@ let syncConnected = false, syncEmail = null;
   });
   document.getElementById("cloudImportBtn").addEventListener("click", driveImportBackup);
   document.addEventListener("visibilitychange", function(){
-    if (!syncConnected || needReauth) return;
-    if (!document.hidden){ syncNow(); }                       // 回到前景:拉取最新
-    else { clearTimeout(pushTimer); pushTimer = null; syncNow(); }   // 切背景/關閉前:把還沒推的變更立刻送出(避免改完就關而漏推)
+    if (!syncConnected) return;
+    if (!document.hidden){ syncNow(); }                                             // 回前景:拉取最新(needReauth 時 syncNow 會走 ensureToken 嘗試 silent 重連,成功即自動恢復,不必手動點「重新連結」)
+    else if (!needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(); }  // 切背景/關閉前:把還沒推的變更送出(needReauth 時推不出去,略過)
   });
   window.addEventListener("pagehide", function(){ if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(); } });
+  // 網路恢復:立即嘗試同步。離線開啟時 GIS 載入不了的那次失敗,回到有網路這裡會馬上再試;
+  // 若之前殘留 needReauth,syncNow 會 silent 取得 token,成功即自動清除,使用者不必手動點「重新連結」。
+  window.addEventListener("online", function(){
+    if (window.refreshLed) window.refreshLed();       // 恢復網路先把燈更新(脫離離線灰)
+    if (!syncConnected) return;
+    retryMs = 5000;                                  // 網路回來→退避歸位,立刻試
+    clearTimeout(pushTimer); pushTimer = null;
+    syncNow();
+  });
+  window.addEventListener("offline", function(){ if (window.refreshLed) window.refreshLed(); });   // 斷網:燈轉離線灰
 
   // 開檔先依「上次的連結狀態」渲染同步卡片(純讀本機 localStorage,不等 GIS client 從網路載入完成),
   // 避免視窗長時間背景後恢復/開啟時,「連結 Google 帳號」登入介面因枯等 GIS 載入而先露出、隨後才被隱藏(閃一下)。
   (function(){
     try { const a = loadAuth(); if (a && a.connected){ syncConnected = true; syncEmail = a.email || null; } } catch(e){}
     window.renderSyncCard();
+    refreshLed();   // 開檔即顯示兩顆燈的初始狀態(含離線判斷)
   })();
 
   whenGis(function(){
