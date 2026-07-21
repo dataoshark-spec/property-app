@@ -1477,7 +1477,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.21 H-fix4";
+const APP_VERSION = "2026.07.21 H-fix5";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -3835,7 +3835,21 @@ function lineDivOf(node, ed, offset, isEnd){
   while (n && n !== ed && n.parentElement !== ed) n = n.parentElement;
   return (n && n !== ed && n.parentElement === ed) ? n : null;
 }
-function unwrapStrikesInRange(ed, rg){
+function saveNeedRange(rg){
+  return { sc: rg.startContainer, so: rg.startOffset, ec: rg.endContainer, eo: rg.endOffset };
+}
+function restoreNeedRange(saved){
+  if (!saved) return false;
+  try {
+    if (!saved.sc || !saved.ec || !saved.sc.isConnected || !saved.ec.isConnected) return false;
+    const sel = window.getSelection(); sel.removeAllRanges();
+    const r = document.createRange();
+    r.setStart(saved.sc, saved.so); r.setEnd(saved.ec, saved.eo);
+    sel.addRange(r);
+    return true;
+  } catch(_){ return false; }
+}
+function unwrapStrikesInRange(ed, rg, reselect){
   let hit = false, first = null, last = null;
   [...ed.querySelectorAll("s,strike,.need-del,span[style*='line-through']")].forEach(el => {
     if (!isStrikeEl(el) || !el.isConnected) return;
@@ -3845,7 +3859,7 @@ function unwrapStrikesInRange(ed, rg){
     while (el.firstChild){ const c = el.firstChild; el.parentNode.insertBefore(c, el); if (!first) first = c; last = c; }
     el.remove();
   });
-  if (hit && first && last){   // 重建選取:框住剛解除的內容,可立刻再按一次重新加上
+  if (reselect !== false && hit && first && last){   // 重建選取:框住剛解除的內容,可立刻再按一次重新加上
     try { const sel = window.getSelection(); sel.removeAllRanges();
       const nr = document.createRange(); nr.setStartBefore(first); nr.setEndAfter(last); sel.addRange(nr); } catch(_){}
   }
@@ -3909,8 +3923,8 @@ function unmarkRange(ed, rg, sel){
   ed.normalize();
   _reselect(first, last);
 }
-// 通用:把整段(逐行)包成 wrapFn 產生的元素(刪線 / 標題共用)
-function wrapRangeByLine(ed, srcRg, wrapFn){
+// 通用:把整段(逐行)包成 wrapFn 產生的元素(刪線 / 標題共用)。savedAfter=操作前存下的選取,優先還原全選範圍(避免只框到部分 made)
+function wrapRangeByLine(ed, srcRg, wrapFn, savedAfter){
   const sL = lineDivOf(srcRg.startContainer, ed, srcRg.startOffset, false);
   const eL = lineDivOf(srcRg.endContainer, ed, srcRg.endOffset, true);
   const made = [];
@@ -3927,10 +3941,12 @@ function wrapRangeByLine(ed, srcRg, wrapFn){
   } else {
     const w = wrapFn(srcRg); if (w) made.push(w);
   }
+  if (savedAfter && restoreNeedRange(savedAfter)) return made;
   if (made.length){   // 重建選取:框住整段,可立刻再按一次整批取消
     try { const sel = window.getSelection(); sel.removeAllRanges(); const nr = document.createRange();
       nr.setStartBefore(made[0]); nr.setEndAfter(made[made.length - 1]); sel.addRange(nr); } catch(_){}
   }
+  return made;
 }
 function toggleNeedStrike(exp){
   const sel = window.getSelection();
@@ -3940,20 +3956,22 @@ function toggleNeedStrike(exp){
   const ed = el && el.closest ? el.closest('.needexp-ed[contenteditable="true"]') : (an === undefined ? null : (an && an.nodeType === 1 && an.classList && an.classList.contains("needexp-ed") ? an : null));
   if (!ed || !exp.contains(ed)){ toast("先選取要加刪除線的文字"); return; }
   const before = editToNeed(ed);
+  const saved = saveNeedRange(rg);
   if (rangeFullyMarked(rg, "s,strike,.need-del")){
     unmarkRange(ed, rg, "s,strike,.need-del");   // 整段都是刪線 → 只取消選取範圍(部分選取時分割,不整段解除)
   } else {
-    // 有沒被刪線的部分 → 整批加上:先清掉範圍內既有刪線(避免巢狀、避免只解除一部分),再整段重新包
-    const wrapRg = rg.cloneRange();   // 獨立複本:unwrap 只移動/移除 <s>、不刪文字節點,故複本仍框住原範圍
-    unwrapStrikesInRange(ed, rg);
-    wrapRangeByLine(ed, wrapRg, wrapStrikeRange);
+    // 先清範圍內既有刪線再整段重包;操作前存選取、unwrap 不縮選取、包完還原,避免全選變成只框一部分
+    unwrapStrikesInRange(ed, rg, false);
+    restoreNeedRange(saved);
+    const sel2 = window.getSelection();
+    if (sel2 && sel2.rangeCount) wrapRangeByLine(ed, sel2.getRangeAt(0), wrapStrikeRange, saved);
   }
   const after = editToNeed(ed);
   if (after !== before) commitNeedSeg(exp.dataset.for, +ed.dataset.seg, after);
 }
 // —— inline 標題:與刪線同一套「選取範圍」邏輯,把選取的文字包成 <span class="need-h">(序列化為 §..§)。
 //    標題與刪線各自獨立、可並存(巢狀);沒選取則提示先選。跟 toggleNeedStrike 對稱。
-function unwrapHeadingsInRange(ed, rg){
+function unwrapHeadingsInRange(ed, rg, reselect){
   let hit = false, first = null, last = null;
   [...ed.querySelectorAll("span.need-h")].forEach(el => {
     if (!isHeadingEl(el) || !el.isConnected) return;
@@ -3963,7 +3981,7 @@ function unwrapHeadingsInRange(ed, rg){
     while (el.firstChild){ const c = el.firstChild; el.parentNode.insertBefore(c, el); if (!first) first = c; last = c; }
     el.remove();
   });
-  if (hit && first && last){
+  if (reselect !== false && hit && first && last){
     try { const sel = window.getSelection(); sel.removeAllRanges();
       const nr = document.createRange(); nr.setStartBefore(first); nr.setEndAfter(last); sel.addRange(nr); } catch(_){}
   }
@@ -3985,12 +4003,14 @@ function toggleNeedHeading(exp){
   const ed = el && el.closest ? el.closest('.needexp-ed[contenteditable="true"]') : null;
   if (!ed || !exp.contains(ed)){ toast("先選取要設為標題的文字"); return; }
   const before = editToNeed(ed);
+  const saved = saveNeedRange(rg);
   if (rangeFullyMarked(rg, "span.need-h")){
     unmarkRange(ed, rg, "span.need-h");   // 整段都是標題 → 只取消選取範圍(部分選取時分割,不整段解除)
   } else {
-    const wrapRg = rg.cloneRange();
-    unwrapHeadingsInRange(ed, rg);
-    wrapRangeByLine(ed, wrapRg, wrapHeadingRange);
+    unwrapHeadingsInRange(ed, rg, false);
+    restoreNeedRange(saved);
+    const sel2 = window.getSelection();
+    if (sel2 && sel2.rangeCount) wrapRangeByLine(ed, sel2.getRangeAt(0), wrapHeadingRange, saved);
   }
   const after = editToNeed(ed);
   if (after !== before) commitNeedSeg(exp.dataset.for, +ed.dataset.seg, after);
