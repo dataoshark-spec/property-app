@@ -1468,7 +1468,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.20 E";
+const APP_VERSION = "2026.07.20 G";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2298,18 +2298,23 @@ function flushEditing(){
       const w = el.closest(".needexp"); if (w) commitNeedSeg(w.dataset.for, +el.dataset.seg, editToNeed(el));   // 備註三段內容
     } else if (el.dataset && el.dataset.titleedit){
       const w = el.closest(".needexp"); if (w) commitNeedTitle(w.dataset.for, +el.dataset.seg, el.textContent); // 備註三段標題
+    } else {
+      return;   // 沒在編輯格,不需 blur
     }
+    // 關鍵:讓編輯格失焦。否則 activeElement 仍是 tcell/nseg-ed,緊接著的 syncNow 會因 isTableBusy() 回 true 而延後(setTimeout),
+    // 但頁面正要隱藏,背景 setTimeout 常被凍結不執行 → flush 雖救了本地,同步卻送不出去、換裝置看不到。blur 後才能立即同步。
+    if (typeof el.blur === "function") el.blur();
   } catch(e){}
 }
 window.flushEditing = flushEditing;
 
 tableWrap.addEventListener("blur", e=>{
-  const c = e.target; if (c.classList && c.classList.contains("tcell")){ tCommitCell(c); tFlash(c); }
+  const c = e.target; if (c.classList && c.classList.contains("tcell")){ clearTimeout(c._saveT); tCommitCell(c); tFlash(c); }   // blur 已 commit,清掉 debounce 計時器免得稍後又空跑一次
 }, true);
 tableWrap.addEventListener("keydown", e=>{
   const c = e.target; if (!c.classList || !c.classList.contains("tcell")) return;
   if (e.key === "Enter"){
-    e.preventDefault(); tCommitCell(c); tFlash(c);
+    e.preventDefault(); clearTimeout(c._saveT); tCommitCell(c); tFlash(c);
     const tr = c.closest("tr"), nextTr = tr.nextElementSibling;
     if (nextTr){ const nc = nextTr.querySelector(`.tcell[data-field="${c.dataset.field}"]`); if (nc){ nc.focus(); caretEnd(nc); } }
   } else if (e.key === "Escape"){ c.blur(); }
@@ -5007,9 +5012,9 @@ let syncConnected = false, syncEmail = null;
   };
 
   // ---- core two-way sync ----
-  async function syncNow(){
+  async function syncNow(force){
     if (!syncConnected || inFlight) return;
-    if (window.isTableBusy && window.isTableBusy()){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return; }
+    if (!force && window.isTableBusy && window.isTableBusy()){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return; }   // 一般情況:編輯/展開中延後同步避免重繪打斷;但 force(切背景/關閉)時不延後——背景 setTimeout 會被凍結,必須當下直接送出
     inFlight = true; setStatus("同步中…", "busy");
     try {
       await ensureToken();
@@ -5117,9 +5122,9 @@ let syncConnected = false, syncEmail = null;
   document.addEventListener("visibilitychange", function(){
     if (!document.hidden){ if (syncConnected) syncNow(); return; }               // 回前景:拉取最新(needReauth 時 syncNow 會走 ensureToken 嘗試 silent 重連)
     if (window.flushEditing) window.flushEditing();                              // 切背景/關閉前:先把正在編輯、還沒 blur 的格提交進 items(避免漏存)
-    if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(); }  // 再把還沒推的變更送出(needReauth 時推不出去,略過)
+    if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(true); }  // force:不被 isTableBusy 延後(背景 setTimeout 會凍結),當下直接送出
   });
-  window.addEventListener("pagehide", function(){ if (window.flushEditing) window.flushEditing(); if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(); } });
+  window.addEventListener("pagehide", function(){ if (window.flushEditing) window.flushEditing(); if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(true); } });
   // 網路恢復:立即嘗試同步。離線開啟時 GIS 載入不了的那次失敗,回到有網路這裡會馬上再試;
   // 若之前殘留 needReauth,syncNow 會 silent 取得 token,成功即自動清除,使用者不必手動點「重新連結」。
   window.addEventListener("online", function(){
