@@ -1478,7 +1478,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.22 H-fix8";
+const APP_VERSION = "2026.07.22 H-fix10";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -3851,14 +3851,24 @@ function restoreNeedRange(saved){
   } catch(_){ return false; }
 }
 function unwrapStrikesInRange(ed, rg, reselect){
+  const strikeSel = "s,strike,.need-del";
   let hit = false, first = null, last = null;
-  [...ed.querySelectorAll("s,strike,.need-del,span[style*='line-through']")].forEach(el => {
-    if (!isStrikeEl(el) || !el.isConnected) return;
-    let inter = false; try { inter = rg.intersectsNode(el); } catch(_){}
+  const marks = [...ed.querySelectorAll(strikeSel + ",span[style*='line-through']")].filter(el => isStrikeEl(el) && el.isConnected);
+  const mkR = document.createRange();
+  marks.reverse().forEach(mk => {
+    let inter = false; try { inter = rg.intersectsNode(mk); } catch(_){}
     if (!inter) return;
     hit = true;
-    while (el.firstChild){ const c = el.firstChild; el.parentNode.insertBefore(c, el); if (!first) first = c; last = c; }
-    el.remove();
+    mkR.selectNodeContents(mk);
+    let startCmp = 0, endCmp = 0;
+    try { startCmp = rg.compareBoundaryPoints(Range.START_TO_START, mkR); endCmp = rg.compareBoundaryPoints(Range.END_TO_END, mkR); } catch(_){}
+    if (startCmp <= 0 && endCmp >= 0){
+      while (mk.firstChild){ const c = mk.firstChild; mk.parentNode.insertBefore(c, mk); if (!first) first = c; last = c; }
+      mk.remove();
+    } else {
+      const sn = splitMarkAtRange(mk, rg, strikeSel);
+      if (sn && sn.midStart){ if (!first) first = sn.midStart; last = sn.midEnd || sn.midStart; }
+    }
   });
   if (reselect !== false && hit && first && last){   // 重建選取:框住剛解除的內容,可立刻再按一次重新加上
     try { const sel = window.getSelection(); sel.removeAllRanges();
@@ -3902,7 +3912,6 @@ function wrapStrikeRange(rg){
   return sEl;
 }
 function rangeFullyMarked(rg, sel){
-  if (!rg.toString().replace(/\s+/g,"")) return false;
   let root = rg.commonAncestorContainer;
   if (root.nodeType === 3) root = root.parentNode;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
@@ -3913,7 +3922,17 @@ function rangeFullyMarked(rg, sel){
     seen = true;
     if (!(n.parentElement && n.parentElement.closest(sel))) return false;   // 有一段不在標記內 → 非「整段已標記」
   }
-  return seen;
+  if (seen) return true;
+  // 選取以連結標籤為主時 toString 可能為空 → 改查元素是否在標記內
+  const ew = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null);
+  let el, elSeen = false;
+  while (el = ew.nextNode()){
+    if (!rg.intersectsNode(el)) continue;
+    if (!(el.matches && el.matches(".need-link-chip,.need-link"))) continue;
+    elSeen = true;
+    if (!el.closest(sel)) return false;
+  }
+  return elSeen;
 }
 // 只取消「選取範圍」的標記:把選取從 <s>/<span.need-h> 挖出(標記元素從中間分割),不影響選取以外的部分
 function _reselect(first, last){
@@ -3963,27 +3982,30 @@ function splitMarkAtRange(mk, rg, sel){
     else splitR.setStart(mk, 0);
     if (rg.compareBoundaryPoints(Range.END_TO_END, mkR) < 0) splitR.setEnd(rg.endContainer, rg.endOffset);
     else splitR.setEnd(mk, mk.childNodes.length);
-  } catch(_){ return; }
-  if (splitR.collapsed) return;
+  } catch(_){ return null; }
+  if (splitR.collapsed) return null;
   const preR = document.createRange(); preR.selectNodeContents(mk); preR.setEnd(splitR.startContainer, splitR.startOffset);
   const postR = document.createRange(); postR.selectNodeContents(mk); postR.setStart(splitR.endContainer, splitR.endOffset);
   const preFrag = preR.cloneContents(), midFrag = splitR.cloneContents(), postFrag = postR.cloneContents();
   const frag = document.createDocumentFragment();
   if (needFragHasStuff(preFrag)){ const e = mk.cloneNode(false); e.appendChild(preFrag); frag.appendChild(e); }
   midFrag.querySelectorAll(sel).forEach(el => { const p = el.parentNode; while (el.firstChild) p.insertBefore(el.firstChild, el); el.remove(); });
-  [...midFrag.childNodes].forEach(nn => frag.appendChild(nn));
+  const midNodes = [...midFrag.childNodes];
+  midNodes.forEach(nn => frag.appendChild(nn));
   if (needFragHasStuff(postFrag)){ const e = mk.cloneNode(false); e.appendChild(postFrag); frag.appendChild(e); }
   mk.parentNode.replaceChild(frag, mk);
+  return { midStart: midNodes[0] || null, midEnd: midNodes[midNodes.length - 1] || null };
 }
-function unmarkRange(ed, rg, sel, savedAfter){
+function unmarkRange(ed, rg, sel){
   rg = normalizeUnmarkRange(rg, ed, sel);
+  let pickFirst = null, pickLast = null;
   const startMk = markAncestor(rg.startContainer, sel);
   const endMk = markAncestor(rg.endContainer, sel);
   if (startMk && endMk === startMk){
-    splitMarkAtRange(startMk, rg, sel);
+    const sn = splitMarkAtRange(startMk, rg, sel);
+    if (sn && sn.midStart) { pickFirst = sn.midStart; pickLast = sn.midEnd; }
     ed.normalize();
-    if (savedAfter) restoreNeedRange(savedAfter);
-    return;
+    return { midStart: pickFirst, midEnd: pickLast };
   }
   const marks = [...ed.querySelectorAll(sel)].filter(el => {
     if (!el.isConnected) return false;
@@ -3995,12 +4017,28 @@ function unmarkRange(ed, rg, sel, savedAfter){
     let startCmp = 0, endCmp = 0;
     try { startCmp = rg.compareBoundaryPoints(Range.START_TO_START, mkR); endCmp = rg.compareBoundaryPoints(Range.END_TO_END, mkR); } catch(_){}
     if (startCmp <= 0 && endCmp >= 0){
-      while (mk.firstChild) mk.parentNode.insertBefore(mk.firstChild, mk);
+      let f = null, l = null;
+      while (mk.firstChild){ const c = mk.firstChild; mk.parentNode.insertBefore(c, mk); if (!f) f = c; l = c; }
       mk.remove();
-    } else splitMarkAtRange(mk, rg, sel);
+      if (!pickFirst && f) pickFirst = f;
+      if (l) pickLast = l;
+    } else {
+      const sn = splitMarkAtRange(mk, rg, sel);
+      if (sn && sn.midStart){ if (!pickFirst) pickFirst = sn.midStart; pickLast = sn.midEnd; }
+    }
   });
   ed.normalize();
-  if (savedAfter) restoreNeedRange(savedAfter);
+  return { midStart: pickFirst, midEnd: pickLast };
+}
+function reselectNeedPick(pick, saved){
+  if (pick){
+    if (pick.midStart && pick.midEnd && pick.midStart.isConnected && pick.midEnd.isConnected){
+      _reselect(pick.midStart, pick.midEnd);
+      return true;
+    }
+    return false;   // 分割後節點已失效,勿用操作前的 saved(會跳到錯誤列/全選)
+  }
+  return saved ? restoreNeedRange(saved) : false;
 }
 // 通用:把整段(逐行)包成 wrapFn 產生的元素(刪線 / 標題共用)。savedAfter=操作前存下的選取,優先還原全選範圍(避免只框到部分 made)
 function wrapRangeByLine(ed, srcRg, wrapFn, savedAfter){
@@ -4036,8 +4074,10 @@ function toggleNeedStrike(exp){
   if (!ed || !exp.contains(ed)){ toast("先選取要加刪除線的文字"); return; }
   const before = editToNeed(ed);
   const saved = saveNeedRange(rg);
+  let pick = null;
   if (rangeFullyMarked(rg, "s,strike,.need-del")){
-    unmarkRange(ed, rg, "s,strike,.need-del", saved);   // 整段都是刪線 → 只取消選取範圍(部分選取時分割,不整段解除)
+    pick = unmarkRange(ed, rg, "s,strike,.need-del");   // 整段都是刪線 → 只取消選取範圍(部分選取時分割,不整段解除)
+    reselectNeedPick(pick, null);
   } else {
     // 先清範圍內既有刪線再整段重包;操作前存選取、unwrap 不縮選取、包完還原,避免全選變成只框一部分
     unwrapStrikesInRange(ed, rg, false);
@@ -4084,8 +4124,10 @@ function toggleNeedHeading(exp){
   if (!ed || !exp.contains(ed)){ toast("先選取要設為標題的文字"); return; }
   const before = editToNeed(ed);
   const saved = saveNeedRange(rg);
+  let pick = null;
   if (rangeFullyMarked(rg, "span.need-h")){
-    unmarkRange(ed, rg, "span.need-h", saved);   // 整段都是標題 → 只取消選取範圍(部分選取時分割,不整段解除)
+    pick = unmarkRange(ed, rg, "span.need-h");   // 整段都是標題 → 只取消選取範圍(部分選取時分割,不整段解除)
+    reselectNeedPick(pick, null);
   } else {
     unwrapHeadingsInRange(ed, rg, false);
     restoreNeedRange(saved);
