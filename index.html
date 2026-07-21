@@ -2,11 +2,11 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
 <link rel="icon" type="image/png" href="icon-192.png?v=4">
 <link rel="apple-touch-icon" href="icon-180.png?v=4">
-<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIueJqeS7tue4veimvSIsICJzaG9ydF9uYW1lIjogIueJqeS7tue4veimvSIsICJzdGFydF91cmwiOiAiaHR0cHM6Ly9wcm9wZXJ0eS1hcHAtbmluZS1zaWdtYS52ZXJjZWwuYXBwLyIsICJzY29wZSI6ICJodHRwczovL3Byb3BlcnR5LWFwcC1uaW5lLXNpZ21hLnZlcmNlbC5hcHAvIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNGNEY2RjciLCAidGhlbWVfY29sb3IiOiAiIzBGN0E1RiIsICJpY29ucyI6IFt7InNyYyI6ICJodHRwczovL3Byb3BlcnR5LWFwcC1uaW5lLXNpZ21hLnZlcmNlbC5hcHAvaWNvbi0xOTIucG5nP3Y9NCIsICJzaXplcyI6ICIxOTJ4MTkyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIiwgInB1cnBvc2UiOiAiYW55In0sIHsic3JjIjogImh0dHBzOi8vcHJvcGVydHktYXBwLW5pbmUtc2lnbWEudmVyY2VsLmFwcC9pY29uLTUxMi5wbmc/dj00IiwgInNpemVzIjogIjUxMng1MTIiLCAidHlwZSI6ICJpbWFnZS9wbmciLCAicHVycG9zZSI6ICJhbnkifV19">
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi54mp5Lu257i96Ka9Iiwic2hvcnRfbmFtZSI6IueJqeS7tue4veimvSIsInN0YXJ0X3VybCI6Ii4vIiwic2NvcGUiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNGNEY2RjciLCJ0aGVtZV9jb2xvciI6IiMwRjdBNUYiLCJpY29ucyI6W3sic3JjIjoiaWNvbi0xOTIucG5nP3Y9NCIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55In0seyJzcmMiOiJpY29uLTUxMi5wbmc/dj00Iiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyIsInB1cnBvc2UiOiJhbnkifV19">
 <meta name="theme-color" content="#0F7A5F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -29,6 +29,10 @@
 <script src="https://apis.google.com/js/api.js" async defer></script>
 <style>
   :root{
+    --safe-top:env(safe-area-inset-top, 0px);
+    --safe-bottom:env(safe-area-inset-bottom, 0px);
+    --safe-left:env(safe-area-inset-left, 0px);
+    --safe-right:env(safe-area-inset-right, 0px);
     --paper:#EBEFF1;
     --card:#FFFFFF;
     --ink:#16222A;
@@ -527,7 +531,7 @@
     box-shadow:0 0 0 2px rgba(15,122,95,.4),0 8px 20px rgba(15,122,95,.16);}
   .cards.selecting .card:not(.selected){opacity:.72;}
 
-  .selbar{position:fixed;z-index:41;left:50%;bottom:18px;width:min(444px,calc(100% - 28px));
+  .selbar{position:fixed;z-index:41;left:50%;bottom:calc(18px + var(--safe-bottom));width:min(444px,calc(100% - 28px));
     --vvx:0px;--vvy:0px;--vvs:1;   /* 雙指放大時由 JS 校正:把工具列拉回實際看得到的範圍(見 visualViewport 段) */
     transform:translate(calc(-50% + var(--vvx)), calc(160% + var(--vvy))) scale(var(--vvs));
     transform-origin:50% 100%;
@@ -771,7 +775,7 @@
   .btn-danger{background:var(--danger);color:#fff;border:none;font-family:inherit;font-weight:700;font-size:.95rem;
     padding:11px 20px;border-radius:11px;cursor:pointer;transition:filter .15s ease;}
   .btn-danger:hover{filter:brightness(.93);}
-  .toast{position:fixed;z-index:70;left:50%;bottom:30px;transform:translate(-50%,16px);
+  .toast{position:fixed;z-index:70;left:50%;bottom:calc(30px + var(--safe-bottom));transform:translate(-50%,16px);
     background:var(--ink);color:#fff;font-size:.9rem;font-weight:600;padding:12px 20px;border-radius:999px;
     box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;
     transition:opacity .2s ease,transform .2s ease;max-width:88%;text-align:center;}
@@ -813,7 +817,7 @@
     /* 手機:編輯/新增物件表單改「整頁滿版」,不留頂部空白(桌機維持底部面板) */
     .modal-bg{align-items:stretch;}
     #detailBg.modal-bg.center{align-items:stretch;padding:0;}   /* 物件明細:手機全畫面(蓋掉 .center 的置中+留白,與編輯表單同樣滿版) */
-    .modal{max-width:none;max-height:none;height:100dvh;border-radius:0;animation:modalUp .22s ease;}
+    .modal{max-width:none;max-height:none;height:calc(100dvh - var(--safe-top));padding-bottom:var(--safe-bottom);border-radius:0;animation:modalUp .22s ease;}
     .modal-body{flex:1;min-height:0;}
     @keyframes modalUp{from{transform:translateY(14px);opacity:.6;}to{transform:translateY(0);opacity:1;}}
     .table-wrap{margin-left:24px;margin-right:24px;}   /* 左右留較寬的非捲動邊,讓螢幕邊緣「滑動返回」手勢不被表格捲動吃掉 */
@@ -880,7 +884,6 @@
   .tcell[data-field="due"],.tcell[data-field="addr"],.tcell[data-field="tel"],.tcell[data-field="store"]{font-size:.77rem;}
   .tcell[data-field="due"]{font-size:.66rem;}
   .tcell[data-field="layout"],.tcell[data-field="floor"],.tcell[data-field="agent"],.tcell[data-field="store"],.tcell[data-field="tel"]{font-size:.72rem;}
-  .tcell:hover{background:var(--surface-2);}
   .tcell:focus{background:var(--card);box-shadow:inset 0 0 0 2px var(--accent);border-radius:5px;overflow:visible;white-space:normal;position:relative;z-index:2;}
   .tcell.saved{animation:tSaved .7s ease;}
   /* 編輯模式:到期日欄「生成檔名」面板 — 滑到該格最左窄感應帶,面板從左滑入覆蓋整格,點任一處生成 */
@@ -966,9 +969,13 @@
   tr.exp-open .tcell[contenteditable],tr.exp-open .tcat-trigger,tr.exp-open .tchip,tr.exp-open .tdue-btn,tr.exp-open .gen-btn,tr.exp-open button[data-act="del"]{pointer-events:none;}   /* 展開列鎖定:含我方到期日鈕/生成鈕/刪除鈕 */
   .ptable tbody tr.exp-open td:first-child{box-shadow:inset 3px 0 0 var(--accent);}
   tr.needexp > td{padding:0;height:auto;background:var(--accent-tint) !important;border-bottom:1px solid var(--accent-tint-bd);border-right:none;border-radius:0 0 13px 13px;box-shadow:inset 3px 0 0 var(--accent), 0 18px 26px -12px rgba(22,34,42,.24);}
-  /* 編輯模式:展開區(父列+展開列)背景由淺底改為灰,一眼看出正在編輯;正常(唯讀)模式維持淺底 */
-  .ptable tbody tr.exp-editing td{background:var(--surface-2) !important;}
-  tr.needexp.editing > td{background:var(--surface-2) !important;}
+  /* 編輯模式:展開區(父列+展開列)背景改灰、左側邊線改中性色,與正常(唯讀)淺藍一眼可辨 */
+  .table-wrap.edit-mode .ptable tbody tr.exp-open td,
+  .ptable tbody tr.exp-open.exp-editing td{background:var(--surface-3) !important;border-bottom:none;}
+  .table-wrap.edit-mode .ptable tbody tr.exp-open td:first-child,
+  .ptable tbody tr.exp-open.exp-editing td:first-child{box-shadow:inset 3px 0 0 var(--border-2);}
+  .table-wrap.edit-mode tr.needexp > td,
+  tr.needexp.editing > td{background:var(--surface-3) !important;border-bottom-color:var(--line) !important;box-shadow:inset 3px 0 0 var(--border-2), 0 18px 26px -12px rgba(22,34,42,.1) !important;}
   .needexp-wrap{position:sticky;left:0;box-sizing:border-box;padding:13px 16px 15px;}
   /* 展開聚焦模式:有展開列時,其他列淡化,視線集中在展開區塊 */
   .exp-focus-on .tbody-wrap table:has(tr.exp-open) tbody tr:not(.exp-open):not(.needexp){opacity:.32;transition:opacity .2s;}
@@ -1111,7 +1118,8 @@
   .ptable.ro .tchip:not(.on){opacity:.45;cursor:default;}
   .ptable.ro .tchip:not(.on):hover::after{content:none;}
   /* ===== install banner ===== */
-  .install-bar{position:fixed;z-index:60;left:50%;bottom:16px;transform:translateX(-50%) translateY(220%);
+  #fltBg{z-index:60;}
+  .install-bar{position:fixed;z-index:60;left:50%;bottom:calc(16px + var(--safe-bottom));transform:translateX(-50%) translateY(220%);
     width:min(470px,calc(100% - 24px));display:flex;align-items:center;gap:11px;
     background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 13px;
     box-shadow:0 14px 36px rgba(0,0,0,.30);transition:transform .32s cubic-bezier(.2,.75,.3,1);}
@@ -1468,7 +1476,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.20 G";
+const APP_VERSION = "2026.07.21 H-fix2";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1495,11 +1503,20 @@ function searchHay(d){
 
 const money = n => Number(n||0).toLocaleString("en-US");
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-const safeColor = v => { const s = String(v == null ? "" : v).trim(); return /^#[0-9A-Fa-f]{3,8}$/.test(s) ? s : "#8494A0"; };   // 只接受 HEX:避免匯入資料把任意字串插進 style 屬性
-const normUrl = u => { const s = String(u == null ? "" : u).trim(); return /^https?:\/\//i.test(s) ? s : ("https://" + s.replace(/^\/+/, "")); };   // 沒帶協定的連結自動補 https://(貼 www.xxx 也能開)
-const linkChip = (url, label) => url
-  ? `<a class="chip on" href="${esc(url)}" target="_blank" rel="noopener">${label} <span class="ext">↗</span></a>`
-  : `<span class="chip off">${label}</span>`;
+const safeColor = v => { const s = String(v == null ? "" : v).trim(); return /^#[0-9A-Fa-f]{3,8}$/.test(s) ? s : "#8494A0"; };
+const safeUrl = u => {
+  const s = String(u == null ? "" : u).trim();
+  if (!s) return "";
+  if (/^https?:\/\//i.test(s) || /^tel:/i.test(s)) return s;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return "";
+  return "https://" + s.replace(/^\/+/, "");
+};
+const openExtUrl = u => { const href = safeUrl(u); if (href) window.open(href, "_blank", "noopener"); };
+const normUrl = u => safeUrl(u);
+const linkChip = (url, label) => { const href = safeUrl(url);
+  return href
+  ? `<a class="chip on" href="${esc(href)}" target="_blank" rel="noopener">${label} <span class="ext">↗</span></a>`
+  : `<span class="chip off">${label}</span>`; };
 
 let dueSoonDays = 30;
 function dueStatus(due){
@@ -1511,6 +1528,7 @@ function dueStatus(due){
   if (isNaN(roc)||isNaN(mm)||isNaN(dd)||mm<1||mm>12||dd<1||dd>31) return "";
   const exp = new Date(roc+1911, mm-1, dd);
   if (isNaN(exp.getTime())) return "";
+  if (exp.getMonth() !== mm - 1 || exp.getDate() !== dd) return "";
   const today = new Date(); today.setHours(0,0,0,0);
   const diff = Math.round((exp - today)/86400000);
   if (diff < 0) return "over";
@@ -1587,7 +1605,7 @@ function cardHTML(d){
   const sel = selected.has(d.id) ? " selected" : "";
   const ds = dueStatus(d.due);   // 到期狀態:正常/緊湊都用「右側邊條」提醒;左側類別色條已退役(類別以右上灰字呈現)
   if (density === "compact"){
-    return `<article class="card compact-card${sel}${ds ? " due-"+ds : ""}" data-id="${d.id}"><svg class="lp-ring" aria-hidden="true"><rect class="lp-track"/><rect class="lp-draw" pathLength="100"/><rect class="lp-tip" pathLength="100"/></svg>
+    return `<article class="card compact-card${sel}${ds ? " due-"+ds : ""}" data-id="${esc(d.id)}"><svg class="lp-ring" aria-hidden="true"><rect class="lp-track"/><rect class="lp-draw" pathLength="100"/><rect class="lp-tip" pathLength="100"/></svg>
     ${selMark(d)}
     <div class="body">
       <div class="card-head">
@@ -1601,7 +1619,7 @@ function cardHTML(d){
     </div>
   </article>`;
   }
-  return `<article class="card${sel}${ds ? " due-"+ds : ""}" data-id="${d.id}"><svg class="lp-ring" aria-hidden="true"><rect class="lp-track"/><rect class="lp-draw" pathLength="100"/><rect class="lp-tip" pathLength="100"/></svg>
+  return `<article class="card${sel}${ds ? " due-"+ds : ""}" data-id="${esc(d.id)}"><svg class="lp-ring" aria-hidden="true"><rect class="lp-track"/><rect class="lp-draw" pathLength="100"/><rect class="lp-tip" pathLength="100"/></svg>
     ${selMark(d)}
     <div class="body">
       <div class="card-head">
@@ -1630,13 +1648,15 @@ function cardHTML(d){
 const STORE_KEY = "property_app_data_v4";
 const DELETED_KEY = "property_app_deleted_v1";
 const DEVICE_KEY = "property_app_deviceid_v1";
-const BASE_TS = 1700000000000; // 舊/示範資料的預設時間戳(2023);任何實際新增或編輯都會比它新
+const BASE_TS = 1700000000000;
+const SEED_VERSION = "seed2-20260720";
 const storageOK = (() => {
   try { localStorage.setItem("__probe","1"); localStorage.removeItem("__probe"); return true; }
   catch (e) { return false; }
 })();
 let uidc = Date.now();
-const uid = () => "p" + (uidc++).toString(36);
+// id 加上裝置尾碼:避免兩台裝置毫秒級巧合撞 id,雲端合併誤把兩筆不同物件當同一筆。
+const uid = () => "p" + (uidc++).toString(36) + "-" + deviceId.slice(4, 8);
 
 // 每台裝置固定 id（第一次啟動產生一次，之後雲端同步用來標記「這筆是哪台寫的」）
 function loadDeviceId(){
@@ -1652,15 +1672,41 @@ const deviceId = loadDeviceId();
 function loadItems(){
   if (storageOK){
     try {
+      const hasStore = localStorage.getItem(STORE_KEY) !== null;
+      if (localStorage.getItem("property_app_seedver") !== SEED_VERSION){
+        localStorage.setItem("property_app_seedver", SEED_VERSION);
+        if (!hasStore){
+          const seeded = SEED.map((d,i) => ({...d, id: "seed"+i, updatedAt: BASE_TS}));
+          localStorage.setItem(STORE_KEY, JSON.stringify(seeded));
+          localStorage.setItem(DELETED_KEY, "{}");
+          return seeded;
+        }
+      }
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw){ const arr = JSON.parse(raw); if (Array.isArray(arr)) return arr.map(d => ({...d, id: d.id || uid(), updatedAt: d.updatedAt || BASE_TS})); }
+      if (raw){
+        try {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) return arr.map(d => ({...d, id: d.id || uid(), updatedAt: d.updatedAt || BASE_TS}));
+        } catch (parseErr) {
+          window._storageCorrupt = true;
+          setTimeout(() => { if (typeof toast === "function") toast("⚠ 本機資料已損壞，未自動覆寫。請先匯出備份或聯絡支援還原。"); }, 0);
+        }
+      }
     } catch (e) {}
   }
-  return SEED.map((d,i) => ({...d, id: "seed"+i, updatedAt: BASE_TS}));
+  return [];
 }
+let _saveFailAt = 0;
 function saveItems(){
   if (!storageOK) return;
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(items)); } catch (e) {}
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(items)); }
+  catch (e) {
+    const now = Date.now();
+    if (now - _saveFailAt > 30000){
+      _saveFailAt = now;
+      if (typeof toast === "function") toast("⚠ 本機儲存失敗（空間可能已滿）— 請先匯出備份或清理資料");
+    }
+  }
 }
 let items = loadItems();
 
@@ -1672,7 +1718,17 @@ function loadDeleted(){
   for (const k in obj){ if (!(obj[k] > cutoff)) delete obj[k]; }
   return obj;
 }
-function saveDeleted(){ if (storageOK){ try { localStorage.setItem(DELETED_KEY, JSON.stringify(deleted)); } catch (e) {} } }
+function saveDeleted(){
+  if (!storageOK) return;
+  try { localStorage.setItem(DELETED_KEY, JSON.stringify(deleted)); }
+  catch (e) {
+    const now = Date.now();
+    if (now - _saveFailAt > 30000){
+      _saveFailAt = now;
+      if (typeof toast === "function") toast("⚠ 刪除記錄儲存失敗（空間可能已滿）— 請先匯出備份或清理資料");
+    }
+  }
+}
 let deleted = loadDeleted();
 
 // ---- Categories (editable + persisted) ----
@@ -1685,14 +1741,14 @@ const DEFAULT_CATS = [
 const CAT_PALETTE = ["#0F7A5F","#2C68A6","#C2790B","#7A4F9E","#B4472E","#0E8A8A","#4A6B2A","#B03060"];
 const CATS_KEY = "property_app_cats_v4";
 function loadCats(){
-  if (storageOK){ try { const raw = localStorage.getItem(CATS_KEY); if (raw){ const a = JSON.parse(raw); if (Array.isArray(a) && a.length) return a; } } catch (e) {} }
+  if (storageOK){ try { const raw = localStorage.getItem(CATS_KEY); if (raw){ const a = JSON.parse(raw); if (Array.isArray(a)) return a; } } catch (e) {} }
   return DEFAULT_CATS.map(c => ({...c}));
 }
 function saveCats(){ if (storageOK){ try { localStorage.setItem(CATS_KEY, JSON.stringify(cats)); } catch (e) {} } }
 let cats = loadCats();
 
 const catCount = key => items.filter(d => d.cat === key).length;
-const catColor = key => { const c = cats.find(x => x.key === key); return c ? c.color : "#8494A0"; };
+const catColor = key => { const c = cats.find(x => x.key === key); return c ? safeColor(c.color) : "#8494A0"; };
 const nextColor = () => CAT_PALETTE.find(col => !cats.some(c => c.color === col)) || CAT_PALETTE[cats.length % CAT_PALETTE.length];
 
 // 首頁類別清單:內容超出可捲時,底部顯示淡出+往下箭頭提示;捲到底自動隱藏
@@ -1721,7 +1777,7 @@ function renderTabs(){
   const allActive = currentCat === "";
   let html = `<button class="tab${allActive ? " active" : ""}" data-cat="">全部</button>`;
   html += cats.map(c => {
-    const col = c.color || "#8494A0";
+    const col = safeColor(c.color);
     const active = c.key === currentCat;
     return `<button class="tab cat-tab${active ? " active" : ""}" data-cat="${esc(c.key)}" style="--tc:${col};--tctext:${badgeTextColor(col)}">${esc(c.key)}</button>`;
   }).join("");
@@ -1729,12 +1785,12 @@ function renderTabs(){
 }
 function refreshCategories(){
   saveCats();
-  touchCats();
+  if (typeof touchCats === "function") touchCats();
   renderCover();
   renderTabs();
   renderCatOptions();
   applyFilter();
-  scheduleSync();
+  if (typeof scheduleSync === "function") scheduleSync();
 }
 renderCover();
 
@@ -1799,6 +1855,48 @@ function anyColFilter(){
 function clearAllColFilters(){
   Object.keys(colFilter).forEach(k => colFilter[k] = null);
   fltP.lo = null; fltP.hi = null;
+  saveColFilterState();
+}
+function resetListFilters(){
+  if (searchEl) searchEl.value = "";
+  clearAllColFilters();
+}
+const FILTER_STATE_KEY = "property_app_filters_v1";
+function serializeColFilterState(){
+  const o = {};
+  Object.keys(colFilter).forEach(k => { const s = colFilter[k]; o[k] = s && s.size ? [...s] : null; });
+  return { colFilter: o, fltP: { lo: fltP.lo, hi: fltP.hi } };
+}
+function applyColFilterState(s){
+  if (!s || typeof s !== "object") return;
+  if (s.colFilter && typeof s.colFilter === "object"){
+    Object.keys(colFilter).forEach(k => {
+      const a = s.colFilter[k];
+      colFilter[k] = (Array.isArray(a) && a.length) ? new Set(a) : null;
+    });
+  }
+  if (s.fltP){
+    fltP.lo = (s.fltP.lo != null && isFinite(s.fltP.lo)) ? s.fltP.lo : null;
+    fltP.hi = (s.fltP.hi != null && isFinite(s.fltP.hi)) ? s.fltP.hi : null;
+  }
+}
+function saveColFilterState(){
+  if (!storageOK) return;
+  try { localStorage.setItem(FILTER_STATE_KEY, JSON.stringify(serializeColFilterState())); } catch(e){}
+}
+function loadColFilterState(){
+  if (!storageOK) return;
+  try {
+    const s = JSON.parse(localStorage.getItem(FILTER_STATE_KEY) || "null");
+    if (s) applyColFilterState(s);
+  } catch(e){}
+}
+loadColFilterState();
+function remapColFilterCat(oldKey, newKey){
+  const st = colFilter.cat;
+  if (!st || !st.has(oldKey)) return;
+  st.delete(oldKey); st.add(newKey);
+  if (!st.size) colFilter.cat = null;
 }
 function colFilterOn(f){ return f === "price" ? (fltP.lo != null || fltP.hi != null) : !!(colFilter[f] && colFilter[f].size); }
 function applyColFilters(list){
@@ -1823,14 +1921,15 @@ function orderedFilterVals(f){
 }
 const fltBg = document.getElementById("fltBg");
 function openColFlt(f){
-  closeCatMenu(); closeLinkPop(); tableWrap.classList.remove("gen-open");   // 關其他浮層
+  closeOtherOverlays("flt"); tableWrap.classList.remove("gen-open");
   fltField = f;
   document.getElementById("fltTitle").textContent = "篩選：" + (FLT_NAME[f]||f);
   document.getElementById("fltBody").classList.remove("editing"); document.getElementById("fltClear").textContent = "清除此欄篩選";
   renderFltBody();
   fltBg.classList.add("open");
+  lockOverlay();
 }
-function closeColFlt(){ fltBg.classList.remove("open"); fltField = null; }
+function closeColFlt(){ fltBg.classList.remove("open"); fltField = null; unlockOverlay(); applyPendingMergeIfAny(); }
 window.closeColFlt = closeColFlt;
 function renderFltBody(){
   const body = document.getElementById("fltBody");
@@ -1838,7 +1937,7 @@ function renderFltBody(){
     body.innerHTML = `<div class="fbud-hint">顯示售價落在此範圍內的物件(單位：萬)</div>
       <div class="fbud"><input id="fltLo" inputmode="numeric" placeholder="下限" value="${fltP.lo != null ? fltP.lo : ""}"><span class="bsep">–</span><input id="fltHi" inputmode="numeric" placeholder="上限" value="${fltP.hi != null ? fltP.hi : ""}"></div>`;
     const lo = document.getElementById("fltLo"), hi = document.getElementById("fltHi");
-    const upd = () => { fltP.lo = numOrNull(lo.value); fltP.hi = numOrNull(hi.value); applyFilter(); };
+    const upd = () => { fltP.lo = numOrNull(lo.value); fltP.hi = numOrNull(hi.value); saveColFilterState(); applyFilter(); };
     lo.addEventListener("input", upd); hi.addEventListener("input", upd);
     return;
   }
@@ -1853,6 +1952,7 @@ function renderFltBody(){
     let stt = colFilter[f] || new Set();
     if (cb.checked) stt.add(cb.value); else stt.delete(cb.value);
     colFilter[f] = stt.size ? stt : null;
+    saveColFilterState();
     applyFilter();
   }));
 }
@@ -1861,6 +1961,7 @@ document.getElementById("fltDone").addEventListener("click", closeColFlt);
 document.getElementById("fltClear").addEventListener("click", () => {
   if (document.getElementById("fltBody").classList.contains("editing")){ exitFltEditing(); return; }
   if (fltField === "price"){ fltP.lo = null; fltP.hi = null; } else if (fltField){ colFilter[fltField] = null; }
+  saveColFilterState();
   renderFltBody(); applyFilter();
 });
 fltBg.addEventListener("click", e => { if (e.target === fltBg) closeColFlt(); });
@@ -1986,11 +2087,19 @@ function syncToggleUI(){
   }
   const ce = document.getElementById("cards");
   if (ce) ce.classList.toggle("cmode-view", !editMode);
+  if (tableWrap) tableWrap.classList.toggle("edit-mode", editMode);   // 表格展開區底色:編輯=灰、正常=淺藍
 }
 function syncTableMode(){
   document.getElementById("app").classList.toggle("table-mode", viewMode==="table" && listView.classList.contains("active"));
 }
-function setViewMode(vm){ viewMode = (vm==="table") ? "table" : "card"; saveViewMode(); applyFilter(); }
+function setViewMode(vm){
+  viewMode = (vm==="table") ? "table" : "card"; saveViewMode();
+  if (viewMode !== "table"){                                     // 離開表格:收合展開,避免殘留的隱藏展開之後把舊內容寫回
+    if (typeof closeNeedExp === "function") closeNeedExp();
+    if (typeof hideNeedHover === "function") hideNeedHover();
+  }
+  applyFilter();
+}
 
 // ---- table rendering ----
 const T_COLS = ["到期","類別","格局","案名","地址","樓層","售價","連結","承辦","電話","門市","備註"];
@@ -2065,7 +2174,7 @@ function trowHTML(d){
   const dueInner = editMode      // 編輯模式:到期日改為日曆選擇(不用鍵盤輸入);正常模式維持可點複製
     ? `<button type="button" class="tdue-btn ${ds}" data-duecal="1" title="${esc(d.due)}">${esc(d.due)}</button>`
     : `<div class="tcell tdue ${ds}" contenteditable="false" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div>`;
-  const _trCls = (((openNeedId===d.id) ? "exp-open " : "") + (ds ? "due-"+ds : "") + ((tselMode && selected.has(d.id)) ? " tsel-row" : "")).trim();
+  const _trCls = (((openNeedId===d.id) ? ("exp-open" + (editMode ? " exp-editing" : "") + " ") : "") + (ds ? "due-"+ds : "") + ((tselMode && selected.has(d.id)) ? " tsel-row" : "")).trim();
   return `<tr data-id="${esc(d.id)}"${_trCls ? ` class="${_trCls}"` : ""}>`+
     `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button>${dueInner}</td>`+
     catCell +
@@ -2101,14 +2210,7 @@ function renderTable(list){
   const bodyWrap = tableWrap.querySelector(".tbody-wrap");
   if (bodyWrap){ bodyWrap.scrollTop = sTop; bodyWrap.scrollLeft = sLeft; }
   if (headWrap) headWrap.scrollLeft = sLeft;
-  // 左右捲動雙向同步(表頭↔表身),用旗標避免互相觸發成迴圈
-  if (headWrap && bodyWrap){
-    let syncing = false;
-    const link = (from, to) => from.addEventListener("scroll", () => {
-      if (syncing) return; syncing = true; to.scrollLeft = from.scrollLeft; syncing = false;
-    });
-    link(bodyWrap, headWrap); link(headWrap, bodyWrap);
-  }
+  if (headWrap && bodyWrap) bindTableScrollSync(headWrap, bodyWrap);
   // 重繪後還原展開中的備註列(搜尋/同步/切換造成重繪時,展開狀態不消失)
   if (openNeedId){
     const otr = tableWrap.querySelector(`tr[data-id="${openNeedId}"]`);
@@ -2217,11 +2319,15 @@ tableWrap.addEventListener("pointerdown", e => {
   const h = e.target.closest(".col-resize"); if (!h) return;
   e.preventDefault(); e.stopPropagation();
   const field = h.dataset.field, now = Date.now();
-  if (field === _lastRzField && (now - _lastRzTime) < 350){ _lastRzTime = 0; _lastRzField = null; autoFitColumn(field); return; }  // 350ms 內同欄再按=雙擊自適應
+  if (field === _lastRzField && (now - _lastRzTime) < 500){ _lastRzTime = 0; _lastRzField = null; autoFitColumn(field); return; }  // 350ms 內同欄再按=雙擊自適應
   _lastRzField = field; _lastRzTime = now;
   const th = h.closest("th"), idx = T_FIELDS.indexOf(field);
   _rz = { field, startX: e.clientX, startW: th.offsetWidth, hMin: colHeaderMin(idx), h, moved: false };
   h.classList.add("dragging"); document.body.classList.add("col-resizing");
+});
+tableWrap.addEventListener("dblclick", e => {
+  const h = e.target.closest(".col-resize");
+  if (h && h.dataset.field){ e.preventDefault(); e.stopPropagation(); autoFitColumn(h.dataset.field); }
 });
 window.addEventListener("pointermove", e => {
   if (!_rz) return;
@@ -2232,8 +2338,18 @@ window.addEventListener("pointermove", e => {
 function _rzEnd(){ if (!_rz) return; const moved = _rz.moved; _rz.h.classList.remove("dragging"); document.body.classList.remove("col-resizing"); _rz = null; if (moved){ saveColW(); onLocalChange("settings"); } }
 window.addEventListener("pointerup", _rzEnd);
 window.addEventListener("pointercancel", _rzEnd);
+function bindTableScrollSync(headWrap, bodyWrap){
+  if (tableWrap._scrollUnbind){ tableWrap._scrollUnbind(); tableWrap._scrollUnbind = null; }
+  let syncing = false;
+  const onBody = () => { if (syncing) return; syncing = true; headWrap.scrollLeft = bodyWrap.scrollLeft; syncing = false; };
+  const onHead = () => { if (syncing) return; syncing = true; bodyWrap.scrollLeft = headWrap.scrollLeft; syncing = false; };
+  bodyWrap.addEventListener("scroll", onBody);
+  headWrap.addEventListener("scroll", onHead);
+  tableWrap._scrollUnbind = () => { bodyWrap.removeEventListener("scroll", onBody); headWrap.removeEventListener("scroll", onHead); };
+}
 // 編輯中(格子聚焦、連結框或類別選單開啟)時,暫停同步重繪,避免游標被打斷、畫面跳動
 window.isTableBusy = function(){
+  if (modalBg.classList.contains("open") || detailBg.classList.contains("open")) return true;
   const a = document.activeElement;
   if (a && a.classList && a.classList.contains("tcell")) return true;
   if (a && a.classList && a.classList.contains("nseg-ed")) return true;   // 備註展開編輯中:延後同步
@@ -2243,6 +2359,8 @@ window.isTableBusy = function(){
   if (tselMode) return true;   // 批次選取中:延後同步重繪(重繪雖會保留選取,但避免點選當下列順序變動)
   const cb = document.getElementById("calBg"); if (cb && cb.classList.contains("open")) return true;   // 日曆開啟中:延後同步,避免底下表格被重繪
   const fb = document.getElementById("fltBg"); if (fb && fb.classList.contains("open")) return true;   // 欄位篩選開啟中:同上
+  const cbg = document.getElementById("catBg"); if (cbg && cbg.classList.contains("open")) return true;
+  const cf = document.getElementById("confirmBg"); if (cf && cf.classList.contains("open")) return true;
   return false;
 };
 
@@ -2274,14 +2392,15 @@ function openTableDueCal(trigger){
     }
   });
 }
-function tCommitCell(cell){
-  const it = tFindItem(cell); if (!it) return;
+function tCommitCell(cell){                       // 回傳 true=值有變更(呼叫端據此決定要不要閃「已儲存」)
+  const it = tFindItem(cell); if (!it) return false;
   const field = cell.dataset.field;
   let val = cell.textContent.trim();
   if (field === "name") val = normalizeName(val);
   if (field === "price") val = (val === "") ? "" : (parseInt(val.replace(/[^\d]/g,""),10) || 0);
   if (field === "name" && cell.textContent.trim() !== val) cell.textContent = val;   // 顯示同步為正規化後的案名
-  if (it[field] !== val){ it[field] = val; it.updatedAt = Date.now(); saveItems(); onLocalChange("data"); }
+  if (it[field] !== val){ it[field] = val; it.updatedAt = Date.now(); saveItems(); onLocalChange("data"); return true; }
+  return false;
 }
 function caretEnd(el){ try{ const r=document.createRange(); r.selectNodeContents(el); r.collapse(false); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
 
@@ -2290,6 +2409,7 @@ function caretEnd(el){ try{ const r=document.createRange(); r.selectNodeContents
 // 會導致 flush 同步出去的是舊資料(前一天「漢成六街」那次就是這樣漏掉)。切背景/關閉前先呼叫這個,把在編輯的格先落地。
 function flushEditing(){
   try {
+    if (modalBg.classList.contains("open")){ commitFormIfOpen(); return; }
     const el = document.activeElement;
     if (!el || !el.classList) return;
     if (el.classList.contains("tcell") && el.getAttribute("contenteditable") === "true"){
@@ -2309,13 +2429,15 @@ function flushEditing(){
 window.flushEditing = flushEditing;
 
 tableWrap.addEventListener("blur", e=>{
-  const c = e.target; if (c.classList && c.classList.contains("tcell")){ clearTimeout(c._saveT); tCommitCell(c); tFlash(c); }   // blur 已 commit,清掉 debounce 計時器免得稍後又空跑一次
+  const c = e.target; if (c.classList && c.classList.contains("tcell")){ clearTimeout(c._saveT); if (tCommitCell(c)) tFlash(c); }   // blur 已 commit,清掉 debounce 計時器免得稍後又空跑一次
 }, true);
 tableWrap.addEventListener("keydown", e=>{
   const c = e.target; if (!c.classList || !c.classList.contains("tcell")) return;
   if (e.key === "Enter"){
-    e.preventDefault(); clearTimeout(c._saveT); tCommitCell(c); tFlash(c);
-    const tr = c.closest("tr"), nextTr = tr.nextElementSibling;
+    e.preventDefault(); clearTimeout(c._saveT); if (tCommitCell(c)) tFlash(c);
+    const tr = c.closest("tr");
+    let nextTr = tr.nextElementSibling;
+    while (nextTr && nextTr.classList.contains("needexp")) nextTr = nextTr.nextElementSibling;   // 跳過展開列(沒有對應欄位),Enter 逐列跳格才不會卡住
     if (nextTr){ const nc = nextTr.querySelector(`.tcell[data-field="${c.dataset.field}"]`); if (nc){ nc.focus(); caretEnd(nc); } }
   } else if (e.key === "Escape"){ c.blur(); }
 });
@@ -2420,9 +2542,12 @@ tableWrap.addEventListener("input", e => {
   cell._saveT = setTimeout(function(){ if (cell.isConnected) tCommitCell(cell); }, 400);
 });
 tableWrap.addEventListener("click", e=>{
-  // 備註展開中:點該列任何位置(展開區內部除外)= 收合
+  // 備註展開中:點空白區收合;同列上的按鈕/欄位/連結仍可操作
   const openTr = e.target.closest("tr.exp-open");
-  if (openTr){ e.stopPropagation(); hideNeedHover(); closeNeedExp(); return; }
+  if (openTr){
+    if (e.target.closest(".gen-btn, .tdue-btn, .tchip, .tcell, .tcat-trigger, [data-act='del'], .tneed[data-need]")){ /* 交給下方各 handler */ }
+    else { e.stopPropagation(); hideNeedHover(); closeNeedExp(); return; }
+  }
   // 手機:點「到期日」表頭 → 切換所有列的生成面板開/關(電腦版維持滑到左緣才出現)
   const dueHead = e.target.closest('th[data-col="due"]');
   if (dueHead && !e.target.closest(".col-resize") && window.matchMedia && window.matchMedia("(hover: none)").matches){
@@ -2456,7 +2581,7 @@ tableWrap.addEventListener("click", e=>{
     if (editMode){ e.stopPropagation(); openLinkPop(chip); }
     else {
       const u = (chip.dataset.url || "").trim();
-      if (u) window.open(normUrl(u), "_blank", "noopener");
+      if (u) openExtUrl(normUrl(u));
       else toast(chip.dataset.label + " 尚未設定連結");
     }
     return;
@@ -2536,6 +2661,7 @@ function setEditMode(on){
 const catmenu = document.getElementById("catmenu");
 let catTrigger = null;
 function openCatMenu(trigger){
+  closeOtherOverlays("cat");
   const it = tFindItem(trigger); if (!it) return;
   catTrigger = trigger;
   catmenu.innerHTML = cats.map(c =>
@@ -2651,7 +2777,7 @@ document.getElementById("lpPaste").addEventListener("click", ()=>{
   if (navigator.clipboard && navigator.clipboard.readText){ navigator.clipboard.readText().then(t=>{ lpInput.value=(t||"").trim(); lpRefresh(); lpInput.focus(); }).catch(()=>lpInput.focus()); }
   else lpInput.focus();
 });
-lpOpenBtn.addEventListener("click", ()=>{ const u=lpInput.value.trim(); if (u) window.open(normUrl(u),"_blank","noopener"); });
+lpOpenBtn.addEventListener("click", ()=>{ const u=lpInput.value.trim(); if (u) openExtUrl(normUrl(u)); });
 
 // ---- toggle handlers ----
 document.getElementById("coverVT").addEventListener("click", e=>{
@@ -2663,7 +2789,9 @@ document.getElementById("viewBtn").addEventListener("click", () => {
   const vm = (viewMode === "table") ? "card" : "table";   // 一顆按鈕:在卡片/表格之間切換
   editMode = false; saveEditMode();     // 切換檢視一律恢復正常模式
   exitSelectMode();                      // 並退出卡片多選(避免刪除列殘留浮在表格上)
-  closeCatMenu(); closeLinkPop();        // 關閉表格的類別/連結浮層,避免懸浮殘留
+  closeCatMenu();
+  if (lpop.classList.contains("show")) commitLink(); else closeLinkPop();
+  if (typeof closeDetail === "function") closeDetail();
   tableWrap.classList.remove("gen-open");   // 收起手機的生成面板,避免狀態殘留
   setViewMode(vm);
 });
@@ -2723,6 +2851,9 @@ function openList(cat){
 }
 function showCover(){
   exitSelectMode();
+  if (typeof closeColFlt === "function") closeColFlt();
+  if (typeof closeNeedExp === "function") closeNeedExp();   // 離開列表:收合備註展開並提交,避免隱藏 DOM 內未落地編輯遺失
+  if (typeof hideNeedHover === "function") hideNeedHover();
   saveNav("cover");   // 記住:目前在封面
   listView.classList.remove("active");
   syncTableMode();
@@ -2741,7 +2872,8 @@ document.getElementById("tabs").addEventListener("click", e => {
   const btn = e.target.closest(".tab");
   if (btn) { exitSelectMode(); currentCat = btn.dataset.cat; applyFilter(); }
 });
-searchEl.addEventListener("input", applyFilter);
+let _searchDeb = null;
+searchEl.addEventListener("input", () => { clearTimeout(_searchDeb); _searchDeb = setTimeout(applyFilter, 150); });
 // 自訂搜尋清除鈕:有字就顯示(不受聚焦影響);點了清空並更新列表
 document.getElementById("searchClear").addEventListener("click", () => { searchEl.value = ""; applyFilter(); });
 // 搜尋提示:點進搜尋框就點亮可搜尋欄位;離開時若沒有文字才熄滅
@@ -2826,7 +2958,7 @@ function setSort(key){
   applyFilter();
   onLocalChange("settings");
 }
-function openSortSel(){ sortSel.classList.add("open"); sortBtn.setAttribute("aria-expanded","true"); }
+function openSortSel(){ if (typeof closeOtherOverlays === "function") closeOtherOverlays("sort"); sortSel.classList.add("open"); sortBtn.setAttribute("aria-expanded","true"); }
 function closeSortSel(){ sortSel.classList.remove("open"); sortBtn.setAttribute("aria-expanded","false"); }
 sortBtn.addEventListener("click", e => { e.stopPropagation(); sortSel.classList.contains("open") ? closeSortSel() : openSortSel(); });
 sortMenu.addEventListener("click", e => { const o = e.target.closest(".cselect-opt"); if (o){ setSort(o.dataset.key); closeSortSel(); } });
@@ -2843,8 +2975,50 @@ function toast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
 }
+// ---- 全螢幕遮罩:背景捲動鎖定 + 焦點輔助 ----
+let _overlayLock = 0, _focusReturn = null, _inertRoot = null;
+function lockOverlay(returnEl){
+  _overlayLock++;
+  if (_overlayLock === 1){
+    document.documentElement.classList.add("picker-open");
+    document.body.classList.add("picker-open");
+    _inertRoot = document.getElementById("app");
+    if (_inertRoot){
+      _inertRoot.setAttribute("aria-hidden", "true");
+      try { _inertRoot.inert = true; } catch(e){}
+    }
+  }
+  _focusReturn = returnEl || document.activeElement;
+}
+function unlockOverlay(){
+  _overlayLock = Math.max(0, _overlayLock - 1);
+  if (_overlayLock === 0){
+    document.documentElement.classList.remove("picker-open");
+    document.body.classList.remove("picker-open");
+    if (_inertRoot){
+      _inertRoot.removeAttribute("aria-hidden");
+      try { _inertRoot.inert = false; } catch(e){}
+      _inertRoot = null;
+    }
+    try { if (_focusReturn && _focusReturn.focus) _focusReturn.focus(); } catch(e){}
+    _focusReturn = null;
+  }
+}
+function focusTrapEl(el){
+  if (!el) return;
+  const t = el.querySelector('button, [href], input, select, textarea, [contenteditable="true"], [tabindex]:not([tabindex="-1"])');
+  setTimeout(() => { try { (t || el).focus(); } catch(e){} }, 50);
+}
+function trapFocusKey(e, container){
+  if (e.key !== "Tab" || !container) return;
+  const nodes = container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (!nodes.length) return;
+  const first = nodes[0], last = nodes[nodes.length - 1];
+  if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+}
 const confirmBg = document.getElementById("confirmBg");
-let confirmCb = null, confirmCancelCb = null;
+let confirmCb = null, confirmCancelCb = null, _confirmDownOnBg = false;
 function askConfirm(title, detail, onYes){
   document.getElementById("confirmTitle").textContent = title;
   const descEl = document.getElementById("confirmDesc");
@@ -2853,21 +3027,34 @@ function askConfirm(title, detail, onYes){
   const ok = document.getElementById("confirmOk"), cancel = document.getElementById("confirmCancel");
   ok.textContent = "確定"; ok.className = "btn-danger"; cancel.textContent = "取消";
   confirmCb = onYes; confirmCancelCb = null;
+  lockOverlay();
   confirmBg.classList.add("open");
+  focusTrapEl(cancel);
 }
-function closeConfirm(){ confirmBg.classList.remove("open"); confirmCb = null; confirmCancelCb = null; }
+function closeConfirm(){ confirmBg.classList.remove("open"); unlockOverlay(); confirmCb = null; confirmCancelCb = null; applyPendingMergeIfAny(); }
 document.getElementById("confirmOk").addEventListener("click", () => { const cb = confirmCb; closeConfirm(); if (cb) cb(); });
 document.getElementById("confirmCancel").addEventListener("click", () => { const cb = confirmCancelCb; closeConfirm(); if (cb) cb(); });
-confirmBg.addEventListener("click", e => { if (e.target === confirmBg) closeConfirm(); });
+confirmBg.addEventListener("pointerdown", e => { _confirmDownOnBg = e.target === confirmBg; });
+confirmBg.addEventListener("click", e => { if (e.target === confirmBg && _confirmDownOnBg) closeConfirm(); _confirmDownOnBg = false; });
 // ---- Esc 鍵:關閉最上層的浮層/對話框(依疊層順序一次關一層;桌機體貼) ----
 document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && confirmBg.classList.contains("open")){ e.preventDefault(); document.getElementById("confirmOk").click(); return; }
+  if (e.key === "Tab"){
+    if (confirmBg.classList.contains("open")){ trapFocusKey(e, confirmBg.querySelector(".confirm")); return; }
+    const mbg = document.getElementById("modalBg");
+    const modal = mbg && mbg.classList.contains("open") ? mbg.querySelector(".modal") : null;
+    if (modal){ trapFocusKey(e, modal); return; }
+  }
   if (e.key !== "Escape") return;
+  const ib = document.getElementById("installBar");
+  if (ib && ib.classList.contains("show")){ ib.classList.remove("show"); try { localStorage.setItem("property_app_install_dismiss_v1", "1"); } catch(err){} return; }
   const isOn = (id, cls) => { const el = document.getElementById(id); return el && el.classList.contains(cls); };
   if (isOn("calBg","open")){ if (window.closeCal) window.closeCal(); return; }        // 日曆(最上層)
-  if (isOn("fltBg","open")){ if (window.closeColFlt) window.closeColFlt(); return; }    // 欄位篩選彈窗
+  if (isOn("fltBg","open")){ const fb = document.getElementById("fltBody"); if (fb && fb.classList.contains("editing")) exitFltEditing(); else if (window.closeColFlt) window.closeColFlt(); return; }    // 欄位篩選彈窗
   if (isOn("confirmBg","open")){ closeConfirm(); return; }                            // 確認框
   if (isOn("catmenu","show")){ closeCatMenu(); return; }                              // 表格類別選單
-  if (isOn("linkpop","show")){ closeLinkPop(); return; }                              // 連結編輯框
+  if (isOn("linkpop","show")){ closeLinkPop(); return; }                              // 連結編輯框(取消)
+  if (palettePop && palettePop.classList.contains("open")){ if (typeof closePalette === "function") closePalette(); return; }
   if (typeof tselMode !== "undefined" && tselMode){ exitTselMode(); return; }         // 表格批次選取(Esc=取消)
   if (typeof selectMode !== "undefined" && selectMode){ exitSelectMode(); return; }   // 卡片多選(Esc=取消)
   if (typeof openNeedId !== "undefined" && openNeedId && viewMode === "table" && listView.classList.contains("active")){ closeNeedExp(); return; }   // 備註展開(Esc=收合,排最後)
@@ -2905,8 +3092,10 @@ function todayROC(){
     const s = String(roc||"").replace(/\D/g,"");
     if (s.length < 5) return null;
     const day = +s.slice(-2), mon = +s.slice(-4,-2), ry = +s.slice(0,-4);
+    if (isNaN(ry)||isNaN(mon)||isNaN(day)||mon<1||mon>12||day<1||day>31) return null;
     const dt = new Date(ry + 1911, mon-1, day);
-    return isNaN(dt.getTime()) ? null : dt;
+    if (isNaN(dt.getTime()) || dt.getMonth() !== mon - 1 || dt.getDate() !== day) return null;
+    return dt;
   }
   function dateToRoc(dt){
     return String(dt.getFullYear()-1911) + String(dt.getMonth()+1).padStart(2,"0") + String(dt.getDate()).padStart(2,"0");
@@ -3015,9 +3204,23 @@ function openForm(id){
   { const lg = document.getElementById("linkGroup"), lt = document.getElementById("linkToggle");   // 每次打開表單:連結群組一律預設收合(一排三欄)
     if (lg){ lg.classList.add("collapsed"); if (lt){ lt.setAttribute("aria-expanded","false"); lt.setAttribute("aria-label","展開連結欄位"); } } }
   modalBg.classList.add("open");
-  if (!id) setTimeout(() => F.name.focus(), 50);
+  lockOverlay();
+  if (!id){
+    const draft = loadFormDraft();
+    if (draft){ applyFormDraft(draft); toast("已還原上次未儲存的新增內容"); }
+    setTimeout(() => F.name.focus(), 50);
+  }
 }
-function closeForm(){ modalBg.classList.remove("open"); editingId = null; }
+function applyPendingMergeIfAny(){
+  if (window._pendingMerge && typeof window.__applyMerged === "function"){
+    const m = window._pendingMerge; window._pendingMerge = null; window.__applyMerged(m);
+  }
+}
+function closeForm(){
+  modalBg.classList.remove("open"); editingId = null;
+  unlockOverlay();
+  applyPendingMergeIfAny();
+}
 
 // ===== 物件明細(唯讀,卡片檢視正常模式點卡片開啟) =====
 const detailBg = document.getElementById("detailBg");
@@ -3063,9 +3266,28 @@ function openDetail(id){
   const segHTML = seg(needTitle(d,1), d.note, IC_DOC) + seg(needTitle(d,2), d.note2, IC_EYE) + seg(needTitle(d,3), d.note3, IC_CHECK);
   document.getElementById("detailBody").innerHTML = basic + agent + links + segHTML;
   detailBg.classList.add("open");
+  lockOverlay();
 }
-function closeDetail(){ detailBg.classList.remove("open"); }
+function closeDetail(){
+  detailBg.classList.remove("open");
+  unlockOverlay();
+  applyPendingMergeIfAny();
+}
 document.getElementById("detailClose").addEventListener("click", closeDetail);
+// 詳情頁:水平滑動(左滑或右滑)返回。只在「水平位移明顯大於垂直」時觸發,避免和內容的垂直捲動衝突
+(function(){
+  let sx = 0, sy = 0, st = 0, tracking = false;
+  detailBg.addEventListener("touchstart", e => {
+    if (e.touches && e.touches.length === 1){ sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now(); tracking = true; }
+    else tracking = false;
+  }, { passive: true });
+  detailBg.addEventListener("touchend", e => {
+    if (!tracking) return; tracking = false;
+    const t = e.changedTouches && e.changedTouches[0]; if (!t) return;
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8 && (Date.now() - st) < 600 && detailBg.classList.contains("open")){ closeDetail(); }
+  }, { passive: true });
+})();
 let _dtlDownOnBg = false;
 detailBg.addEventListener("pointerdown", e => { _dtlDownOnBg = (e.target === detailBg); });
 detailBg.addEventListener("click", e => { if (e.target === detailBg && _dtlDownOnBg) closeDetail(); _dtlDownOnBg = false; });
@@ -3074,27 +3296,91 @@ document.getElementById("detailBody").addEventListener("click", e => {
   const cp = e.target.closest(".dtl-copy"); if (cp) copyFieldText(cp);
 });
 
-function saveForm(){
-  const name = normalizeName(F.name.value.trim());
-  if (!name){ toast("請輸入案名"); F.name.focus(); return; }
-  const isEdit = !!editingId;
-  const rec = {
-    name, cat: formCat,
+function buildFormRec(){
+  const u591 = safeUrl(F.u591.value.trim());
+  const uLeju = safeUrl(F.uleju.value.trim());
+  const uI = safeUrl(F.ui.value.trim());
+  return {
+    name: normalizeName(F.name.value.trim()), cat: formCat,
     layout: F.layout.value.trim(), floor: F.floor.value.trim(),
     price: F.price.value.trim() === "" ? "" : (parseInt(F.price.value, 10) || 0),
     addr: F.addr.value.trim(), due: F.due.value.trim(),
     agent: F.agent.value.trim(), tel: F.tel.value.trim(), store: F.store.value.trim(),
-    url591: F.u591.value.trim() || null, urlLeju: F.uleju.value.trim() || null, urlI: F.ui.value.trim() || null,
+    url591: u591 || null, urlLeju: uLeju || null, urlI: uI || null,
     note: editToNeed(F.note), note2: editToNeed(F.note2), note3: editToNeed(F.note3),
     t1: F.t1.value.trim(), t2: F.t2.value.trim(), t3: F.t3.value.trim(),
   };
+}
+const FORM_DRAFT_KEY = "property_app_form_draft_v1";
+function formDraftHasContent(rec){
+  return !!(rec.name || rec.addr || rec.agent || rec.layout || rec.note || rec.note2 || rec.note3);
+}
+function saveFormDraft(){
+  if (editingId || !modalBg.classList.contains("open")) return;
+  const rec = buildFormRec();
+  if (!formDraftHasContent(rec)){ clearFormDraft(); return; }
+  try { sessionStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(rec)); } catch(e){}
+}
+function loadFormDraft(){
+  try { const s = sessionStorage.getItem(FORM_DRAFT_KEY); return s ? JSON.parse(s) : null; } catch(e){ return null; }
+}
+function clearFormDraft(){ try { sessionStorage.removeItem(FORM_DRAFT_KEY); } catch(e){} }
+function applyFormDraft(d){
+  if (!d) return;
+  F.name.value = d.name || "";
+  setFormCat(d.cat || "");
+  F.layout.value = d.layout || "";
+  F.floor.value = d.floor || "";
+  F.price.value = d.price === "" || d.price == null ? "" : String(d.price);
+  F.addr.value = d.addr || "";
+  F.due.value = d.due || "";
+  F.agent.value = d.agent || "";
+  F.tel.value = d.tel || "";
+  F.store.value = d.store || "";
+  F.u591.value = d.url591 || "";
+  F.uleju.value = d.urlLeju || "";
+  F.ui.value = d.urlI || "";
+  F.note.innerHTML = d.note ? needToFormHTML(d.note) : "<div><br></div>";
+  F.note2.innerHTML = d.note2 ? needToFormHTML(d.note2) : "<div><br></div>";
+  F.note3.innerHTML = d.note3 ? needToFormHTML(d.note3) : "<div><br></div>";
+  F.t1.value = d.t1 || "備註";
+  F.t2.value = d.t2 || "注意";
+  F.t3.value = d.t3 || "其它";
+}
+(function(){
+  let draftT = null;
+  modalBg.addEventListener("input", () => {
+    if (editingId) return;
+    clearTimeout(draftT);
+    draftT = setTimeout(saveFormDraft, 400);
+  });
+})();
+function commitFormIfOpen(){
+  if (!modalBg.classList.contains("open")) return;
+  if (editingId){
+    const name = normalizeName(F.name.value.trim()); if (!name) return;
+    const i = items.findIndex(x => x.id === editingId); if (i < 0) return;
+    items[i] = {...items[i], ...buildFormRec(), updatedAt: Date.now()};
+    saveItems(); onLocalChange("data");
+  } else {
+    saveFormDraft();
+  }
+}
+function saveForm(){
+  const name = normalizeName(F.name.value.trim());
+  if (!name){ toast("請輸入案名"); F.name.focus(); return; }
+  const isEdit = !!editingId;
+  const rec = buildFormRec();
+  clearFormDraft();
   if (editingId){
     const i = items.findIndex(x => x.id === editingId);
-    if (i > -1) items[i] = {...items[i], ...rec, updatedAt: Date.now()};
+    if (i < 0){ toast("此物件已不存在，無法儲存"); closeForm(); applyFilter(); return; }
+    items[i] = {...items[i], ...rec, updatedAt: Date.now()};
   } else {
     items.push({...rec, id: uid(), updatedAt: Date.now()});
   }
   saveItems();
+  window._pendingMerge = null;   // 剛儲存為準,丟掉同步期間的過期合併快照(避免 closeForm 蓋回舊資料)
   closeForm();
   applyFilter();
   onLocalChange("data");
@@ -3115,6 +3401,7 @@ function deleteItem(id){
 }
 
 document.getElementById("fab").addEventListener("click", () => {
+  if (openNeedId && typeof closeNeedExp === "function") closeNeedExp();   // 有展開時先收合,避免殘留半吊子畫面
   if (viewMode === "table") addTableRow(); else openForm(null);
 });
 
@@ -3281,7 +3568,8 @@ function _mkLpRing(host, ms, rx){
 }
 function enterTselMode(seedId){
   if (tselMode) return;
-  closeCatMenu(); closeLinkPop();        // 先關表格浮層
+  if (typeof closeOtherOverlays === "function") closeOtherOverlays("");
+  if (typeof openNeedId !== "undefined" && openNeedId && typeof closeNeedExp === "function") closeNeedExp();
   exitSelectMode();                      // 防禦性互斥(卡片多選理論上在不同檢視)
   tselMode = true; selected.clear();
   tableWrap.classList.add("tsel-on");
@@ -3413,9 +3701,14 @@ document.addEventListener("pointercancel", _tselDragEnd);
 // 關閉其他浮層(展開備註/觸發懸浮前呼叫),只保留指定的一種。集中呼叫我方既有的各關閉函式。
 function closeOtherOverlays(keep){
   if (keep !== "cat" && typeof closeCatMenu === "function") closeCatMenu();
-  if (keep !== "link" && typeof closeLinkPop === "function") closeLinkPop();
+  if (keep !== "link"){
+    if (lpop && lpop.classList.contains("show") && typeof commitLink === "function") commitLink();
+    else if (typeof closeLinkPop === "function") closeLinkPop();
+  }
   if (keep !== "flt" && typeof closeColFlt === "function") closeColFlt();
   if (keep !== "sort" && typeof closeSortSel === "function") closeSortSel();
+  if (keep !== "catsel" && typeof closeCatSel === "function") closeCatSel();
+  if (keep !== "exp" && typeof closeNeedExp === "function") closeNeedExp();
   if (keep !== "hover" && typeof hideNeedHover === "function") hideNeedHover();
 }
 function needSeg(it, sg){ return sg===2 ? (it.note2||"") : sg===3 ? (it.note3||"") : (it.note||""); }
@@ -3463,7 +3756,7 @@ function openNeedExp(tr, doFocus){
   const id = tr.dataset.id;
   tableWrap.querySelectorAll(".needexp").forEach(ex => {
     commitAllSegs(ex);
-    const orow = tableWrap.querySelector(`tr[data-id="${ex.dataset.for}"]`); if (orow) orow.classList.remove("exp-open");
+    const orow = tableWrap.querySelector(`tr[data-id="${ex.dataset.for}"]`); if (orow) orow.classList.remove("exp-open", "exp-editing");
     ex.remove();
   });
   const it = items.find(x => x.id === id); if (!it) return;
@@ -3692,7 +3985,7 @@ function closeNeedExp(){
   const tr = tableWrap.querySelector(`tr[data-id="${ex.dataset.for}"]`);
   commitAllSegs(ex);
   ex.remove();
-  if (tr) tr.classList.remove("exp-open");
+  if (tr) tr.classList.remove("exp-open", "exp-editing");
   openNeedId = null;
 }
 function toggleNeedExp(tr){
@@ -3701,7 +3994,7 @@ function toggleNeedExp(tr){
   const nx = tr.nextElementSibling;
   if (nx && nx.classList.contains("needexp") && nx.dataset.for === id){
     commitAllSegs(nx);
-    nx.remove(); tr.classList.remove("exp-open"); openNeedId = null; return;
+    nx.remove(); tr.classList.remove("exp-open", "exp-editing"); openNeedId = null; return;
   }
   openNeedExp(tr, true);
 }
@@ -3872,7 +4165,7 @@ document.addEventListener("click", e => {
   e.preventDefault(); e.stopPropagation();
   if (a.classList.contains("need-link-chip")){ openLinkPopNeed(a); return; }   // 編輯模式標籤 → 連結編輯面板(貼上/清除/開啟/完成)
   const u = a.getAttribute("data-url") || a.getAttribute("href");              // 唯讀「連結」是 span(data-url);href 為舊 <a> 相容
-  if (u) window.open(u, "_blank", "noopener");                                 // 正常模式 → 直接開啟
+  if (u) openExtUrl(u);                                 // 正常模式 → 直接開啟
 }, true);
 // span 版「連結」沒有 <a> 的原生鍵盤行為:Tab 聚焦後按 Enter 比照點擊開啟
 document.addEventListener("keydown", e => {
@@ -3881,16 +4174,7 @@ document.addEventListener("keydown", e => {
   if (!a) return;
   e.preventDefault(); e.stopPropagation();
   const u = a.getAttribute("data-url") || a.getAttribute("href");
-  if (u) window.open(u, "_blank", "noopener");
-});
-// span 版「連結」沒有 <a> 的原生鍵盤行為:Tab 聚焦後按 Enter 比照點擊開啟
-document.addEventListener("keydown", e => {
-  if (e.key !== "Enter") return;
-  const a = e.target && e.target.closest ? e.target.closest(".need-link") : null;
-  if (!a) return;
-  e.preventDefault(); e.stopPropagation();
-  const u = a.getAttribute("data-url") || a.getAttribute("href");
-  if (u) window.open(u, "_blank", "noopener");
+  if (u) openExtUrl(u);
 });
 function fragToNeedText(box){
   const lines = []; let cur = "";
@@ -4108,6 +4392,7 @@ selDelete.addEventListener("click", () => {
   if (!selected.size) return;
   const n = selected.size;
   askConfirm(`刪除所選 ${n} 筆物件？`, "刪除後無法復原，建議先做雲端備份。", () => {
+    if (openNeedId && selected.has(openNeedId) && typeof closeNeedExp === "function") closeNeedExp();
     selected.forEach(id => { deleted[id] = Date.now(); });
     saveDeleted();
     items = items.filter(d => !selected.has(d.id));
@@ -4129,11 +4414,50 @@ document.getElementById("linkToggle").addEventListener("click", function(){
 });
 document.getElementById("modalClose").addEventListener("click", closeForm);
 document.getElementById("modalDelete").addEventListener("click", () => { if (editingId) deleteItem(editingId); });
-modalBg.addEventListener("click", e => { if (e.target === modalBg) closeForm(); });
+let _mbDownOnBg = false;
+modalBg.addEventListener("pointerdown", e => { _mbDownOnBg = (e.target === modalBg); });
+modalBg.addEventListener("click", e => { if (e.target === modalBg && _mbDownOnBg) closeForm(); _mbDownOnBg = false; });
 
 // ---- Backup / Import / Cloud / Reset ----
+const BACKUP_APP = "property";
+const BACKUP_MAX_ITEMS = 5000;
+function inferAppFromItems(arr){
+  if (!Array.isArray(arr) || !arr.length) return null;
+  for (let i = 0; i < Math.min(arr.length, 8); i++){
+    const s = arr[i];
+    if (!s || typeof s !== "object" || Array.isArray(s)) continue;
+    const custScore = (s.cust != null ? 1 : 0) + (s.need != null ? 1 : 0) + (s.budget != null ? 1 : 0);
+    const propScore = (s.addr != null ? 1 : 0) + (s.price != null ? 1 : 0) + (s.layout != null ? 1 : 0) + (s.name != null ? 1 : 0) - (s.cust != null ? 2 : 0);
+    if (custScore >= 2) return "customer";
+    if (propScore >= 2) return "property";
+  }
+  return null;
+}
+function detectBackupApp(parsed){
+  const arr = Array.isArray(parsed) ? parsed : (parsed && parsed.items);
+  const inferred = inferAppFromItems(arr);
+  if (!parsed || Array.isArray(parsed)) return inferred;
+  const declared = (parsed.app === "customer" || parsed.app === "property") ? parsed.app : null;
+  if (declared && inferred && declared !== inferred) return inferred;   // app 欄位與內容不符 → 以內容為準,validate 會擋
+  return declared || inferred;
+}
+function validateBackup(parsed){
+  let arr = null;
+  if (Array.isArray(parsed)) arr = parsed;
+  else if (parsed && Array.isArray(parsed.items)) arr = parsed.items;
+  else throw new Error("bad format");
+  if (arr.length){
+    const app = detectBackupApp(parsed);
+    if (!app || app !== BACKUP_APP) throw new Error("wrong_app");
+    if (arr.length > BACKUP_MAX_ITEMS) throw new Error("too_many");
+    for (let i = 0; i < arr.length; i++){
+      const d = arr[i];
+      if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error("bad format");
+    }
+  }
+}
 function backupData(){
-  return { version: 5, exportedAt: new Date().toISOString(), deviceId, cats, items, deleted, settings: collectSettings() };
+  return { version: 5, app: BACKUP_APP, exportedAt: new Date().toISOString(), deviceId, cats, items, deleted, settings: collectSettings(), colw: colW, theme: theme };
 }
 function backupFileName(){
   const d = new Date(), p = n => String(n).padStart(2,"0");
@@ -4151,21 +4475,46 @@ document.getElementById("exportBtn").addEventListener("click", () => { downloadB
 // 「備份到 Google 雲端」的實作在下方 Google 雲端同步 IIFE 內(用獨立的 drive.file 授權,不影響同步)
 const importFile = document.getElementById("importFile");
 function applyBackup(parsed){
-  let newItems, newCats = null, newDeleted = null;
+  validateBackup(parsed);
+  let newItems, newCats = null, newDeleted = null, hasDeletedField = false;
   if (Array.isArray(parsed)) { newItems = parsed; }
   else if (parsed && Array.isArray(parsed.items)) {
     newItems = parsed.items;
     if (Array.isArray(parsed.cats) && parsed.cats.length) newCats = parsed.cats;
-    if (parsed.deleted && typeof parsed.deleted === "object") newDeleted = parsed.deleted;
+    if (parsed.deleted && typeof parsed.deleted === "object"){ newDeleted = parsed.deleted; hasDeletedField = true; }
   }
   else throw new Error("bad format");
-  items = newItems.map(d => ({...d, id: d.id || uid(), updatedAt: Date.now()}));
+  if (typeof closeNeedExp === "function") closeNeedExp();   // 匯入覆蓋前列表備註展開先收合提交,避免殘留幽靈展開列
+  if (typeof hideNeedHover === "function") hideNeedHover();
+  const importTs = Date.now();
+  items = newItems.map(d => ({...d, id: d.id || uid(), updatedAt: (d.updatedAt && d.updatedAt > 0) ? d.updatedAt : importTs}));
   if (newCats) { cats = newCats; saveCats(); touchCats(); renderTabs(); renderCatOptions(); }
-  if (newDeleted) { deleted = newDeleted; saveDeleted(); }
+  if (hasDeletedField) { deleted = newDeleted; saveDeleted(); }
+  else { deleted = {}; saveDeleted(); }   // 舊格式/純陣列:清墓碑,避免匯入的資料被舊刪除記錄擋住
   saveItems(); renderCover();
+  if (parsed && parsed.settings && typeof parsed.settings === "object"){
+    applySettings(parsed.settings);
+    onLocalChange("settings");
+  } else if (parsed && (parsed.colw || parsed.theme)){
+    applySettings({ colw: parsed.colw, theme: parsed.theme });
+    onLocalChange("settings");
+  }
+  resetListFilters();
+  if (typeof applyFilter === "function") applyFilter();
   onLocalChange("data");
-  if (parsed && parsed.settings){ applySettings(parsed.settings); if (window.touchSettings) window.touchSettings(); }
   toast(`已匯入 ${items.length} 筆物件`);
+}
+function confirmApplyBackup(parsed){
+  try { validateBackup(parsed); }
+  catch (e){
+    if (e && e.message === "wrong_app") toast("這是「客戶總覽」的備份檔，無法匯入物件總覽");
+    else if (e && e.message === "too_many") toast("匯入失敗：筆數超過 " + BACKUP_MAX_ITEMS + " 筆上限");
+    else toast("匯入失敗：格式不正確");
+    return;
+  }
+  const n = Array.isArray(parsed) ? parsed.length : (parsed.items || []).length;
+  const cloudNote = syncConnected ? "若已連結 Google 雲端，同步後也會影響雲端資料。" : "";
+  askConfirm("匯入備份檔？", `將以備份檔的 ${n} 筆資料覆蓋本機。${cloudNote}`, () => applyBackup(parsed));
 }
 // 「匯入備份檔」的來源選擇(手機 / Google 雲端)綁定在下方 Google 雲端 IIFE 內
 importFile.addEventListener("change", e => {
@@ -4173,7 +4522,7 @@ importFile.addEventListener("change", e => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    try { applyBackup(JSON.parse(reader.result)); }
+    try { confirmApplyBackup(JSON.parse(reader.result)); }
     catch (err) { toast("匯入失敗：格式不正確"); }
     importFile.value = "";
   };
@@ -4185,6 +4534,8 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     items = SEED.map((d,i) => ({...d, id: "seed"+i, updatedAt: Date.now()}));
     deleted = {}; saveDeleted();
     saveItems(); renderCover();
+    resetListFilters();
+    if (typeof applyFilter === "function") applyFilter();
     onLocalChange("data");
     toast("已還原預設資料");
   });
@@ -4221,11 +4572,14 @@ ddPresetsEl.addEventListener("click", e => { const b = e.target.closest("button"
 
 function openSettings(){
   exitSelectMode();
+  if (typeof closeColFlt === "function") closeColFlt();
+  if (typeof closeNeedExp === "function") closeNeedExp();
   renderDueDays();
   settingsView.classList.add("active");
   cover.style.display = "none";
   listView.classList.remove("active");
   syncTableMode();   // 離開表格頁就取消寬版,設定頁維持一般寬度
+  saveNav("settings", currentCat);
   window.scrollTo(0,0);
 }
 function closeSettings(){
@@ -4239,7 +4593,7 @@ function closeSettings(){
 document.getElementById("coverGear").addEventListener("click", e => { e.stopPropagation(); openSettings(); });
 document.getElementById("setBack").addEventListener("click", closeSettings);
 renderDueDays();
-(function(){ const v = document.getElementById("verLine"); if (v) v.textContent = "物件總覽 · 更新日 " + APP_VERSION; })();
+(function(){ const v = document.getElementById("verLine"); if (v) v.textContent = "物件總覽 · Cursor 更新日 " + APP_VERSION; })();
 // 開機還原上次畫面:上次在列表 → 直接回到該分類的列表(分類已被刪除則回「全部」);上次在封面 → 維持預設
 (function(){
   if (!storageOK) return;
@@ -4271,7 +4625,8 @@ document.getElementById("themePicker").addEventListener("click", e=>{
 
 // ===== 設定的收集 / 套用(供備份、匯入、雲端同步共用;含 到期提醒 與 外觀主題) =====
 function collectSettings(){
-  return { density: density, sort: currentSort, dueDays: dueSoonDays, theme: theme, colw: colW, fltorder: (filterOrder || {}), expfocus: expFocus };
+  const fs = serializeColFilterState();
+  return { density: density, sort: currentSort, dueDays: dueSoonDays, theme: theme, colw: colW, fltorder: (filterOrder || {}), expfocus: expFocus, colFilter: fs.colFilter, fltP: fs.fltP };
 }
 function applySettings(s){
   if (!s || typeof s !== "object") return;
@@ -4283,8 +4638,8 @@ function applySettings(s){
     currentSort = s.sort; saveSort();
     if (typeof sortTxt !== "undefined" && sortTxt) sortTxt.textContent = (SORTS.find(x => x.key === currentSort) || SORTS[0]).label;
   }
-  if (typeof s.dueDays === "number" && s.dueDays >= 0 && s.dueDays <= 3650){
-    dueSoonDays = s.dueDays; saveDueDays(); renderDueDays();
+  if (typeof s.dueDays === "number"){
+    dueSoonDays = Math.min(DD_MAX, Math.max(DD_MIN, s.dueDays)); saveDueDays(); renderDueDays();
   }
   if (s.theme === "dark" || s.theme === "light"){
     theme = s.theme; saveTheme(); applyTheme();
@@ -4292,6 +4647,7 @@ function applySettings(s){
   if (s.colw && typeof s.colw === "object"){ colW = {...DEFAULT_COLW, ...s.colw}; saveColW(); }
   if (s.fltorder && typeof s.fltorder === "object"){ filterOrder = s.fltorder; saveFltOrder(); }
   if (typeof s.expfocus === "boolean"){ expFocus = s.expfocus; saveExpFocus(); if (typeof applyExpFocus === "function") applyExpFocus(); }
+  if (s.colFilter || s.fltP){ applyColFilterState(s); saveColFilterState(); }
   applyFilter();
 }
 // ===== 外觀主題設定結束 =====
@@ -4302,17 +4658,34 @@ function applySettings(s){
   if (!bar) return;
   let deferred = null;
   const DKEY = "property_app_install_dismiss_v1";
+  const ibTxt = bar.querySelector(".ib-txt");
+  const ibInstall = document.getElementById("ibInstall");
+  const ibClose = document.getElementById("ibClose");
   const dismissed = () => { try { return localStorage.getItem(DKEY) === "1"; } catch(e){ return false; } };
   const standalone = () => (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+  const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  function showInstallBar(iosMode){
+    if (dismissed() || standalone()) return;
+    if (iosMode){
+      if (ibTxt) ibTxt.textContent = "在 Safari 點「分享」→「加入主畫面」，離線也能用";
+      if (ibInstall) ibInstall.style.display = "none";
+    } else {
+      if (ibTxt) ibTxt.textContent = "將「物件總覽」安裝至桌面，離線也能用";
+      if (ibInstall) ibInstall.style.display = "";
+    }
+    bar.classList.add("show");
+    setTimeout(() => { try { if (ibClose) ibClose.focus(); } catch(e){} }, 80);
+  }
   window.addEventListener("beforeinstallprompt", e => {
     e.preventDefault(); deferred = e;
-    if (!standalone() && !dismissed()) bar.classList.add("show");
+    showInstallBar(false);
   });
-  document.getElementById("ibInstall").addEventListener("click", async () => {
+  if (isIOS() && !standalone() && !dismissed()) setTimeout(() => showInstallBar(true), 1200);
+  ibInstall.addEventListener("click", async () => {
     bar.classList.remove("show");
     if (deferred){ deferred.prompt(); try { await deferred.userChoice; } catch(e){} deferred = null; }
   });
-  document.getElementById("ibClose").addEventListener("click", () => {
+  ibClose.addEventListener("click", () => {
     bar.classList.remove("show");
     try { localStorage.setItem(DKEY, "1"); } catch(e){}
   });
@@ -4334,8 +4707,8 @@ function renderCatList(){
       <button class="cat-del" aria-label="刪除類別">🗑</button>
     </div>`).join("");
 }
-function openCatManager(){ renderCatList(); catNewEl.value = ""; catBg.classList.add("open"); }
-function closeCatManager(){ closePalette(); catBg.classList.remove("open"); }
+function openCatManager(){ renderCatList(); catNewEl.value = ""; catBg.classList.add("open"); lockOverlay(); }
+function closeCatManager(){ closePalette(); catBg.classList.remove("open"); unlockOverlay(); applyPendingMergeIfAny(); }
 
 // ---- 類別調色:進階調色盤(色域拖曳 + 色相/深淺滑桿 + 顏色編號 + 快選色票) ----
 const PALETTE = ["#C0341A","#D6452A","#E0662E","#E09A1B","#B5A216",
@@ -4495,10 +4868,14 @@ catListEl.addEventListener("change", e => {
     if (cats.some(c => c.key === newKey)){ toast("類別名稱重複"); e.target.value = oldKey; return; }
     cat.key = newKey;
     item.dataset.key = newKey;
-    items.forEach(it => { if (it.cat === oldKey) it.cat = newKey; });
+    // 改名要一併更新受影響資料的 updatedAt:否則兩台裝置同 id 同時間戳、內容不同,雲端合併無法收斂。
+    const _renameTs = Date.now();
+    items.forEach(it => { if (it.cat === oldKey){ it.cat = newKey; it.updatedAt = _renameTs; } });
+    remapColFilterCat(oldKey, newKey);
     if (currentCat === oldKey) currentCat = newKey;
     saveItems();
     refreshCategories();
+    onLocalChange("data");
     toast("已改名");
   }
 });
@@ -4514,10 +4891,15 @@ catListEl.addEventListener("click", e => {
     `刪除類別「${key}」？`,
     n > 0 ? `該類別的 ${n} 筆物件會變成未分類，仍可在「全部」中找到。` : "",
     () => {
+      const ts = Date.now();
+      items.forEach(it => { if (it.cat === key){ it.cat = ""; it.updatedAt = ts; } });
+      if (colFilter.cat){ colFilter.cat.delete(key); if (!colFilter.cat.size) colFilter.cat = null; }
+      saveItems();
       cats = cats.filter(c => c.key !== key);
       if (currentCat === key) currentCat = "";
       refreshCategories();
       renderCatList();
+      onLocalChange("data");
       toast("已刪除類別");
     }
   );
@@ -4588,6 +4970,7 @@ document.addEventListener("pointercancel", endCatDrag);
 
   function overlayOpen(){
     return modalBg.classList.contains("open")
+        || detailBg.classList.contains("open")
         || catBg.classList.contains("open")
         || confirmBg.classList.contains("open")
         || sortSel.classList.contains("open");
@@ -4601,6 +4984,22 @@ document.addEventListener("pointercancel", endCatDrag);
     const v = currentView();
     if (v === "settings") closeSettings();
     else if (v === "list") showCover();
+  }
+  // 「彈出式浮層」(下拉/類別選單/欄篩選/連結面板/調色盤/日曆)開著時:
+  // 橫滑 = 關閉浮層,不做返回導航 —— 下拉還開著就跳回首頁很反直覺。
+  function swipeClosePopups(){
+    let closed = false;
+    const show = id => { const el = document.getElementById(id); return !!(el && el.classList.contains("show")); };
+    const isOpen = id => { const el = document.getElementById(id); return !!(el && el.classList.contains("open")); };
+    if (show("catmenu") || isOpen("fltBg") || isOpen("sortSel") || isOpen("catSel")){
+      if (typeof closeOtherOverlays === "function") closeOtherOverlays("exp");   // 展開列保留,只關彈出物
+      closed = true;
+    }
+    if (show("linkpop")){ if (typeof commitLink === "function") commitLink(); closed = true; }   // 連結面板:滑動視同「完成」
+    if (palettePop && palettePop.classList.contains("open")){ if (typeof closePalette === "function") closePalette(); closed = true; }
+    const cal = document.getElementById("calBg");
+    if (cal && cal.classList.contains("open")){ cal.classList.remove("open"); closed = true; }
+    return closed;
   }
 
   document.addEventListener("touchstart", function(e){
@@ -4630,6 +5029,12 @@ document.addEventListener("pointercancel", endCatDrag);
         suppressClick = true;
         setTimeout(function(){ suppressClick = false; }, 500);
         closeForm();
+        return;
+      }
+      if (swipeClosePopups()){            // 浮層開著:這一滑只負責關閉浮層
+        e.preventDefault();
+        suppressClick = true;
+        setTimeout(function(){ suppressClick = false; }, 500);
         return;
       }
       if (overlayOpen()) return;
@@ -4674,7 +5079,8 @@ let syncConnected = false, syncEmail = null;
   window.touchSettings = function(){ window.__settingsTs = Date.now(); saveTs("settings", window.__settingsTs); };
   window.onLocalChange = function(kind){ if (kind === "cats") window.touchCats(); if (kind === "settings") window.touchSettings(); window.scheduleSync(); };
   let pushTimer = null;
-  window.scheduleSync = function(){ if (!syncConnected) return; clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 1500); };
+  let dirty = false;
+  window.scheduleSync = function(){ dirty = true; if (!syncConnected) return; clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 1500); };
 
   // ---- GIS token flow ----
   function gisReady(){ return !!(window.google && google.accounts && google.accounts.oauth2); }
@@ -4748,7 +5154,7 @@ let syncConnected = false, syncEmail = null;
     if (!res.ok) return null;
     const text = await res.text();
     if (!text) return null;
-    try { return JSON.parse(text); } catch(e){ return null; }
+    try { return JSON.parse(text); } catch(e){ return { __syncCorrupt: true }; }
   }
   async function upload(id, obj){
     const res = await dfetch("https://www.googleapis.com/upload/drive/v3/files/" + id + "?uploadType=media&fields=version", {
@@ -4868,7 +5274,9 @@ let syncConnected = false, syncEmail = null;
       if (res.status === 401 || res.status === 403){ fileToken = null; token = await requestFileToken(true); res = await dl(token); }
       if (!res.ok) throw new Error("download " + res.status);
       const text = await res.text();
-      applyBackup(JSON.parse(text));   // 成功會跳「已匯入 X 筆物件」
+      let parsed;
+      try { parsed = JSON.parse(text); } catch(e){ toast("匯入失敗：格式不正確"); return; }
+      confirmApplyBackup(parsed);   // 成功會跳「已匯入 X 筆物件」
     } catch (e){
       const err = String((e && (e.error || e.type || e.message)) || "");
       if (err === "access_denied" || err.indexOf("popup") >= 0){ toast("已取消"); }
@@ -4893,18 +5301,29 @@ let syncConnected = false, syncEmail = null;
     const del = {}; const ld = local.deleted || {}, rd = remote.deleted || {};
     for (const k in ld) del[k] = ld[k];
     for (const k in rd) del[k] = Math.max(del[k] || 0, rd[k]);
-    // properties: union by id, newer updatedAt wins, then drop if tombstoned after last update
+    // properties: union by id, newer updatedAt wins;平手用確定性裁決,避免兩台互推
+    const recKey = function(r){ return JSON.stringify(sortKeys(r)); };
     const byId = {}; const lp = (local.data && local.data.properties) || [], rp = (remote.data && remote.data.properties) || [];
-    lp.concat(rp).forEach(function(r){ if (!r || r.id == null) return; if (!byId[r.id] || (r.updatedAt||0) > (byId[r.id].updatedAt||0)) byId[r.id] = r; });
+    lp.concat(rp).forEach(function(r){
+      if (!r || r.id == null) return;
+      const cur = byId[r.id];
+      if (!cur){ byId[r.id] = r; return; }
+      const a = (r.updatedAt||0), b = (cur.updatedAt||0);
+      if (a > b){ byId[r.id] = r; return; }
+      if (a === b && recKey(r) > recKey(cur)) byId[r.id] = r;
+    });
     const props = [];
     for (const id in byId){ const r = byId[id]; const dt = del[id]; if (dt && dt >= (r.updatedAt||0)) continue; props.push(r); }
     out.data.properties = props; out.deleted = del;
-    // categories: whole-list last-write-wins
+    const pickLWW = function(l, r){
+      const lt = (l._updatedAt||0), rt = (r._updatedAt||0);
+      if (lt !== rt) return lt > rt ? l : r;
+      return JSON.stringify(sortKeys(l)) >= JSON.stringify(sortKeys(r)) ? l : r;
+    };
     const lc = local.cats || { list: [], _updatedAt: 0 }, rc = remote.cats || { list: [], _updatedAt: 0 };
-    out.cats = ((lc._updatedAt||0) >= (rc._updatedAt||0)) ? lc : rc;
-    // single-value settings: last-write-wins
+    out.cats = pickLWW(lc, rc);
     const ls = local.settings || { _updatedAt: 0 }, rs = remote.settings || { _updatedAt: 0 };
-    out.settings = ((ls._updatedAt||0) >= (rs._updatedAt||0)) ? ls : rs;
+    out.settings = pickLWW(ls, rs);
     return out;
   }
   function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r[k] = o[k]; }); return r; }
@@ -4920,7 +5339,7 @@ let syncConnected = false, syncEmail = null;
     items = (merged.data.properties || []).map(function(d){ return Object.assign({}, d, { id: d.id || uid(), updatedAt: d.updatedAt || BASE_TS }); });
     saveItems();
     deleted = merged.deleted || {}; saveDeleted();
-    if (merged.cats && Array.isArray(merged.cats.list) && merged.cats.list.length){
+    if (merged.cats && Array.isArray(merged.cats.list)){
       cats = merged.cats.list.map(function(c){ return Object.assign({}, c); });
       window.__catsTs = merged.cats._updatedAt || window.__catsTs; saveTs("cats", window.__catsTs);
       saveCats();
@@ -4929,7 +5348,7 @@ let syncConnected = false, syncEmail = null;
       const s = merged.settings;
       if (s.density){ density = s.density; if (storageOK){ try { localStorage.setItem("property_app_density_v1", density); } catch(e){} } if (cardsEl) cardsEl.classList.toggle("compact", density === "compact"); }
       if (s.sort){ currentSort = s.sort; saveSort(); }
-      if (typeof s.dueDays === "number"){ dueSoonDays = s.dueDays; saveDueDays(); if (typeof renderDueDays === "function") renderDueDays(); }
+      if (typeof s.dueDays === "number"){ dueSoonDays = Math.min(DD_MAX, Math.max(DD_MIN, s.dueDays)); saveDueDays(); if (typeof renderDueDays === "function") renderDueDays(); }
       if (s.theme === "dark" || s.theme === "light"){ theme = s.theme; saveTheme(); applyTheme(); }
       if (s.colw && typeof s.colw === "object"){ colW = {...DEFAULT_COLW, ...s.colw}; saveColW(); }
       if (s.fltorder && typeof s.fltorder === "object"){ filterOrder = s.fltorder; saveFltOrder(); }
@@ -4941,7 +5360,9 @@ let syncConnected = false, syncEmail = null;
     if (typeof renderSortOptions === "function"){ renderSortOptions(); sortTxt.textContent = (SORTS.find(function(x){ return x.key === currentSort; }) || SORTS[0]).label; }
     if (typeof renderDueDays === "function") renderDueDays();
     setDensity(density);
+    if (typeof applyFilter === "function") applyFilter();
   }
+  window.__applyMerged = applyMerged;
 
   // ---- daily snapshot (insurance; keeps one per day, 自動只保留最近 30 天) ----
   const SNAP_KEEP_DAYS = 30;
@@ -5011,50 +5432,71 @@ let syncConnected = false, syncEmail = null;
     } else { off.style.display = ""; on.style.display = "none"; }
   };
 
+  let syncGen = 0;
   // ---- core two-way sync ----
   async function syncNow(force){
-    if (!syncConnected || inFlight) return;
-    if (!force && window.isTableBusy && window.isTableBusy()){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return; }   // 一般情況:編輯/展開中延後同步避免重繪打斷;但 force(切背景/關閉)時不延後——背景 setTimeout 會被凍結,必須當下直接送出
+    if (!syncConnected) return;
+    if (inFlight){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return; }
+    const wasDirty = dirty;
+    if (!force && window.isTableBusy && window.isTableBusy()){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return; }
+    const thisRun = ++syncGen;
     inFlight = true; setStatus("同步中…", "busy");
+    let __wd = setTimeout(function(){ if (inFlight && thisRun === syncGen){ inFlight = false; setStatus("同步逾時，稍後重試", "warn"); if (window.refreshLed) window.refreshLed(); } }, 40000);
     try {
       await ensureToken();
       await ensureFileId();
-      let tries = 0, pushed = null;
+      let tries = 0, pushed = null, syncComplete = false;
       while (tries < 3){
         tries++;
         const remote = await download();
+        if (remote && remote.__syncCorrupt){
+          dirty = wasDirty || dirty;
+          setStatus("雲端資料損壞，請從快照還原", "warn");
+          break;
+        }
         const local = buildLocal();
+        dirty = false;
         const merged = mergeMain(local, remote);
+        const localCanon = canonical(local);
         const mergedCanon = canonical(merged);
-        if (mergedCanon !== canonical(local)) applyMerged(merged);   // 內容真的有變才套用+重繪;完全沒變就不動畫面(回前景不會無故跳動)
+        if (mergedCanon !== localCanon){
+          if (modalBg.classList.contains("open") || detailBg.classList.contains("open") || catBg.classList.contains("open") || fltBg.classList.contains("open") || confirmBg.classList.contains("open")) window._pendingMerge = merged;
+          else applyMerged(merged);
+        }
         const needPush = !remote || mergedCanon !== canonical(remote);
-        if (!needPush){ lastVersion = await getVersion(); break; }
+        if (!needPush){ lastVersion = await getVersion(); syncComplete = true; break; }
         merged.rev = ((remote && remote.rev) || 0) + 1; merged.lastWriteBy = deviceId; merged.updatedAt = Date.now();
         const newVer = await upload(fileId, merged);
         const afterVer = await getVersion();
         pushed = merged;
-        if (afterVer && newVer && afterVer === newVer){ lastVersion = afterVer; break; }
-        // else someone wrote concurrently → loop and re-merge
+        if (afterVer && newVer && afterVer === newVer){ lastVersion = afterVer; syncComplete = true; break; }
       }
-      if (pushed) maybeSnapshot(pushed);
-      needReauth = false;   // 同步成功=授權有效:清掉可能殘留的「需要重新連結」(離線誤設,或 token 未過期沒走到會清旗標的 requestToken)
-      retryMs = 5000;       // 成功→退避歸位
-      setStatus("已同步", "ok");
-      try { localStorage.setItem("property_app_lastsync_v1", String(Date.now())); } catch(e){}
-      window.renderLastSync();
+      if (!syncComplete){
+        dirty = true;
+        setStatus("同步未完成，稍後重試", "warn");
+        clearTimeout(pushTimer);
+        pushTimer = setTimeout(function(){ syncNow(); }, retryMs);
+        retryMs = Math.min(retryMs * 2, 60000);
+      } else {
+        if (pushed) maybeSnapshot(pushed);
+        needReauth = false;
+        retryMs = 5000;
+        setStatus("已同步", "ok");
+        try { localStorage.setItem("property_app_lastsync_v1", String(Date.now())); } catch(e){}
+        window.renderLastSync();
+      }
     } catch (e){
+      dirty = dirty || wasDirty;
       if (e && (e.error === "access_denied" || e.error === "interaction_required" || e.error === "login_required")){
         needReauth = true; setStatus("需要重新連結", "warn"); window.renderSyncCard();
-        clearTimeout(pushTimer); pushTimer = null;   // 真授權失效→停掉可能殘留的退避重試,交給使用者手動或 online/回前景 silent 重連
-        // 真正的授權問題(token 失效且無法 silent 刷新)才不重試、等使用者手動;
-        // GIS 沒載入(離線常見)拋的 Error("gis") 已排除在外,改走下面 else 的重試/等網路恢復自動重連
+        clearTimeout(pushTimer); pushTimer = null;
       } else {
         setStatus("同步失敗，稍後重試", "warn");
         clearTimeout(pushTimer);
         pushTimer = setTimeout(function(){ syncNow(); }, retryMs);
-        retryMs = Math.min(retryMs * 2, 60000);   // 指數退避:5s→10s→…→上限 60s
+        retryMs = Math.min(retryMs * 2, 60000);
       }
-    } finally { inFlight = false; }
+    } finally { if (thisRun === syncGen){ clearTimeout(__wd); inFlight = false; } }
   }
   window.__syncNow = syncNow;
 
@@ -5062,6 +5504,7 @@ let syncConnected = false, syncEmail = null;
     stopPolling();
     pollTimer = setInterval(async function(){
       if (!syncConnected || document.hidden || inFlight || needReauth) return;
+      if (dirty){ syncNow(); return; }
       try { await ensureFileId(); const v = await getVersion(); if (v && v !== lastVersion) syncNow(); } catch(e){}
     }, POLL_MS);
   }
