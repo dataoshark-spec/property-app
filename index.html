@@ -1021,7 +1021,8 @@
   .dtl-v{color:var(--ink);font-weight:600;font-size:.93rem;min-width:0;word-break:break-word;font-variant-numeric:tabular-nums;}
   .dtl-empty{color:var(--text-faint);font-weight:500;display:inline-flex;align-items:center;}
   .dtl-empty::before{content:"";width:.8em;height:2px;background:currentColor;border-radius:1px;}   /* 空值橫桿:畫線垂直置中,永不歪 */
-  #detailTitle{display:flex;align-items:center;gap:9px;min-width:0;}
+  #detailTitle{display:flex;align-items:center;gap:9px;min-width:0;overflow:hidden;}
+  #detailBg .modal-head .x{position:relative;z-index:1;}
   .dtl-due-top{margin-left:auto;flex:none;font-family:-apple-system,"Noto Sans TC",sans-serif;font-size:.78rem;font-weight:400;color:var(--text-faint);white-space:nowrap;letter-spacing:.02em;}   /* 標題列到期:推到最右(X鈕左邊)、淺色細字弱化 */
   .dtl-cat{flex:none;font-family:"Noto Sans TC",-apple-system,sans-serif;font-size:.8rem;font-weight:800;line-height:1.25;color:var(--accent-deep);background:var(--accent-tint);border:1px solid var(--accent-tint-bd);border-radius:7px;padding:2px 8px;}
   .dtl-name{min-width:0;}
@@ -1476,7 +1477,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.21 H-fix2";
+const APP_VERSION = "2026.07.21 H-fix3";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2976,16 +2977,21 @@ function toast(msg){
   toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
 }
 // ---- 全螢幕遮罩:背景捲動鎖定 + 焦點輔助 ----
-let _overlayLock = 0, _focusReturn = null, _inertRoot = null;
+let _overlayLock = 0, _focusReturn = null, _inertEls = null;
 function lockOverlay(returnEl){
   _overlayLock++;
   if (_overlayLock === 1){
     document.documentElement.classList.add("picker-open");
     document.body.classList.add("picker-open");
-    _inertRoot = document.getElementById("app");
-    if (_inertRoot){
-      _inertRoot.setAttribute("aria-hidden", "true");
-      try { _inertRoot.inert = true; } catch(e){}
+    const app = document.getElementById("app");
+    if (app){
+      _inertEls = [];
+      // 只鎖主畫面 section,不鎖 #app 內的 modal — 否則 inert 會讓明細/表單的 ✕ 無法點
+      app.querySelectorAll(":scope > section").forEach(el => {
+        _inertEls.push(el);
+        el.setAttribute("aria-hidden", "true");
+        try { el.inert = true; } catch(e){}
+      });
     }
   }
   _focusReturn = returnEl || document.activeElement;
@@ -2995,10 +3001,12 @@ function unlockOverlay(){
   if (_overlayLock === 0){
     document.documentElement.classList.remove("picker-open");
     document.body.classList.remove("picker-open");
-    if (_inertRoot){
-      _inertRoot.removeAttribute("aria-hidden");
-      try { _inertRoot.inert = false; } catch(e){}
-      _inertRoot = null;
+    if (_inertEls){
+      _inertEls.forEach(el => {
+        el.removeAttribute("aria-hidden");
+        try { el.inert = false; } catch(e){}
+      });
+      _inertEls = null;
     }
     try { if (_focusReturn && _focusReturn.focus) _focusReturn.focus(); } catch(e){}
     _focusReturn = null;
