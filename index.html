@@ -1478,7 +1478,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.22 H-fix13";
+const APP_VERSION = "2026.07.22 H-fix14";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2359,9 +2359,11 @@ function isNeedExpEditing(){
   if (a.dataset && a.dataset.titleedit) return true;
   return false;
 }
-// 編輯中(格子聚焦、連結框或類別選單開啟)時,暫停同步重繪,避免游標被打斷、畫面跳動
+// 編輯中(格子聚焦、連結框或類別選單開啟)時,暫停同步重繪,避免游標被打斷、畫面跳動。
+// 注意:唯讀詳情(detailBg)不算忙碌——雲端合併已走 _pendingMerge,關詳情再套用;
+// 若把 detail 算 busy,瀏覽卡片時燈會一直橘黃閃(pending)、同步也被卡住。
 window.isTableBusy = function(){
-  if (modalBg.classList.contains("open") || detailBg.classList.contains("open")) return true;
+  if (modalBg.classList.contains("open")) return true;   // 編輯/新增表單才算忙碌
   const a = document.activeElement;
   if (a && a.classList && a.classList.contains("tcell")) return true;
   if (isNeedExpEditing()) return true;   // 備註展開且正在編輯:延後同步
@@ -3303,6 +3305,7 @@ function closeDetail(){
   detailBg.classList.remove("open");
   unlockOverlay();
   applyPendingMergeIfAny();
+  if (window.refreshLed) window.refreshLed();   // 關詳情後刷新燈(避免殘留 pending 顯示)
 }
 document.getElementById("detailClose").addEventListener("click", closeDetail);
 // 詳情頁:水平滑動(左滑或右滑)返回。只在「水平位移明顯大於垂直」時觸發,避免和內容的垂直捲動衝突
