@@ -1478,7 +1478,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.22 H-fix12";
+const APP_VERSION = "2026.07.22 H-fix13";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2987,12 +2987,18 @@ function toast(msg){
   toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
 }
 // ---- 全螢幕遮罩:背景捲動鎖定 + 焦點輔助 ----
-let _overlayLock = 0, _focusReturn = null, _inertEls = null;
+let _overlayLock = 0, _focusReturn = null, _inertEls = null, _scrollLockY = 0;
 function lockOverlay(returnEl){
   _overlayLock++;
   if (_overlayLock === 1){
+    _scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
     document.documentElement.classList.add("picker-open");
     document.body.classList.add("picker-open");
+    document.body.style.position = "fixed";
+    document.body.style.top = (-_scrollLockY) + "px";
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
     const app = document.getElementById("app");
     if (app){
       _inertEls = [];
@@ -3009,8 +3015,15 @@ function lockOverlay(returnEl){
 function unlockOverlay(){
   _overlayLock = Math.max(0, _overlayLock - 1);
   if (_overlayLock === 0){
+    const y = _scrollLockY;
     document.documentElement.classList.remove("picker-open");
     document.body.classList.remove("picker-open");
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+    window.scrollTo(0, y);
     if (_inertEls){
       _inertEls.forEach(el => {
         el.removeAttribute("aria-hidden");
@@ -3018,7 +3031,7 @@ function unlockOverlay(){
       });
       _inertEls = null;
     }
-    try { if (_focusReturn && _focusReturn.focus) _focusReturn.focus(); } catch(e){}
+    try { if (_focusReturn && _focusReturn.focus) _focusReturn.focus({ preventScroll: true }); } catch(e){ try { if (_focusReturn && _focusReturn.focus) _focusReturn.focus(); } catch(e2){} }
     _focusReturn = null;
   }
 }
