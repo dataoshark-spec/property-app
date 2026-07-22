@@ -1477,7 +1477,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.22V";
+const APP_VERSION = "2026.07.22W";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -3101,6 +3101,11 @@ document.addEventListener("keydown", e => {
   if (isOn("catBg","open")){ closeCatManager(); return; }                             // 管理類別
   if (isOn("detailBg","open")){ closeDetail(); return; }                             // 物件明細(唯讀)
   if (isOn("modalBg","open")){ closeForm(); return; }                                 // 編輯/新增表單
+  // 無浮層時:設定頁 Esc→關設定;列表(卡片/表格) Esc→回封面(與 ← 相同)
+  if (typeof settingsView !== "undefined" && settingsView && settingsView.classList.contains("active")){ closeSettings(); return; }
+  const ae = document.activeElement;
+  if (ae && ae.isContentEditable){ try { ae.blur(); } catch(err){} return; }           // 表格格編輯中:只失焦,不跳首頁
+  if (listView.classList.contains("active")){ e.preventDefault(); showCover(); return; }
 });
 
 // ---- Add / Edit / Delete ----
