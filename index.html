@@ -1478,7 +1478,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.22 H-fix11";
+const APP_VERSION = "2026.07.22 H-fix12";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -5338,7 +5338,7 @@ document.addEventListener("pointercancel", endCatDrag);
   const H_MIN = 70;     // 觸發返回所需的最小水平距離(px)
   const RATIO = 1.5;    // 水平位移須明顯大於垂直(避免和上下捲動衝突)
   const T_MAX = 800;    // 手勢最長時間(ms)
-  let sx = 0, sy = 0, st = 0, track = false, skip = false;
+  let sx = 0, sy = 0, st = 0, track = false, skip = false, detailWasOpen = false;
 
   function overlayOpen(){
     return modalBg.classList.contains("open")
@@ -5378,10 +5378,12 @@ document.addEventListener("pointercancel", endCatDrag);
     if (e.touches.length !== 1){ track = false; return; }
     const t = e.touches[0];
     sx = t.clientX; sy = t.clientY; st = Date.now(); track = true;
+    detailWasOpen = detailBg.classList.contains("open");
     const el = e.target;
     // 起點若在橫向捲動列 / 輸入框 / 下拉選單 / 表格 / 連結視窗上，則不攔截(讓它們正常運作)
     skip = !!(el.closest && el.closest("#tabs, input, textarea, .cselect, .table-wrap, #linkpop, #catmenu, select"));
     if (modalBg.classList.contains("open")) skip = false;  // 編輯表單開啟時,允許滑動關閉
+    if (detailWasOpen) skip = false;  // 詳情頁開啟時,允許滑動關閉(只回列表,不跳封面)
     const _cb = document.getElementById("calBg");
     if (_cb && _cb.classList.contains("open")) skip = true;   // 日曆開啟時不攔手勢(日曆有自己的取消/點外關閉)
   }, { passive: true });
@@ -5395,6 +5397,14 @@ document.addEventListener("pointercancel", endCatDrag);
     const dx = t.clientX - sx, dy = t.clientY - sy, dt = Date.now() - st;
     const ax = Math.abs(dx), ay = Math.abs(dy);
     if (ax >= H_MIN && ax > ay * RATIO && dt <= T_MAX){
+      // 詳情頁開啟時橫滑 = 只關閉詳情,留在列表(避免連帶觸發 goBack 跳回封面)
+      if (detailWasOpen){
+        e.preventDefault();
+        suppressClick = true;
+        setTimeout(function(){ suppressClick = false; }, 500);
+        if (detailBg.classList.contains("open")) closeDetail();
+        return;
+      }
       // 編輯物件表單開啟時,橫向滑動 = 關閉表單(返回)
       if (modalBg.classList.contains("open")){
         e.preventDefault();
