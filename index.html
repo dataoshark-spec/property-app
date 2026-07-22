@@ -679,9 +679,8 @@
   /* ==== 表格欄位標題篩選(參考客戶總覽:勾選式 + 售價範圍 + 長按拖曳排序) ==== */
   .th-flt{display:inline-flex;align-items:center;gap:4px;background:none;border:0;padding:2px 7px;margin:-2px -7px;border-radius:7px;color:inherit;font:inherit;cursor:pointer;}
   .th-flt .fmk{opacity:.55;font-size:.72em;}
-  /* 關鍵字搜尋中(聚焦或已有文字):點亮「會被比對」的欄位標題,讓使用者知道搜尋範圍(連結/電話不在搜尋範圍故不亮) */
+  /* 關鍵字搜尋中(聚焦或已有文字):點亮「會被比對」的欄位標題,讓使用者知道搜尋範圍(到期日/連結/電話不在搜尋範圍故不亮) */
   .thead-wrap th .th-label{transition:color .15s;}
-  .table-wrap.search-hint th[data-col="due"] .th-label,
   .table-wrap.search-hint th[data-col="cat"] .th-label,
   .table-wrap.search-hint th[data-col="layout"] .th-label,
   .table-wrap.search-hint th[data-col="name"] .th-label,
@@ -1478,7 +1477,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.22 H-fix14";
+const APP_VERSION = "2026.07.22V";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1488,7 +1487,7 @@ const SEED = [
 // ---- Helpers ----
 const layoutText = g => ({"322":"3房2廳2衛","221":"2房2廳1衛","3改2/22":"3改2房2廳2衛"}[g]) || (g==="開放"?"開放空間":g||"");
 // 搜尋比對用的字串來源:各欄位之間夾一個分隔字元(U+001F),避免「甲欄結尾＋乙欄開頭」被拼成假命中
-const SEARCH_FIELDS = ["name","addr","agent","store","cat","due","layout","floor","price","note","note2","note3","t1","t2","t3"];
+const SEARCH_FIELDS = ["name","addr","agent","store","cat","layout","floor","price","note","note2","note3","t1","t2","t3"];   // 不含 due(到期日):關鍵字搜尋不比對到期
 function searchHay(d){
   let s = "";
   const NOTE_KEYS = { note:1, note2:1, note3:1 };
@@ -1967,7 +1966,13 @@ document.getElementById("fltClear").addEventListener("click", () => {
   renderFltBody(); applyFilter();
 });
 fltBg.addEventListener("click", e => { if (e.target === fltBg) closeColFlt(); });
-document.getElementById("fltClearAll").addEventListener("click", () => { clearAllColFilters(); applyFilter(); });
+document.getElementById("fltClearAll").addEventListener("click", () => {
+  if (!anyColFilter()) return;
+  if (typeof closeOtherOverlays === "function") closeOtherOverlays("");   // 先關掉篩選彈窗/下拉/展開
+  clearAllColFilters();
+  applyFilter();
+  toast("已清除所有欄位篩選");
+});
 tableWrap.addEventListener("click", e => { const b = e.target.closest(".th-flt"); if (b){ e.stopPropagation(); openColFlt(b.dataset.flt); } });
 
 // 篩選清單:長按進排序模式(才顯示握把),拖曳調整順序(手機可用)
