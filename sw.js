@@ -5,7 +5,7 @@
       所以你之後每次部署新版都會馬上生效,不會卡在舊版)。
    注意:Google 雲端同步等跨網域請求一律交給網路,不經過快取。 */
 
-const CACHE = "property-app-shell-v20260722-W";
+const CACHE = "property-app-shell-v20260722-X";
 const SHELL = ["./", "./index.html", "./sw.js", "./icon-192.png", "./icon-180.png", "./icon-512.png"];
 const OFFLINE_HTML = "<!DOCTYPE html><html lang=\"zh-Hant\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>離線</title></head><body style=\"font-family:sans-serif;padding:2rem;text-align:center\"><h1>目前離線</h1><p>請連上網路後重新開啟，或確認曾在此裝置成功開啟過本 App。</p></body></html>";
 
