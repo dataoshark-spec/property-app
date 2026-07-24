@@ -771,6 +771,8 @@
     display:-webkit-box;-webkit-line-clamp:4;line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
   .confirm-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.75;margin-top:11px;}
   .confirm-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
+  .close-sync-spin{width:28px;height:28px;margin:18px auto 4px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:closeSyncSpin .75s linear infinite;}
+  @keyframes closeSyncSpin{to{transform:rotate(360deg);}}
   .btn-danger{background:var(--danger);color:#fff;border:none;font-family:inherit;font-weight:700;font-size:.95rem;
     padding:11px 20px;border-radius:11px;cursor:pointer;transition:filter .15s ease;}
   .btn-danger:hover{filter:brightness(.93);}
@@ -1448,6 +1450,19 @@
     </div>
   </div>
 
+  <!-- ===== 關閉視窗前同步 ===== -->
+  <div class="modal-bg center" id="closeSyncBg" style="display:none;">
+    <div class="confirm close-sync">
+      <p class="confirm-title" id="closeSyncTitle">尚有未同步資料</p>
+      <p class="confirm-desc" id="closeSyncDesc">正在同步，完成後將自動關閉…</p>
+      <div class="close-sync-spin" id="closeSyncSpin" aria-hidden="true"></div>
+      <div class="confirm-foot" id="closeSyncFoot" style="display:none;">
+        <button class="btn-ghost" id="closeSyncRetry" type="button">重試同步</button>
+        <button class="btn-danger" id="closeSyncForce" type="button">仍要關閉</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== Toast ===== -->
   <!-- ===== Install banner ===== -->
   <div class="install-bar" id="installBar" role="dialog" aria-label="安裝應用程式">
@@ -1481,7 +1496,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.24F";
+const APP_VERSION = "2026.07.24H";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2642,7 +2657,7 @@ tableWrap.addEventListener("keydown", e => {
     tCellBeginType(c);
     try { document.execCommand("insertText", false, e.key); } catch(err){ c.textContent = e.key; caretEnd(c); }
     clearTimeout(c._saveT);
-    c._saveT = setTimeout(function(){ if (c.isConnected) tCommitCell(c); }, 400);
+    c._saveT = setTimeout(function(){ if (c.isConnected) tCommitCell(c); }, 200);
   }
 }, true);
 tableWrap.addEventListener("compositionstart", e => {
@@ -2771,9 +2786,9 @@ tableWrap.addEventListener("input", e => {
     try { const r = document.createRange(); r.selectNodeContents(cell); r.collapse(false); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch(err){}
   }
   // 邊打邊存的保險:一般格原本只在 blur 才 commit,這裡加 debounce 自動落地。
-  // 就算 App 被直接滑掉/強制關閉(visibilitychange、pagehide 未必觸發),資料也已寫進 items,最多只漏最後 ~0.4 秒的字。
+  // 就算 App 被直接滑掉/強制關閉(visibilitychange、pagehide 未必觸發),資料也已寫進 items,最多只漏最後 ~0.2 秒的字。
   clearTimeout(cell._saveT);
-  cell._saveT = setTimeout(function(){ if (cell.isConnected) tCommitCell(cell); }, 400);
+  cell._saveT = setTimeout(function(){ if (cell.isConnected) tCommitCell(cell); }, 200);
 });
 tableWrap.addEventListener("click", e=>{
   // 備註展開中:點空白區收合;同列上的按鈕/欄位/連結仍可操作
@@ -6084,19 +6099,39 @@ let syncConnected = false, syncEmail = null;
   };
 
   let syncGen = 0;
+  function waitSyncIdle(ms){
+    const deadline = Date.now() + (ms || 45000);
+    return new Promise(function(resolve){
+      (function tick(){
+        if (!inFlight){ resolve(true); return; }
+        if (Date.now() >= deadline){ resolve(false); return; }
+        setTimeout(tick, 50);
+      })();
+    });
+  }
   // ---- core two-way sync ----
   async function syncNow(force){
-    if (!syncConnected) return;
-    if (inFlight){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return; }
+    if (!syncConnected) return { ok: false, reason: "not_connected" };
+    if (inFlight){
+      if (force){
+        const idle = await waitSyncIdle(45000);
+        if (!dirty && idle) return { ok: true };
+        if (inFlight) return { ok: false, reason: "busy" };
+      } else {
+        clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000);
+        return { ok: false, reason: "busy" };
+      }
+    }
     const wasDirty = dirty;
-    if (!force && window.isTableBusy && window.isTableBusy()){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return; }
+    if (!force && window.isTableBusy && window.isTableBusy()){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return { ok: false, reason: "busy" }; }
     const thisRun = ++syncGen;
     inFlight = true; setStatus("同步中…", "busy");
     let __wd = setTimeout(function(){ if (inFlight && thisRun === syncGen){ inFlight = false; setStatus("同步逾時，稍後重試", "warn"); if (window.refreshLed) window.refreshLed(); } }, 40000);
+    let syncComplete = false;
     try {
       await ensureToken();
       await ensureFileId();
-      let tries = 0, pushed = null, syncComplete = false;
+      let tries = 0, pushed = null;
       while (tries < 3){
         tries++;
         const remote = await download();
@@ -6111,7 +6146,8 @@ let syncConnected = false, syncEmail = null;
         const localCanon = canonical(local);
         const mergedCanon = canonical(merged);
         if (mergedCanon !== localCanon){
-          if (modalBg.classList.contains("open") || detailBg.classList.contains("open") || catBg.classList.contains("open") || fltBg.classList.contains("open") || confirmBg.classList.contains("open")) window._pendingMerge = merged;
+          const csBg = document.getElementById("closeSyncBg");
+          if (modalBg.classList.contains("open") || detailBg.classList.contains("open") || catBg.classList.contains("open") || fltBg.classList.contains("open") || confirmBg.classList.contains("open") || (csBg && csBg.classList.contains("open"))) window._pendingMerge = merged;
           else applyMerged(merged);
         }
         const needPush = !remote || mergedCanon !== canonical(remote);
@@ -6148,8 +6184,155 @@ let syncConnected = false, syncEmail = null;
         retryMs = Math.min(retryMs * 2, 60000);
       }
     } finally { if (thisRun === syncGen){ clearTimeout(__wd); inFlight = false; if (window.refreshLed) window.refreshLed(); } }
+    return { ok: syncComplete && !dirty && !needReauth, reason: syncComplete ? undefined : (needReauth ? "reauth" : "failed") };
   }
   window.__syncNow = syncNow;
+
+  // ---- 關閉視窗(✕/關閉視窗)前:未同步則攔截、同步完自動關閉 ----
+  let _closeSyncActive = false, _closingAllowed = false, _closeSyncQueued = false;
+  const closeSyncBg = document.getElementById("closeSyncBg");
+  const closeSyncTitle = document.getElementById("closeSyncTitle");
+  const closeSyncDesc = document.getElementById("closeSyncDesc");
+  const closeSyncSpin = document.getElementById("closeSyncSpin");
+  const closeSyncFoot = document.getElementById("closeSyncFoot");
+  const closeSyncRetry = document.getElementById("closeSyncRetry");
+  const closeSyncForce = document.getElementById("closeSyncForce");
+  function shouldInterceptClose(){
+    if (syncConnected && (dirty || inFlight)) return true;
+    if (!syncConnected && items && items.length > 0) return true;
+    return false;
+  }
+  function getCloseSyncMode(){
+    if (!syncConnected) return !navigator.onLine ? "no_google_offline" : "no_google";
+    if (needReauth && (dirty || inFlight)) return "reauth";
+    if (!navigator.onLine) return "offline";
+    return "sync";
+  }
+  function openCloseSyncBg(){
+    if (!closeSyncBg) return;
+    closeSyncBg.style.display = "";
+    lockOverlay();
+    closeSyncBg.classList.add("open");
+  }
+  function hideCloseSyncBg(){
+    if (!closeSyncBg) return;
+    closeSyncBg.classList.remove("open");
+    closeSyncBg.style.display = "none";
+    unlockOverlay();
+  }
+  function showCloseSyncUi(mode){
+    openCloseSyncBg();
+    if (!closeSyncRetry || !closeSyncForce) return;
+    closeSyncRetry.style.display = "";
+    if (mode === "syncing"){
+      closeSyncTitle.textContent = "尚有未同步資料";
+      closeSyncDesc.textContent = "正在同步，完成後將自動關閉…";
+      closeSyncSpin.style.display = "";
+      closeSyncFoot.style.display = "none";
+    } else if (mode === "no_google"){
+      closeSyncTitle.textContent = "尚未連結 Google 雲端";
+      closeSyncDesc.textContent = "資料僅存於本機，其他裝置無法同步。建議至「設定」連結 Google，或選擇仍要關閉。";
+      closeSyncSpin.style.display = "none";
+      closeSyncFoot.style.display = "";
+      closeSyncRetry.style.display = "none";
+    } else if (mode === "no_google_offline"){
+      closeSyncTitle.textContent = "離線且未連結 Google";
+      closeSyncDesc.textContent = "資料僅存於本機。連上網路後請至「設定」連結 Google 以同步多裝置，或選擇仍要關閉。";
+      closeSyncSpin.style.display = "none";
+      closeSyncFoot.style.display = "";
+      closeSyncRetry.style.display = "none";
+    } else if (mode === "offline"){
+      closeSyncTitle.textContent = "目前離線";
+      closeSyncDesc.textContent = "變更已存於本機。連上網路後會自動同步，或選擇仍要關閉。";
+      closeSyncSpin.style.display = "none";
+      closeSyncFoot.style.display = "";
+      closeSyncRetry.style.display = "none";
+    } else if (mode === "reauth"){
+      closeSyncTitle.textContent = "需要重新連結 Google";
+      closeSyncDesc.textContent = "尚有未同步資料。請到設定重新連結後再關閉，或選擇仍要關閉（本機已存）。";
+      closeSyncSpin.style.display = "none";
+      closeSyncFoot.style.display = "";
+      closeSyncRetry.style.display = "none";
+    } else if (mode === "manual"){
+      closeSyncTitle.textContent = "同步完成";
+      closeSyncDesc.textContent = "若視窗未自動關閉，請再按一次右上角 ✕。";
+      closeSyncSpin.style.display = "none";
+      closeSyncFoot.style.display = "none";
+    } else {
+      closeSyncTitle.textContent = "同步未完成";
+      closeSyncDesc.textContent = "請檢查網路後重試，或選擇仍要關閉（變更已存於本機）。";
+      closeSyncSpin.style.display = "none";
+      closeSyncFoot.style.display = "";
+    }
+  }
+  function finishCloseWindow(){
+    _closingAllowed = true;
+    hideCloseSyncBg();
+    window.close();
+    setTimeout(function(){
+      _closingAllowed = false;
+      showCloseSyncUi("manual");
+    }, 700);
+  }
+  async function runCloseSync(){
+    if (_closeSyncActive) return;
+    _closeSyncActive = true;
+    if (window.flushEditing) window.flushEditing();
+    const mode = getCloseSyncMode();
+    if (!syncConnected){
+      showCloseSyncUi(mode);
+      _closeSyncActive = false;
+      return;
+    }
+    if (mode === "reauth"){
+      showCloseSyncUi("reauth");
+      _closeSyncActive = false;
+      return;
+    }
+    if (mode === "offline"){
+      showCloseSyncUi("offline");
+      _closeSyncActive = false;
+      return;
+    }
+    if (!dirty && !inFlight){
+      finishCloseWindow();
+      _closeSyncActive = false;
+      return;
+    }
+    showCloseSyncUi("syncing");
+    clearTimeout(pushTimer); pushTimer = null;
+    const res = await syncNow(true);
+    if (res && res.ok){
+      finishCloseWindow();
+    } else if (res && res.reason === "reauth"){
+      showCloseSyncUi("reauth");
+    } else {
+      showCloseSyncUi("failed");
+    }
+    _closeSyncActive = false;
+  }
+  function queueCloseSync(){
+    if (_closeSyncQueued || _closeSyncActive || _closingAllowed) return;
+    _closeSyncQueued = true;
+    setTimeout(function(){ _closeSyncQueued = false; runCloseSync(); }, 0);
+  }
+  if (closeSyncRetry) closeSyncRetry.addEventListener("click", function(){ runCloseSync(); });
+  if (closeSyncForce) closeSyncForce.addEventListener("click", function(){ _closingAllowed = true; hideCloseSyncBg(); window.close(); });
+  document.addEventListener("keydown", function(e){
+    if (e.key !== "Escape" || !closeSyncBg || !closeSyncBg.classList.contains("open")) return;
+    if (closeSyncFoot && closeSyncFoot.style.display !== "none"){
+      hideCloseSyncBg();
+      _closeSyncQueued = false;
+      _closeSyncActive = false;
+    }
+  });
+  window.addEventListener("beforeunload", function(e){
+    if (_closingAllowed) return;
+    if (window.flushEditing && !_closeSyncActive) window.flushEditing();
+    if (!shouldInterceptClose()) return;
+    e.preventDefault();
+    queueCloseSync();
+  });
 
   function startPolling(){
     stopPolling();
@@ -6215,10 +6398,15 @@ let syncConnected = false, syncEmail = null;
   document.getElementById("cloudImportBtn").addEventListener("click", driveImportBackup);
   document.addEventListener("visibilitychange", function(){
     if (!document.hidden){ if (syncConnected) syncNow(); return; }               // 回前景:拉取最新(needReauth 時 syncNow 會走 ensureToken 嘗試 silent 重連)
+    if (_closeSyncActive || _closingAllowed) return;
     if (window.flushEditing) window.flushEditing();                              // 切背景/關閉前:先把正在編輯、還沒 blur 的格提交進 items(避免漏存)
     if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(true); }  // force:不被 isTableBusy 延後(背景 setTimeout 會凍結),當下直接送出
   });
-  window.addEventListener("pagehide", function(){ if (window.flushEditing) window.flushEditing(); if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(true); } });
+  window.addEventListener("pagehide", function(){
+    if (_closeSyncActive || _closingAllowed) return;
+    if (window.flushEditing) window.flushEditing();
+    if (syncConnected && !needReauth){ clearTimeout(pushTimer); pushTimer = null; syncNow(true); }
+  });
   // 網路恢復:立即嘗試同步。離線開啟時 GIS 載入不了的那次失敗,回到有網路這裡會馬上再試;
   // 若之前殘留 needReauth,syncNow 會 silent 取得 token,成功即自動清除,使用者不必手動點「重新連結」。
   window.addEventListener("online", function(){
