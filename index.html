@@ -878,12 +878,16 @@
   .ptable td.tdel{border-left:none;}   /* 刪除欄去左框(仿客戶總覽)*/
   .ptable thead th:nth-last-child(2){border-right:none;}   /* 備註標題去右框(它後面永遠是刪除欄)*/
   @media (hover:hover){ .ptable tbody tr:not(.exp-open):not(.needexp):hover td{background:var(--surface-1);} }
-  .tcell{padding:9px 10px;min-height:40px;line-height:22px;outline:none;cursor:text;transition:background .12s,box-shadow .12s;
+  .tcell{padding:9px 10px;min-height:40px;line-height:22px;outline:none;cursor:text;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ptable:not(.ro) .tcell[data-field]{transition:background .04s ease;}
+  .ptable:not(.ro) .tcell[data-field]:focus{transition:none;}
   .tcell[data-field="due"],.tcell[data-field="addr"],.tcell[data-field="tel"],.tcell[data-field="store"]{font-size:.77rem;}
   .tcell[data-field="due"]{font-size:.66rem;}
   .tcell[data-field="layout"],.tcell[data-field="floor"],.tcell[data-field="agent"],.tcell[data-field="store"],.tcell[data-field="tel"]{font-size:.72rem;}
   .tcell:focus{background:var(--card);box-shadow:inset 0 0 0 2px var(--accent);border-radius:5px;overflow:visible;white-space:normal;position:relative;z-index:2;}
+  .ptable:not(.ro) .tcell[contenteditable="false"][data-field]:focus{cursor:default;user-select:none;-webkit-user-select:none;}
+  .ptable:not(.ro) .tcell[contenteditable="true"][data-field]{cursor:text;user-select:text;-webkit-user-select:text;}
   .tcell.saved{animation:tSaved .7s ease;}
   /* 編輯模式:到期日欄「生成檔名」面板 — 滑到該格最左窄感應帶,面板從左滑入覆蓋整格,點任一處生成 */
   td.duewrap{position:relative;}
@@ -1477,7 +1481,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.23A";
+const APP_VERSION = "2026.07.24E";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2161,15 +2165,17 @@ function setColWidth(field, w){
   const mw = colSumMinWidth() + "px";
   tableWrap.querySelectorAll(".ptable").forEach(t => t.style.minWidth = mw);
 }
-function tchip(url, label, cls){
+function tchip(url, label, cls, tab){
   const on = url && String(url).trim();
   const u = on ? String(url) : "";
   const tip = on ? (u.length > 46 ? u.slice(0,46) + "…" : u) : `尚未加入${label}連結`;
-  return `<span class="tchip ${cls} ${on?'on':''}" title="${esc(tip)}" data-label="${esc(label)}" data-url="${esc(url||'')}">${label}</span>`;
+  const tabAttr = tab ? ' tabindex="0"' : "";
+  return `<span class="tchip ${cls} ${on?'on':''}"${tabAttr} title="${esc(tip)}" data-label="${esc(label)}" data-url="${esc(url||'')}">${label}</span>`;
 }
 function trowHTML(d){
   const color = catColor(d.cat);
-  const ce = editMode ? "true" : "false";
+  const ce = "false";
+  const tTab = editMode ? ' tabindex="0"' : "";
   const catCell = editMode
     ? `<td class="tcat"><button type="button" class="tcat-trigger" data-field="cat" style="border-color:${safeColor(color)}"><span class="tcat-label">${esc(d.cat)}</span></button></td>`
     : `<td class="tcat"><span class="tcat-badge" style="border-color:${safeColor(color)}">${esc(d.cat)}</span></td>`;
@@ -2185,18 +2191,18 @@ function trowHTML(d){
   return `<tr data-id="${esc(d.id)}"${_trCls ? ` class="${_trCls}"` : ""}>`+
     `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button>${dueInner}</td>`+
     catCell +
-    `<td><div class="tcell" contenteditable="${ce}" data-field="layout" title="${esc(d.layout)}">${esc(d.layout)}</div></td>`+
-    `<td><div class="tcell tname" contenteditable="${ce}" data-field="name" title="${esc(d.name)}">${nameInner}</div></td>`+
-    `<td><div class="tcell" contenteditable="${ce}" data-field="addr" title="${esc(d.addr)}">${esc(d.addr)}</div></td>`+
-    `<td><div class="tcell" contenteditable="${ce}" data-field="floor" title="${esc(d.floor)}">${esc(d.floor)}</div></td>`+
-    `<td><div class="tcell tnum" contenteditable="${ce}" data-field="price" title="${esc(d.price)}">${esc(d.price)}</div></td>`+
+    `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="layout" title="${esc(d.layout)}">${esc(d.layout)}</div></td>`+
+    `<td><div class="tcell tname" contenteditable="${ce}"${tTab} data-field="name" title="${esc(d.name)}">${nameInner}</div></td>`+
+    `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="addr" title="${esc(d.addr)}">${esc(d.addr)}</div></td>`+
+    `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="floor" title="${esc(d.floor)}">${esc(d.floor)}</div></td>`+
+    `<td><div class="tcell tnum" contenteditable="${ce}"${tTab} data-field="price" title="${esc(d.price)}">${esc(d.price)}</div></td>`+
     `<td class="tlinks"><span class="tchips">`+
-      tchip(d.url591,"591","n591")+ tchip(d.urlLeju,"樂居","leju")+ tchip(d.urlI,"永慶","")+
+      tchip(d.url591,"591","n591",editMode)+ tchip(d.urlLeju,"樂居","leju",editMode)+ tchip(d.urlI,"永慶","",editMode)+
     `</span></td>`+
-    `<td><div class="tcell" contenteditable="${ce}" data-field="agent" title="${esc(d.agent)}">${esc(d.agent)}</div></td>`+
-    `<td><div class="tcell" contenteditable="${ce}" data-field="tel" title="${esc(d.tel)}">${esc(d.tel)}</div></td>`+
-    `<td><div class="tcell" contenteditable="${ce}" data-field="store" title="${esc(d.store)}">${esc(d.store)}</div></td>`+
-    `<td class="tneedcell"><div class="tcell tneed" data-need="1">${noteHasContent(d) ? '<span class="tneed-has">有</span>' : '<span class="tneed-ph">無</span>'}</div></td>`+
+    `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="agent" title="${esc(d.agent)}">${esc(d.agent)}</div></td>`+
+    `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="tel" title="${esc(d.tel)}">${esc(d.tel)}</div></td>`+
+    `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="store" title="${esc(d.store)}">${esc(d.store)}</div></td>`+
+    `<td class="tneedcell"><div class="tcell tneed" data-need="1"${editMode ? ' tabindex="0"' : ""}>${noteHasContent(d) ? '<span class="tneed-has">有</span>' : '<span class="tneed-ph">無</span>'}</div></td>`+
     delCell +
   `</tr>`;
 }
@@ -2370,7 +2376,7 @@ function isNeedExpEditing(){
 window.isTableBusy = function(){
   if (modalBg.classList.contains("open")) return true;   // 編輯/新增表單才算忙碌
   const a = document.activeElement;
-  if (a && a.classList && a.classList.contains("tcell")) return true;
+  if (a && a.classList && a.classList.contains("tcell") && a.getAttribute("contenteditable") === "true") return true;
   if (isNeedExpEditing()) return true;   // 備註展開且正在編輯:延後同步
   const lp = document.getElementById("linkpop"); if (lp && lp.classList.contains("show")) return true;
   const cm = document.getElementById("catmenu"); if (cm && cm.classList.contains("show")) return true;
@@ -2421,6 +2427,122 @@ function tCommitCell(cell){                       // 回傳 true=值有變更(�
   return false;
 }
 function caretEnd(el){ try{ const r=document.createRange(); r.selectNodeContents(el); r.collapse(false); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
+function caretStart(el){ try{ const r=document.createRange(); r.selectNodeContents(el); r.collapse(true); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
+function tCellIsEditing(cell){ return !!(cell && cell.classList && cell.classList.contains("tcell") && cell.dataset.field && cell.getAttribute("contenteditable") === "true"); }
+function tCellExitEdit(cell, opts){
+  if (!tCellIsEditing(cell)) return;
+  opts = opts || {};
+  clearTimeout(cell._saveT);
+  cell.setAttribute("contenteditable", "false");
+  if (opts.commit === false) return;
+  const run = () => {
+    if (!cell.isConnected) return;
+    if (tCommitCell(cell) && opts.flash !== false) tFlash(cell);
+  };
+  if (opts.defer) requestAnimationFrame(run);
+  else run();
+}
+function tCellSelect(cell, skipExit){
+  if (!cell || !cell.classList.contains("tcell") || !cell.dataset.field || !editMode) return;
+  const active = document.activeElement;
+  if (!skipExit && active && active !== cell && tCellIsEditing(active)) tCellExitEdit(active, {flash: false, defer: true});
+  cell.setAttribute("contenteditable", "false");
+  if (!cell.hasAttribute("tabindex")) cell.tabIndex = 0;
+  cell.focus({ preventScroll: true });
+  try { const s = window.getSelection(); if (s) s.removeAllRanges(); } catch(e){}
+  tScrollFieldIntoView(cell);
+}
+function tPlaceCaretAtPoint(el, x, y){
+  try {
+    let range = null;
+    if (document.caretRangeFromPoint) range = document.caretRangeFromPoint(x, y);
+    else if (document.caretPositionFromPoint){
+      const pos = document.caretPositionFromPoint(x, y);
+      if (pos){ range = document.createRange(); range.setStart(pos.offsetNode, pos.offset); range.collapse(true); }
+    }
+    if (range && el.contains(range.startContainer)){
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    } else caretEnd(el);
+  } catch(e){ caretEnd(el); }
+}
+function tCellEdit(cell, x, y){
+  if (!cell || !cell.classList.contains("tcell") || !cell.dataset.field || !editMode) return;
+  const active = document.activeElement;
+  if (active && active !== cell && tCellIsEditing(active)) tCellExitEdit(active, {flash: false, defer: true});
+  cell.setAttribute("contenteditable", "true");
+  cell.focus({ preventScroll: true });
+  const place = () => {
+    if (x != null && y != null) tPlaceCaretAtPoint(cell, x, y);
+    else caretEnd(cell);
+  };
+  requestAnimationFrame(place);
+  tScrollFieldIntoView(cell);
+}
+function tNavFieldFromEl(el){
+  if (!el) return null;
+  if (el.classList.contains("tcell") && el.dataset.field) return el.dataset.field;
+  if (el.classList.contains("tcat-trigger")) return "cat";
+  if (el.classList.contains("tdue-btn") && el.dataset.duecal) return "due";
+  if (el.classList.contains("tchip")) return "links";
+  if (el.classList.contains("tneed") && el.dataset.need) return "note";
+  return null;
+}
+function tGetFieldEl(tr, field){
+  if (!tr || !tr.dataset.id) return null;
+  if (field === "due") return tr.querySelector(".tdue-btn[data-duecal]");
+  if (field === "cat") return tr.querySelector(".tcat-trigger");
+  if (field === "links") return tr.querySelector(".tchip");
+  if (field === "note") return tr.querySelector(".tneed[data-need]");
+  return tr.querySelector(`.tcell[data-field="${field}"]`);
+}
+function tDataRowSibling(tr, dir){
+  let r = dir > 0 ? tr.nextElementSibling : tr.previousElementSibling;
+  while (r && r.classList.contains("needexp")) r = dir > 0 ? r.nextElementSibling : r.previousElementSibling;
+  return r && r.dataset.id ? r : null;
+}
+function tCommitIfCell(el){
+  if (tCellIsEditing(el)) tCellExitEdit(el);
+}
+function tScrollFieldIntoView(el){
+  const bw = tableWrap.querySelector(".tbody-wrap");
+  if (!bw || !el || !el.getBoundingClientRect) return;
+  const er = el.getBoundingClientRect(), br = bw.getBoundingClientRect();
+  if (er.top < br.top + 4) bw.scrollTop -= (br.top - er.top) + 8;
+  else if (er.bottom > br.bottom - 4) bw.scrollTop += (er.bottom - br.bottom) + 8;
+}
+function tFocusFieldEl(el){
+  if (!el) return false;
+  if (el.classList.contains("tcell") && el.dataset.field){
+    tCellSelect(el);
+    return true;
+  }
+  if ((el.classList.contains("tchip") || el.classList.contains("tneed")) && !el.hasAttribute("tabindex")) el.tabIndex = 0;
+  el.focus();
+  tScrollFieldIntoView(el);
+  return true;
+}
+function tNavGrid(fromEl, dRow, dCol){
+  const field = tNavFieldFromEl(fromEl);
+  const tr = fromEl.closest("tr[data-id]");
+  if (!field || !tr) return false;
+  let fi = T_FIELDS.indexOf(field);
+  if (fi < 0) return false;
+  if (dCol){
+    const ni = fi + dCol;
+    if (ni < 0 || ni >= T_FIELDS.length) return false;
+    fi = ni;
+  }
+  let nrow = tr;
+  if (dRow){
+    const nr = tDataRowSibling(tr, dRow);
+    if (!nr) return false;
+    nrow = nr;
+  }
+  const target = tGetFieldEl(nrow, T_FIELDS[fi]);
+  if (!target) return false;
+  tCommitIfCell(fromEl);
+  return tFocusFieldEl(target);
+}
 
 // 強制把「當前正在編輯、尚未 blur」的格子提交進 items。
 // 表格一般格是靠 blur 才 commit;若使用者游標還停在某格就直接切背景/關 App,那格內容還在 DOM、沒寫進 items,
@@ -2430,8 +2552,8 @@ function flushEditing(){
     if (modalBg.classList.contains("open")){ commitFormIfOpen(); return; }
     const el = document.activeElement;
     if (!el || !el.classList) return;
-    if (el.classList.contains("tcell") && el.getAttribute("contenteditable") === "true"){
-      tCommitCell(el);                                   // 一般欄位格(案名/地址/售價…)
+    if (el.classList.contains("tcell") && tCellIsEditing(el)){
+      tCellExitEdit(el);                                   // 一般欄位格(案名/地址/售價…)
     } else if (el.classList.contains("nseg-ed") && !el.classList.contains("needexp-view")){
       const w = el.closest(".needexp"); if (w) commitNeedSeg(w.dataset.for, +el.dataset.seg, editToNeed(el));   // 備註三段內容
     } else if (el.dataset && el.dataset.titleedit){
@@ -2447,18 +2569,97 @@ function flushEditing(){
 window.flushEditing = flushEditing;
 
 tableWrap.addEventListener("blur", e=>{
-  const c = e.target; if (c.classList && c.classList.contains("tcell")){ clearTimeout(c._saveT); if (tCommitCell(c)) tFlash(c); }   // blur 已 commit,清掉 debounce 計時器免得稍後又空跑一次
+  const c = e.target;
+  if (c.classList && c.classList.contains("tcell") && c.dataset.field && tCellIsEditing(c)) tCellExitEdit(c);
+}, true);
+let _tCellTap = { cell: null, t: 0 };
+function tCellEnterEdit(cell, x, y){
+  if (!cell) return;
+  clearTimeout(cell._tSelDelay);
+  tCellEdit(cell, x, y);
+}
+// 類 Excel:單擊選取整格、雙擊進入文字編輯(手動偵測雙擊+dblclick 備援;第一下 preventDefault 會讓 detail>=2 失效)
+tableWrap.addEventListener("pointerdown", e => {
+  if (!editMode) return;
+  const cell = e.target.closest(".tcell[data-field]");
+  if (!cell || e.button !== 0) return;
+  const now = Date.now();
+  const dbl = _tCellTap.cell === cell && (now - _tCellTap.t) < 400;
+  _tCellTap = { cell, t: now };
+  if (dbl){
+    e.preventDefault();
+    tCellEnterEdit(cell, e.clientX, e.clientY);
+    return;
+  }
+  if (tCellIsEditing(cell)) return;
+  e.preventDefault();
+  tCellSelect(cell);
+}, true);
+tableWrap.addEventListener("dblclick", e => {
+  if (!editMode) return;
+  const cell = e.target.closest(".tcell[data-field]");
+  if (!cell) return;
+  e.preventDefault();
+  if (!tCellIsEditing(cell)) tCellEnterEdit(cell, e.clientX, e.clientY);
 }, true);
 tableWrap.addEventListener("keydown", e=>{
-  const c = e.target; if (!c.classList || !c.classList.contains("tcell")) return;
+  const c = e.target;
+  if (!c.classList || !c.classList.contains("tcell") || !c.dataset.field) return;
   if (e.key === "Enter"){
-    e.preventDefault(); clearTimeout(c._saveT); if (tCommitCell(c)) tFlash(c);
-    const tr = c.closest("tr");
-    let nextTr = tr.nextElementSibling;
-    while (nextTr && nextTr.classList.contains("needexp")) nextTr = nextTr.nextElementSibling;   // 跳過展開列(沒有對應欄位),Enter 逐列跳格才不會卡住
-    if (nextTr){ const nc = nextTr.querySelector(`.tcell[data-field="${c.dataset.field}"]`); if (nc){ nc.focus(); caretEnd(nc); } }
-  } else if (e.key === "Escape"){ c.blur(); }
+    e.preventDefault();
+    if (tCellIsEditing(c)) tCellExitEdit(c);
+    tNavGrid(c, 1, 0);
+  } else if (e.key === "Escape"){
+    if (tCellIsEditing(c)){ e.preventDefault(); tCellExitEdit(c); tCellSelect(c); }
+    else c.blur();
+  } else if (e.key === "F2"){
+    e.preventDefault();
+    if (!tCellIsEditing(c)) tCellEdit(c);
+  }
 });
+// 選取狀態下直接打字 = 覆寫整格並進入編輯(類 Excel)
+tableWrap.addEventListener("keydown", e => {
+  if (!editMode) return;
+  const c = document.activeElement;
+  if (!c || !c.classList.contains("tcell") || !c.dataset.field || tCellIsEditing(c)) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (["Tab","Enter","Escape","F2","ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Home","End","PageUp","PageDown"].includes(e.key)) return;
+  if (e.key === "Delete" || e.key === "Backspace"){
+    e.preventDefault(); c.textContent = ""; tCommitCell(c); return;
+  }
+  if (e.key.length === 1){
+    e.preventDefault();
+    c.textContent = "";
+    tCellEdit(c);
+    try { document.execCommand("insertText", false, e.key); } catch(err){ c.textContent = e.key; caretEnd(c); }
+    clearTimeout(c._saveT);
+    c._saveT = setTimeout(function(){ if (c.isConnected) tCommitCell(c); }, 400);
+  }
+}, true);
+// 編輯模式:方向鍵在「選取狀態」直接換欄;「編輯狀態」則在欄內移動游標
+tableWrap.addEventListener("keydown", e => {
+  if (!editMode) return;
+  if (catmenu.classList.contains("show")) return;
+  const k = e.key;
+  if (k !== "ArrowUp" && k !== "ArrowDown" && k !== "ArrowLeft" && k !== "ArrowRight") return;
+  const el = document.activeElement;
+  if (!el || !tableWrap.contains(el)) return;
+  if (!tNavFieldFromEl(el)) return;
+  if (el.classList.contains("tcell") && tCellIsEditing(el)) return;
+  e.preventDefault();
+  const dRow = k === "ArrowUp" ? -1 : k === "ArrowDown" ? 1 : 0;
+  const dCol = k === "ArrowLeft" ? -1 : k === "ArrowRight" ? 1 : 0;
+  tNavGrid(el, dRow, dCol);
+}, true);
+// 類別觸發鈕:Enter/空白開選單(避免在可捲動表單內按 Enter 造成整表亂捲)
+tableWrap.addEventListener("keydown", e => {
+  if (!editMode) return;
+  const trig = e.target.closest(".tcat-trigger");
+  if (!trig || (e.key !== "Enter" && e.key !== " ")) return;
+  if (catmenu.classList.contains("show")) return;
+  e.preventDefault();
+  openCatMenu(trig);
+}, true);
 // 貼上時只保留純文字,剝掉來源的顏色/字體/樣式,避免欄位變形(多行/定位點轉空白)
 tableWrap.addEventListener("paste", e => {
   const cell = (e.target && e.target.closest) ? e.target.closest(".tcell") : null;
@@ -2677,7 +2878,39 @@ function setEditMode(on){
 
 // ---- 類別下拉選單 ----
 const catmenu = document.getElementById("catmenu");
-let catTrigger = null;
+let catTrigger = null, catMenuIdx = 0;
+function applyCatChoice(key){
+  if (!catTrigger) return;
+  const it = tFindItem(catTrigger);
+  if (it){
+    if (it.cat !== key){ it.cat = key; it.updatedAt = Date.now(); saveItems(); onLocalChange("data"); }
+    catTrigger.style.borderColor = catColor(it.cat);
+    const lbl = catTrigger.querySelector(".tcat-label"); if (lbl) lbl.textContent = it.cat;
+  }
+  const trig = catTrigger;
+  closeCatMenu();
+  if (trig && trig.isConnected) trig.focus();
+}
+function catMenuHighlight(){
+  catmenu.querySelectorAll(".catmenu-opt").forEach((o, i) => o.classList.toggle("sel", i === catMenuIdx));
+}
+function catMenuSyncIdx(){
+  const opts = [...catmenu.querySelectorAll(".catmenu-opt")];
+  const i = opts.findIndex(o => o.classList.contains("sel"));
+  catMenuIdx = i >= 0 ? i : 0;
+  catMenuHighlight();
+}
+function onCatMenuKey(e){
+  if (!catmenu.classList.contains("show")) return;
+  const opts = catmenu.querySelectorAll(".catmenu-opt");
+  if (!opts.length) return;
+  if (e.key === "ArrowDown"){ e.preventDefault(); e.stopPropagation(); catMenuIdx = (catMenuIdx + 1) % opts.length; catMenuHighlight(); }
+  else if (e.key === "ArrowUp"){ e.preventDefault(); e.stopPropagation(); catMenuIdx = (catMenuIdx - 1 + opts.length) % opts.length; catMenuHighlight(); }
+  else if (e.key === "Enter" || e.key === " "){ e.preventDefault(); e.stopPropagation(); const opt = opts[catMenuIdx]; if (opt) applyCatChoice(opt.dataset.key); }
+  else if (e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); const trig = catTrigger; closeCatMenu(); if (trig) trig.focus(); }
+  else if (e.key === "Tab"){ closeCatMenu(); }
+}
+document.addEventListener("keydown", onCatMenuKey, true);
 function openCatMenu(trigger){
   closeOtherOverlays("cat");
   const it = tFindItem(trigger); if (!it) return;
@@ -2688,6 +2921,7 @@ function openCatMenu(trigger){
   const r = trigger.getBoundingClientRect();
   catmenu.classList.add("show");
   if (window.refreshLed) window.refreshLed();
+  catMenuSyncIdx();
   const w = catmenu.offsetWidth;
   let left = Math.min(r.left, window.innerWidth - w - 10); left = Math.max(10, left);
   let top = r.bottom + 5;
@@ -2699,13 +2933,7 @@ function catMenuOutside(e){ if (e.target.closest("#catmenu") || e.target.closest
 function closeCatMenu(){ document.removeEventListener("click", catMenuOutside); catmenu.classList.remove("show"); catTrigger = null; if (window.refreshLed) window.refreshLed(); }
 catmenu.addEventListener("click", e=>{
   const opt = e.target.closest(".catmenu-opt"); if (!opt || !catTrigger) return;
-  const it = tFindItem(catTrigger); const key = opt.dataset.key;
-  if (it){
-    if (it.cat !== key){ it.cat = key; it.updatedAt = Date.now(); saveItems(); onLocalChange("data"); }
-    catTrigger.style.borderColor = catColor(it.cat);
-    const lbl = catTrigger.querySelector(".tcat-label"); if (lbl) lbl.textContent = it.cat;
-  }
-  closeCatMenu();
+  applyCatChoice(opt.dataset.key);
 });
 function addTableRow(){
   if (!editMode){ editMode = true; saveEditMode(); }
@@ -2715,7 +2943,7 @@ function addTableRow(){
   items.push(it); saveItems(); onLocalChange("data");
   applyFilter();
   const row = tableWrap.querySelector(`tr[data-id="${it.id}"]`);
-  if (row){ const nc = row.querySelector('.tcell[data-field="name"]'); if (nc) nc.focus(); row.scrollIntoView({behavior:"smooth", block:"nearest"}); }
+  if (row){ const nc = row.querySelector('.tcell[data-field="name"]'); if (nc) tCellEdit(nc); row.scrollIntoView({behavior:"smooth", block:"nearest"}); }
 }
 
 // ---- link paste popover ----
