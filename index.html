@@ -778,11 +778,17 @@
   .cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;}
   .cal-week span{text-align:center;font-size:.9rem;font-weight:600;color:var(--text-faint);padding:4px 0;}
   .cal-week span:first-child,.cal-week span:last-child{color:#C4737B;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px 2px;}
-  .cal-day{aspect-ratio:1;min-height:46px;border:0;background:transparent;border-radius:50%;font-size:1.12rem;font-weight:600;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;padding:0;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px 4px;}
+  .cal-day{aspect-ratio:1;min-height:44px;border:0;background:transparent;border-radius:50%;font-size:1.12rem;font-weight:600;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;line-height:1;padding:0;box-sizing:border-box;}
+  .cal-day .cal-dnum{display:block;line-height:1;transform:translateY(1.5px);}
   .cal-day.wkend{color:#C4737B;}
   .cal-day.today{background:var(--accent);color:#fff;font-weight:700;}
-  .cal-day.sel:not(.today){box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent-deep);}
+  /* 已選=實線內圈+淡底;TAB=虛線內縮(不外擴、不碰鄰格) */
+  .cal-day.sel:not(.today){box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-tint);color:var(--accent-deep);}
+  .cal .cal-day:focus,.cal .cal-day:focus-visible{outline:2px dashed var(--accent-deep);outline-offset:-3px;box-shadow:none;background:var(--surface-2);z-index:2;}
+  .cal .cal-day.sel:not(.today):focus,.cal .cal-day.sel:not(.today):focus-visible{outline:2px dashed var(--accent-deep);outline-offset:-3px;box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-tint);}
+  /* 今天聚焦須覆寫上方 background:surface-2,否則白字疊淺底會「消失」 */
+  .cal .cal-day.today:focus,.cal .cal-day.today:focus-visible{outline:2px dashed #fff;outline-offset:-4px;box-shadow:0 0 0 2px var(--accent-deep);background:var(--accent);color:#fff;filter:brightness(1.08);}
   .cal-day:active{background:var(--surface-2);}
   .cal-day.today:active{background:var(--accent-deep);}
   .cal-day.empty{visibility:hidden;cursor:default;}
@@ -794,6 +800,10 @@
   .cal-fbtn.cal-cancel:active{background:var(--surface-1);}
   .cal-fbtn.cal-clear{background:transparent;border:1px solid var(--line);color:var(--ink-soft);}
   .cal-fbtn.cal-clear:active{background:var(--surface-1);}
+  .cal .cal-fbtn:focus,.cal .cal-fbtn:focus-visible{outline:2px dashed var(--accent-deep);outline-offset:3px;box-shadow:none;}
+  .cal .cal-fbtn.cal-today:focus,.cal .cal-fbtn.cal-today:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 6px var(--ink);filter:brightness(1.08);}
+  .cal .cal-fmt button:focus,.cal .cal-fmt button:focus-visible,.cal .cal-nav:focus,.cal .cal-nav:focus-visible{outline:2px dashed var(--accent);outline-offset:2px;box-shadow:none;}
+  .cal:focus,.cal:focus-visible{outline:none;}
   /* 表格編輯模式:到期日改為按鈕(點擊開日曆),外觀比照原本的到期日格 */
   .tdue-btn{width:100%;border:0;background:transparent;padding:9px 10px;min-height:40px;line-height:22px;cursor:pointer;text-align:center;
     font-family:inherit;font-size:.66rem;font-weight:600;color:var(--ink-soft);font-variant-numeric:tabular-nums;
@@ -883,6 +893,9 @@
   [data-theme="dark"] .thead-wrap{background:#1E3A31;}
   /* 表身層:垂直+水平捲動都在這裡,捲軸只出現在資料列範圍 */
   .tbody-wrap{overflow:auto;scrollbar-gutter:stable;max-height:max(220px, calc(100dvh - var(--lh,240px) - 178px));scrollbar-width:thin;scrollbar-color:var(--border-2) transparent;}   /* gutter:捲軸空間常駐,筆數變化時最後一欄不會左右跳(與客戶總覽一致) */
+  /* 備註欄選字中:禁水平自動捲,避免與還原 scrollLeft 震盪造成表頭狂晃 */
+  .table-wrap.need-sel-hlock .tbody-wrap{overflow-x:hidden;}
+  .table-wrap.need-sel-hlock .thead-wrap{overflow-x:hidden;}
   .tbody-wrap::-webkit-scrollbar{height:12px;width:12px;}
   .tbody-wrap::-webkit-scrollbar-track{background:transparent;}
   .tbody-wrap::-webkit-scrollbar-track:vertical{margin:0 0 12px 0;}     /* 底部避開圓角 */
@@ -924,7 +937,14 @@
   .tcell[data-field="due"],.tcell[data-field="addr"],.tcell[data-field="tel"],.tcell[data-field="store"]{font-size:.77rem;}
   .tcell[data-field="due"]{font-size:.66rem;}
   .tcell[data-field="layout"],.tcell[data-field="floor"],.tcell[data-field="agent"],.tcell[data-field="store"],.tcell[data-field="tel"]{font-size:.72rem;}
-  .tcell:focus{background:var(--card);box-shadow:inset 0 0 0 2px var(--accent);border-radius:5px;overflow:visible;white-space:normal;position:relative;z-index:2;}
+  /* 外圈焦框(勿用 inset:易被相鄰格/gen-edge 蓋成「缺一邊」);z-index 高於 gen-edge(3) */
+  /* 內縮焦框:外圈會被 overflow／下一列 hover 裁掉;聚焦時藏 gen-edge */
+  .tcell:focus{background:var(--card);box-shadow:inset 0 0 0 2px var(--accent);border-radius:5px;overflow:hidden;white-space:normal;position:relative;z-index:6;}
+  td.duewrap:has(.tcell:focus) .gen-edge,td.datewrap:has(.tcell:focus) .gen-edge{visibility:hidden;}
+  .ptable :where(.topt-trigger,.tcat-trigger,.tdel button,.tdue-btn):focus-visible{box-shadow:var(--focus-ring-inset);}
+  .ptable tbody tr:has(:focus-visible),
+  .ptable tbody tr:has(.tcell:focus){position:relative;z-index:5;}
+
   .ptable:not(.ro) .tcell[contenteditable="false"][data-field]:focus{cursor:default;user-select:none;-webkit-user-select:none;}
   .ptable:not(.ro) .tcell[contenteditable="true"][data-field]{cursor:text;user-select:text;-webkit-user-select:text;}
   .tcell.saved{animation:tSaved .7s ease;}
@@ -1520,7 +1540,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.24W";
+const APP_VERSION = "2026.07.24ZE";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2228,7 +2248,7 @@ function trowHTML(d){
     : `<div class="tcell tdue ${ds}" contenteditable="false" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div>`;
   const _trCls = (((openNeedId===d.id) ? ("exp-open" + (editMode ? " exp-editing" : "") + " ") : "") + (ds ? "due-"+ds : "") + ((tselMode && selected.has(d.id)) ? " tsel-row" : "")).trim();
   return `<tr data-id="${esc(d.id)}"${_trCls ? ` class="${_trCls}"` : ""}>`+
-    `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button>${dueInner}</td>`+
+    `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" tabindex="-1" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button>${dueInner}</td>`+
     catCell +
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="layout" title="${esc(d.layout)}">${esc(d.layout)}</div></td>`+
     `<td><div class="tcell tname" contenteditable="${ce}"${tTab} data-field="name" title="${esc(d.name)}">${nameInner}</div></td>`+
@@ -2399,6 +2419,30 @@ function bindTableScrollSync(headWrap, bodyWrap){
   headWrap.addEventListener("scroll", onHead);
   tableWrap._scrollUnbind = () => { bodyWrap.removeEventListener("scroll", onBody); headWrap.removeEventListener("scroll", onHead); };
 }
+// 備註欄拖曳選字:關掉表頭/表身水平 overflow(勿用 scrollLeft 對拉,會震盪→標題狂晃)
+(function(){
+  let lockL = null, bw = null, hw = null;
+  function endLock(){
+    if (lockL == null) return;
+    tableWrap.classList.remove("need-sel-hlock");
+    if (bw) bw.scrollLeft = lockL;
+    if (hw) hw.scrollLeft = lockL;
+    lockL = null; bw = null; hw = null;
+  }
+  document.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    const ed = e.target && e.target.closest && e.target.closest(".nseg-ed, .needexp-ed, .fneed-ed, .ov-need-in");
+    if (!ed) return;
+    bw = tableWrap.querySelector(".tbody-wrap");
+    hw = tableWrap.querySelector(".thead-wrap");
+    if (!bw) return;
+    lockL = bw.scrollLeft;
+    if (hw) hw.scrollLeft = lockL;
+    tableWrap.classList.add("need-sel-hlock");
+  }, true);
+  document.addEventListener("pointerup", endLock, true);
+  document.addEventListener("pointercancel", endLock, true);
+})();
 // 備註展開列:僅「編輯模式且焦點在可編輯段/標題」才算忙碌;唯讀展開不擋同步、不讓燈一直閃
 function isNeedExpEditing(){
   const exp = tableWrap.querySelector(".needexp.editing");
@@ -2792,6 +2836,14 @@ tableWrap.addEventListener("blur", e => {
 tableWrap.addEventListener("keydown", e => {
   if (e.target.dataset && e.target.dataset.titleedit && e.key === "Enter"){ e.preventDefault(); e.target.blur(); }
 }, true);
+// 備註「內容」邊打邊轉全形:只就地改字(不用 beforeinput+execCommand,避免 IME 一次鍵入變多顆)
+tableWrap.addEventListener("compositionend", e => {
+  const ed = needContentEditorFrom(e.target);
+  if (!ed) return;
+  liveNeedSymbolsFix(ed);
+  const w = ed.closest(".needexp");
+  if (w && ed.classList.contains("nseg-ed")) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
+}, true);
 tableWrap.addEventListener("paste", e => {
   const nedBody = e.target.closest && e.target.closest('.needexp-ed[contenteditable="true"]');
   const nedTitle = e.target.closest && e.target.closest(".nseg-t[data-titleedit]");
@@ -2838,7 +2890,9 @@ tableWrap.addEventListener("keydown", e => {
 tableWrap.addEventListener("input", e => {
   const c = e.target;
   if (c.classList && c.classList.contains("nseg-ed") && !c.classList.contains("needexp-view")){
-    const w = c.closest(".needexp"); if (w) commitNeedSeg(w.dataset.for, +c.dataset.seg, editToNeed(c));
+    const w = c.closest(".needexp");
+    if (!e.isComposing && !c.isComposing) liveNeedSymbolsFix(c);
+    if (w) commitNeedSeg(w.dataset.for, +c.dataset.seg, editToNeed(c));
   } else if (c.dataset && c.dataset.titleedit){
     const w = c.closest(".needexp"); if (w) commitNeedTitle(w.dataset.for, +c.dataset.seg, c.textContent);
   }
@@ -3380,9 +3434,14 @@ function focusTrapEl(el){
 }
 function trapFocusKey(e, container){
   if (e.key !== "Tab" || !container) return;
-  const nodes = container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  const nodes = Array.prototype.filter.call(
+    container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+    el => el.tabIndex >= 0 && !el.disabled && el.getAttribute("aria-hidden") !== "true"
+  );
   if (!nodes.length) return;
   const first = nodes[0], last = nodes[nodes.length - 1];
+  if (!container.contains(document.activeElement)){ e.preventDefault(); first.focus(); return; }
+  if (document.activeElement === container){ e.preventDefault(); (e.shiftKey ? last : first).focus(); return; }
   if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
   else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
 }
@@ -3410,6 +3469,8 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && confirmBg.classList.contains("open")){ e.preventDefault(); document.getElementById("confirmOk").click(); return; }
   if (e.key === "Tab"){
     if (confirmBg.classList.contains("open")){ trapFocusKey(e, confirmBg.querySelector(".confirm")); return; }
+    const calOpen = document.getElementById("calBg");
+    if (calOpen && calOpen.classList.contains("open")){ trapFocusKey(e, calOpen.querySelector(".cal")); return; }
     const mbg = document.getElementById("modalBg");
     const modal = mbg && mbg.classList.contains("open") ? mbg.querySelector(".modal") : null;
     if (modal){ trapFocusKey(e, modal); return; }
@@ -3495,7 +3556,7 @@ function todayROC(){
       if (wd === 0 || wd === 6) c += " wkend";
       if (roc === today) c += " today";
       if (roc === sel) c += " sel";
-      h += '<button type="button" class="' + c + '" data-roc="' + roc + '">' + dd + '</button>';
+      h += '<button type="button" class="' + c + '" data-roc="' + roc + '"><span class="cal-dnum">' + dd + '</span></button>';
     }
     for (let i=first+days;i<42;i++) h += '<button type="button" class="cal-day empty" tabindex="-1"></button>';   // 補滿 6 行(42格):各月週數不同也維持同高,切月份時箭頭不移位、可連續點
     calGrid.innerHTML = h;
@@ -3507,6 +3568,11 @@ function todayROC(){
     const cur = rocToDate(calTarget.get()) || new Date();
     calY = cur.getFullYear(); calM = cur.getMonth();
     render(); calBg.classList.add("open");
+    const panel = calBg.querySelector(".cal");
+    if (panel){
+      panel.setAttribute("tabindex", "-1");
+      try { panel.focus({ preventScroll: true }); } catch (err){ try { panel.focus(); } catch (err2){} }
+    }
   }
   function closeCal(){ calBg.classList.remove("open"); calTarget = FORM_TARGET; }
   document.getElementById("calPrev").addEventListener("click", () => { calM--; if (calM<0){calM=11;calY--;} if (calY < 1912){ calY = 1912; calM = 0; } render(); });
@@ -4742,8 +4808,9 @@ function inlineHTML(t, seg){
 // 不是被拖曳搶走,是選取根本沒開始) → 行尾連結正後方往前選整段選不起來。改 span 後原生選字正常;
 // 點擊開啟本來就由下方 click 監聽統一處理(window.open),互動不變。
 function linkifyNeed(text){
+  // tabindex=-1:表格用 TAB 走儲存格即可,不要再鑽進每個「連結」(仍可滑鼠點)
   const seg = t => needTokens(t).map(tk => tk.t === "url"
-    ? `<span class="need-link" role="link" tabindex="0" data-url="${esc(tk.v)}">連結</span>`
+    ? `<span class="need-link" role="link" tabindex="-1" data-url="${esc(tk.v)}">連結</span>`
     : esc(tk.v)).join("");
   // 必須逐行(與 needToEditHTML 一致):若整段丟進 inlineHTML,~~ 會跨 \n 配對 → 表格看得到刪線、展開卻沒有
   return String(text == null ? "" : text).split("\n").map(ln => inlineHTML(ln, seg)).join("\n");
@@ -4939,6 +5006,87 @@ function syncNeedEdFromStorage(ed, val){
   if (ed.classList && ed.classList.contains("needexp-view")) return;
   const htmlFn = ed.classList.contains("fneed-ed") ? needToFormHTML : needToEditHTML;
   ed.innerHTML = htmlFn(val) || "<div><br></div>";
+}
+// 邊打邊轉:保留 ~、行首「# 」、正在打的 http(s):// 網址
+function needKeepAsciiPunct(ch, before){
+  if (ch === "~") return true;
+  const tail = String(before || "").slice(-240);
+  if (/https?:\/\/\S*$/i.test(tail)) return true;
+  if (/https?$/i.test(tail) && (ch === ":" || ch === "/")) return true;
+  if (/https?:$/i.test(tail) && ch === "/") return true;
+  if (/https?:\/$/i.test(tail) && ch === "/") return true;
+  if (ch === "#" && /(^|\n)$/.test(tail)) return true;
+  if (ch === " " && /(^|\n)#$/.test(tail)) return true;
+  return false;
+}
+function needFwInsertText(data, before){
+  let out = "", base = String(before || "");
+  for (const ch of String(data == null ? "" : data)){
+    if (ch.length !== 1){ out += ch; continue; }
+    if (needKeepAsciiPunct(ch, base + out)){ out += ch; continue; }
+    if (ch >= "!" && ch <= "~" && !((ch >= "0" && ch <= "9") || (ch >= "A" && ch <= "Z") || (ch >= "a" && ch <= "z"))){
+      out += String.fromCharCode(ch.charCodeAt(0) + 0xFEE0);
+    } else out += ch;
+  }
+  return out;
+}
+function needContentEditorFrom(el){
+  if (!el || !el.closest) return null;
+  const ed = el.closest('.needexp-ed[contenteditable="true"], .fneed-ed[contenteditable="true"]');
+  if (!ed || (ed.classList && ed.classList.contains("needexp-view"))) return null;
+  return ed;
+}
+// 就地把半形符號轉全形(不重建 innerHTML,避免弄扁連結標籤／多行)
+function liveNeedSymbolsFix(ed){
+  if (!ed || ed.isComposing) return false;
+  const sel = window.getSelection();
+  let cNode = null, cOff = 0;
+  if (sel && sel.rangeCount && ed.contains(sel.anchorNode)){ cNode = sel.anchorNode; cOff = sel.anchorOffset; }
+  let prefix = "", changed = false;
+  const inChip = n => {
+    for (let p = n; p && p !== ed; p = p.parentNode)
+      if (p.nodeType === 1 && p.classList && p.classList.contains("need-link-chip")) return true;
+    return false;
+  };
+  const walk = n => {
+    if (n.nodeType === 3){
+      if (inChip(n)) return;
+      const raw = n.textContent;
+      let out = "";
+      for (let i = 0; i < raw.length; i++){
+        const ch = raw[i];
+        if (ch === "\u200B"){ out += ch; continue; }
+        const nw = needFwInsertText(ch, prefix);
+        if (nw !== ch){
+          changed = true;
+          if (cNode === n && i < cOff) cOff += (nw.length - ch.length);
+        }
+        out += nw;
+        prefix += nw;
+      }
+      if (out !== raw) n.textContent = out;
+      return;
+    }
+    if (n.nodeType !== 1) return;
+    if (n.classList && n.classList.contains("need-link-chip")){
+      prefix += (n.getAttribute("data-url") || "");
+      return;
+    }
+    if (n.tagName === "BR"){ prefix += "\n"; return; }
+    const isBlock = n.parentNode === ed && (n.tagName === "DIV" || n.tagName === "P");
+    if (isBlock && prefix && !prefix.endsWith("\n")) prefix += "\n";
+    Array.from(n.childNodes).forEach(walk);
+  };
+  Array.from(ed.childNodes).forEach(walk);
+  if (changed && cNode && cNode.parentNode && sel){
+    try {
+      const r = document.createRange();
+      r.setStart(cNode, Math.min(cOff, cNode.textContent.length));
+      r.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r);
+    } catch(_){}
+  }
+  return changed;
 }
 function needCurLine(ed){
   const sel = window.getSelection(); if (!sel || !sel.rangeCount) return null;
@@ -5195,6 +5343,8 @@ function pasteNeedField(ed, tx){
 }
 [F.note, F.note2, F.note3].forEach(ed => {
   if (!ed) return;
+  ed.addEventListener("compositionend", () => { liveNeedSymbolsFix(ed); });
+  ed.addEventListener("input", e => { if (!e.isComposing && !ed.isComposing) liveNeedSymbolsFix(ed); });
   ed.addEventListener("blur", () => {
     const raw = editToNeed(ed);
     const norm = normalizeNeedStorage(raw);
