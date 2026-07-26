@@ -1520,7 +1520,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.24Q";
+const APP_VERSION = "2026.07.24V";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2780,7 +2780,11 @@ tableWrap.addEventListener("copy", e => {
 tableWrap.addEventListener("blur", e => {
   const c = e.target;
   if (c.classList && c.classList.contains("nseg-ed") && !c.classList.contains("needexp-view")){
-    const w = c.closest(".needexp"); if (w) commitNeedSeg(w.dataset.for, +c.dataset.seg, editToNeed(c));
+    const w = c.closest(".needexp"); if (!w) return;
+    const raw = editToNeed(c);
+    const norm = normalizeNeedStorage(raw);
+    commitNeedSeg(w.dataset.for, +c.dataset.seg, norm);
+    if (norm !== raw) syncNeedEdFromStorage(c, norm);
   } else if (c.dataset && c.dataset.titleedit){
     const w = c.closest(".needexp"); if (w) commitNeedTitle(w.dataset.for, +c.dataset.seg, c.textContent);
   }
@@ -2795,11 +2799,12 @@ tableWrap.addEventListener("paste", e => {
   e.preventDefault();
   const cd0 = e.clipboardData || window.clipboardData;
   let tx = ""; try { tx = (cd0 && cd0.getData("text/plain")) || ""; } catch(err){}
-  if (nedTitle && !nedBody){ // 標題:純文字、去換行
+  if (nedTitle && !nedBody){ // 標題:純文字、去換行(標題欄不轉全形符號)
     try { document.execCommand("insertText", false, tx.replace(/[\r\n\t]+/g," ")); } catch(err){}
     return;
   }
-  // 內容:游標緊鄰「連結」標籤之後補一個空格,否則貼的網址會和標籤網址黏成同一 token
+  // 內容:符號轉全形(網址／~~／行首# 保留);游標緊鄰「連結」標籤之後補空格
+  tx = normalizeNeedSymbols(tx);
   if (tx && caretAfterChip(nedBody)) tx = " " + tx;
   const w = nedBody.closest(".needexp"), sg = +nedBody.dataset.seg;
   if (tx.indexOf("\n") < 0){
@@ -3671,7 +3676,7 @@ function buildFormRec(){
     addr: F.addr.value.trim(), due: F.due.value.trim(),
     agent: F.agent.value.trim(), tel: F.tel.value.trim(), store: F.store.value.trim(),
     url591: u591 || null, urlLeju: uLeju || null, urlI: uI || null,
-    note: editToNeed(F.note), note2: editToNeed(F.note2), note3: editToNeed(F.note3),
+    note: normalizeNeedStorage(editToNeed(F.note)), note2: normalizeNeedStorage(editToNeed(F.note2)), note3: normalizeNeedStorage(editToNeed(F.note3)),
     t1: F.t1.value.trim(), t2: F.t2.value.trim(), t3: F.t3.value.trim(),
   };
 }
@@ -4148,7 +4153,9 @@ function openNeedExp(tr, doFocus){
   requestAnimationFrame(sizeNeedExp);
   [1,2,3].forEach(sg => {
     const ed = exp.querySelector(`.nseg-ed[data-seg="${sg}"]`);
-    const v = needSeg(it, sg);
+    let v = needSeg(it, sg);
+    // 展開時順便把「刪線後黏下一筆／跨行 ~~」的舊壞資料寫回(normalize 內含 repair)
+    if (v && normalizeNeedStorage(v) !== v){ commitNeedSeg(id, sg, v); v = needSeg(it, sg); }
     ed.innerHTML = v ? (editMode ? needToEditHTML(v) : needToViewHTML(v)) : (editMode ? "<div><br></div>" : '<div class="tneed-ph">（無內容）</div>');
   });
   if (editMode){
@@ -4294,9 +4301,56 @@ function needFragHasStuff(root){
   if ([...box.querySelectorAll(".need-link-chip, .need-link")].some(c => (c.getAttribute("data-url") || c.getAttribute("href") || "").trim())) return true;
   return !!(box.textContent || "").replace(/[\u200B\s]/g, "");
 }
+// 標記(<s>/<span.need-h>)內若含 <br>,拆成「標記 + br + 標記」,避免刪線包住下一行列
+function splitNeedMarkAtBr(mk){
+  if (!mk || !mk.querySelector || !mk.querySelector("br")) return;
+  const parent = mk.parentNode; if (!parent) return;
+  const nodes = [...mk.childNodes];
+  let cur = mk.cloneNode(false);
+  const putCur = () => {
+    if (needFragHasStuff(cur)) parent.insertBefore(cur, mk);
+    else { while (cur.firstChild) parent.insertBefore(cur.firstChild, mk); }
+    cur = mk.cloneNode(false);
+  };
+  nodes.forEach(n => {
+    if (n.nodeType === 1 && n.tagName === "BR"){
+      putCur();
+      parent.insertBefore(document.createElement("br"), mk);
+    } else cur.appendChild(n);
+  });
+  putCur();
+  mk.remove();
+}
+// 列內 <br> 軟換行 → 拆成多個頂層 <div>(與 Enter 列一致),刪線才不會把多筆黏成一段
+function expandNeedSoftBreaks(ed){
+  if (!ed) return;
+  [...ed.querySelectorAll("s.need-del, s, strike, span.need-h")].forEach(mk => {
+    if (mk.isConnected) splitNeedMarkAtBr(mk);
+  });
+  [...ed.querySelectorAll(":scope > div")].forEach(div => {
+    const hasBr = [...div.childNodes].some(n => n.nodeType === 1 && n.tagName === "BR");
+    if (!hasBr) return;
+    const nh = div.classList && div.classList.contains("nh");
+    const frag = document.createDocumentFragment();
+    let cur = document.createElement("div"); if (nh) cur.className = "nh";
+    const flush = () => {
+      if (!cur.childNodes.length) cur.appendChild(document.createElement("br"));
+      frag.appendChild(cur);
+      cur = document.createElement("div"); if (nh) cur.className = "nh";
+    };
+    [...div.childNodes].forEach(n => {
+      if (n.nodeType === 1 && n.tagName === "BR") flush();
+      else cur.appendChild(n);
+    });
+    flush();
+    div.parentNode.insertBefore(frag, div);
+    div.remove();
+  });
+}
 // 刪線/標題操作後清掉空連結標籤殼與空的 <s>,避免兩顆連結中間出現綠色空泡
 function cleanupNeedEd(ed){
   if (!ed) return;
+  expandNeedSoftBreaks(ed);   // 先拆軟換行,再清空殼
   ed.querySelectorAll(".need-link-chip, .need-link").forEach(c => {
     const url = (c.getAttribute("data-url") || c.getAttribute("href") || "").trim();
     const txt = (c.textContent || "").replace(/\u200B/g, "").trim();
@@ -4319,7 +4373,34 @@ function wrapStrikeRange(rg){
   const frag = rg.extractContents();
   const sEl = document.createElement("s"); sEl.className = "need-del";
   sEl.appendChild(frag); rg.insertNode(sEl);
-  return sEl;
+  if (sEl.querySelector && sEl.querySelector("br")) splitNeedMarkAtBr(sEl);   // 保險:標記內不得留 <br>
+  return sEl.isConnected ? sEl : null;
+}
+// 同一頂層列內,把 range 依 <br> 切成不跨軟換行的片段
+function pushNeedRangesSplitByBr(line, lineRg, out){
+  const brs = [...line.querySelectorAll("br")].filter(br => {
+    try {
+      const brR = document.createRange(); brR.selectNode(br);
+      return lineRg.compareBoundaryPoints(Range.START_TO_END, brR) < 0
+          && lineRg.compareBoundaryPoints(Range.END_TO_START, brR) > 0;
+    } catch(_){ return false; }
+  });
+  if (!brs.length){ out.push(lineRg); return; }
+  let sc = lineRg.startContainer, so = lineRg.startOffset;
+  brs.forEach(br => {
+    try {
+      const r = document.createRange();
+      r.setStart(sc, so); r.setEndBefore(br);
+      if (!r.collapsed) out.push(r);
+      const after = document.createRange(); after.setStartAfter(br); after.collapse(true);
+      sc = after.startContainer; so = after.startOffset;
+    } catch(_){}
+  });
+  try {
+    const rEnd = document.createRange();
+    rEnd.setStart(sc, so); rEnd.setEnd(lineRg.endContainer, lineRg.endOffset);
+    if (!rEnd.collapsed) out.push(rEnd);
+  } catch(_){}
 }
 function rangeFullyMarked(rg, sel){
   let root = rg.commonAncestorContainer;
@@ -4450,24 +4531,31 @@ function reselectNeedPick(pick, saved){
   }
   return saved ? restoreNeedRange(saved) : false;
 }
-// 通用:把整段(逐行)包成 wrapFn 產生的元素(刪線 / 標題共用)。savedAfter=操作前存下的選取,優先還原全選範圍(避免只框到部分 made)
+// 通用:把整段(逐行／逐軟換行)包成 wrapFn 產生的元素(刪線 / 標題共用)。savedAfter=操作前存下的選取,優先還原全選範圍(避免只框到部分 made)
 function wrapRangeByLine(ed, srcRg, wrapFn, savedAfter){
   const sL = lineDivOf(srcRg.startContainer, ed, srcRg.startOffset, false);
   const eL = lineDivOf(srcRg.endContainer, ed, srcRg.endOffset, true);
   const made = [];
-  if (sL && eL && sL !== eL){   // 跨行:逐行包,換行/標題列結構不被破壞
+  const chunks = [];
+  if (sL && eL){
     let cur = sL; const lines = [];
     while (cur){ lines.push(cur); if (cur === eL) break; cur = cur.nextElementSibling; }
     lines.forEach(L => {
       const r2 = document.createRange();
-      if (L === sL && srcRg.startContainer !== ed) r2.setStart(srcRg.startContainer, srcRg.startOffset); else r2.setStart(L, 0);
-      if (L === eL && srcRg.endContainer !== ed) r2.setEnd(srcRg.endContainer, srcRg.endOffset); else r2.setEnd(L, L.childNodes.length);
+      try {
+        if (L === sL && srcRg.startContainer !== ed) r2.setStart(srcRg.startContainer, srcRg.startOffset); else r2.setStart(L, 0);
+        if (L === eL && srcRg.endContainer !== ed) r2.setEnd(srcRg.endContainer, srcRg.endOffset); else r2.setEnd(L, L.childNodes.length);
+      } catch(_){ return; }
       if (r2.collapsed) return;
-      const w = wrapFn(r2); if (w) made.push(w);
+      pushNeedRangesSplitByBr(L, r2, chunks);   // 同一 div 內的 <br> 也要切開,否則刪線會包住下一筆案名
     });
   } else {
-    const w = wrapFn(srcRg); if (w) made.push(w);
+    chunks.push(srcRg);
   }
+  chunks.forEach(r2 => {
+    if (!r2 || r2.collapsed) return;
+    const w = wrapFn(r2); if (w) made.push(w);
+  });
   if (savedAfter && restoreNeedRange(savedAfter)) return made;
   if (made.length){   // 重建選取:框住整段,可立刻再按一次整批取消
     try { const sel = window.getSelection(); sel.removeAllRanges(); const nr = document.createRange();
@@ -4496,9 +4584,12 @@ function toggleNeedStrike(exp){
     if (sel2 && sel2.rangeCount) wrapRangeByLine(ed, sel2.getRangeAt(0), wrapStrikeRange, saved);
   }
   cleanupNeedEd(ed);
-  reselectAfterNeedOp(ed, bookmark, pick);
   const after = editToNeed(ed);
-  if (after !== before) commitNeedSeg(exp.dataset.for, +ed.dataset.seg, after);
+  if (after !== before){
+    commitNeedSeg(exp.dataset.for, +ed.dataset.seg, after);
+    syncNeedEdFromStorage(ed, after);   // 正規化成「一行一個 div」,避免 <s> 內含 <br> 重開亂掉
+  }
+  reselectAfterNeedOp(ed, bookmark, pick);
 }
 // —— inline 標題:與刪線同一套「選取範圍」邏輯,把選取的文字包成 <span class="need-h">(序列化為 §..§)。
 //    標題與刪線各自獨立、可並存(巢狀);沒選取則提示先選。跟 toggleNeedStrike 對稱。
@@ -4524,7 +4615,8 @@ function wrapHeadingRange(rg){
   const frag = rg.extractContents();
   const hEl = document.createElement("span"); hEl.className = "need-h";
   hEl.appendChild(frag); rg.insertNode(hEl);
-  return hEl;
+  if (hEl.querySelector && hEl.querySelector("br")) splitNeedMarkAtBr(hEl);
+  return hEl.isConnected ? hEl : null;
 }
 function toggleNeedHeading(exp){
   const sel = window.getSelection();
@@ -4546,9 +4638,12 @@ function toggleNeedHeading(exp){
     if (sel2 && sel2.rangeCount) wrapRangeByLine(ed, sel2.getRangeAt(0), wrapHeadingRange, saved);
   }
   cleanupNeedEd(ed);
-  reselectAfterNeedOp(ed, bookmark, pick);
   const after = editToNeed(ed);
-  if (after !== before) commitNeedSeg(exp.dataset.for, +ed.dataset.seg, after);
+  if (after !== before){
+    commitNeedSeg(exp.dataset.for, +ed.dataset.seg, after);
+    syncNeedEdFromStorage(ed, after);   // 正規化成「一行一個 div」,避免 <s> 內含 <br> 重開亂掉
+  }
+  reselectAfterNeedOp(ed, bookmark, pick);
 }
 // 收合目前展開的客戶需求(供 ESC 使用):先提交編輯,再移除展開列並清狀態
 // 收合目前展開的客戶需求(供 ESC 使用):先提交編輯,再移除展開列並清狀態
@@ -4644,7 +4739,8 @@ function linkifyNeed(text){
   const seg = t => needTokens(t).map(tk => tk.t === "url"
     ? `<span class="need-link" role="link" tabindex="0" data-url="${esc(tk.v)}">連結</span>`
     : esc(tk.v)).join("");
-  return inlineHTML(text, seg);
+  // 必須逐行(與 needToEditHTML 一致):若整段丟進 inlineHTML,~~ 會跨 \n 配對 → 表格看得到刪線、展開卻沒有
+  return String(text == null ? "" : text).split("\n").map(ln => inlineHTML(ln, seg)).join("\n");
 }
 // 編輯用:§..§ → 標題、~~..~~ → 細刪除線;網址 → 原子化「連結」標籤(contenteditable=false),原始 URL 存在 data-url
 function editLineInner(text){
@@ -4653,9 +4749,12 @@ function editLineInner(text){
     : esc(tk.v)).join("");
   return inlineHTML(text, seg);
 }
+function needDisplayText(t){
+  return repairNeedStrikeNewlines(repairNeedBrokenStrikeLines(repairNeedCrossLineMarks(t||"")));
+}
 // 唯讀顯示用:逐行渲染(保留 # 標題),並把網址轉成「連結」
 function needToViewHTML(t){
-  const lines = (t||"").split("\n");
+  const lines = needDisplayText(t).split("\n");
   return (lines.length ? lines : [""]).map(ln => {
     const m = /^#\s+([\s\S]*)$/.exec(ln);
     const inner = m ? linkifyNeed(m[1]) : linkifyNeed(ln);
@@ -4664,11 +4763,11 @@ function needToViewHTML(t){
 }
 // 表單需求欄用:逐行渲染,網址→「連結」標籤,但保留「# 」為原樣文字(不轉粗體標題,維持表單原本編輯習慣)
 function needToFormHTML(t){
-  const lines = (t||"").split("\n");
+  const lines = needDisplayText(t).split("\n");
   return (lines.length ? lines : [""]).map(ln => `<div>${editLineInner(ln) || "<br>"}</div>`).join("");
 }
 function needToEditHTML(t){
-  const lines = (t||"").split("\n");
+  const lines = needDisplayText(t).split("\n");
   return (lines.length ? lines : [""]).map(ln => {
     const m = /^#\s+([\s\S]*)$/.exec(ln);
     const inner = m ? editLineInner(m[1]) : editLineInner(ln);
@@ -4688,6 +4787,25 @@ function isStrikeEl(n){
 function isHeadingEl(n){
   return !!(n && n.nodeType === 1 && n.tagName === "SPAN" && n.classList && n.classList.contains("need-h"));
 }
+// ~~ / § 不可跨行(重開依 \n 分行再配對標記);空行不加標記,避免幽靈刪線
+function wrapNeedMark(inner, open, close){
+  return String(inner == null ? "" : inner).split("\n").map(line => {
+    if (!String(line).replace(/[\u200B\s]/g, "") && !/https?:\/\//i.test(line)) return line;
+    return open + line + close;
+  }).join("\n");
+}
+// 空列佔位 <div><br></div>(或只含空白/零寬字) → 存成單一空行,不要拆成兩行
+function needLineOnlyBr(node){
+  if (!node || node.nodeType !== 1) return false;
+  let sawBr = false;
+  for (const n of node.childNodes){
+    if (n.nodeType === 3){ if (n.textContent.replace(/\u200B/g, "").trim()) return false; continue; }
+    if (n.nodeType !== 1) continue;
+    if (n.tagName === "BR"){ sawBr = true; continue; }
+    return false;
+  }
+  return sawBr || !node.childNodes.length;
+}
 function needNodeText(el){
   let s = "";
   el.childNodes.forEach(n => {
@@ -4695,9 +4813,16 @@ function needNodeText(el){
     if (n.nodeType === 1){
       if (n.classList && n.classList.contains("need-link-chip")){ s += (n.getAttribute("data-url") || ""); return; }
       if (n.classList && n.classList.contains("need-link")){ s += (n.getAttribute("data-url") || n.getAttribute("href") || ""); return; }   // 顯示用「連結」也還原成網址(否則序列化會吐字面「連結」,把存檔網址洗掉)
-      if (isHeadingEl(n)){ s += "\u00a7" + needNodeText(n) + "\u00a7"; return; }   // inline 標題 → 還原成 §..§ 語法
-      if (isStrikeEl(n)){ s += "~~" + needNodeText(n) + "~~"; return; }   // 刪除線 → 還原成 ~~..~~ 語法
-      if (n.tagName === "BR"){ return; }
+      if (isHeadingEl(n)){ s += wrapNeedMark(needNodeText(n), "\u00a7", "\u00a7"); return; }   // inline 標題 → §..§(逐行)
+      if (isStrikeEl(n)){ s += wrapNeedMark(needNodeText(n), "~~", "~~"); return; }   // 刪除線 → ~~..~~(逐行,不可包住換行)
+      if (n.tagName === "BR"){ s += "\n"; return; }   // 列內 <br> 要保留成換行,否則重開會黏成一團(U 版起的老 bug)
+      // 巢狀 DIV/P 當換行邊界(貼上 HTML 常見),避免重開黏成一團
+      if (n.tagName === "DIV" || n.tagName === "P"){
+        const inner = needLineOnlyBr(n) ? "" : needNodeText(n);
+        if (s && !s.endsWith("\n")) s += "\n";
+        s += inner;
+        return;
+      }
       s += needNodeText(n);
     }
   });
@@ -4705,23 +4830,109 @@ function needNodeText(el){
 }
 function editToNeed(ed){
   const out = [];
+  const pushLine = (t, isH) => { out.push(isH && String(t).trim() ? ("# " + t) : t); };
+  const pushMarked = (inner, open, close) => {
+    wrapNeedMark(inner, open, close).split("\n").forEach(p => out.push(p));
+  };
   ed.childNodes.forEach(node => {
     if (node.nodeType === 3){ const _t = node.textContent.replace(/\u200B/g,""); if (_t) out.push(_t); return; }
     if (node.nodeType === 1){
       if (node.tagName === "BR"){ out.push(""); return; }
       if (node.classList && node.classList.contains("need-link-chip")){ out.push(node.getAttribute("data-url") || ""); return; }
       if (node.classList && node.classList.contains("need-link")){ out.push(node.getAttribute("data-url") || node.getAttribute("href") || ""); return; }   // 顯示用「連結」也還原成網址(否則會把存檔網址洗成字面「連結」)
-      if (isHeadingEl(node)){ out.push("\u00a7" + needNodeText(node) + "\u00a7"); return; }   // 整行都是 inline 標題的極端情況
-      if (isStrikeEl(node)){ out.push("~~" + needNodeText(node) + "~~"); return; }   // 整行都是刪除線的極端情況
-      const t = needNodeText(node).replace(/\n/g,"");
+      if (isHeadingEl(node)){ pushMarked(needNodeText(node), "\u00a7", "\u00a7"); return; }
+      if (isStrikeEl(node)){ pushMarked(needNodeText(node), "~~", "~~"); return; }
       const isH = node.classList && node.classList.contains("nh");
-      out.push(isH && t.trim() ? ("# " + t) : t);
+      if (needLineOnlyBr(node)){ pushLine("", isH); return; }
+      const t = needNodeText(node);
+      let parts = String(t).split("\n");
+      if (parts.length > 1 && parts[parts.length - 1] === "") parts = parts.slice(0, -1);   // 尾端 <br> 多出的空段丟掉
+      parts.forEach((part, idx) => pushLine(part, isH && idx === 0));
     }
   });
   return out.join("\n").replace(/\s+$/,"");
 }
+// 備註「內容」半形符號→全形。刻意保留:
+// 1) ~~ 刪線語法的半形 ~
+// 2) 行首「# 」整行標題標記
+// 3) http(s):// 網址(連結標籤／linkify 只認 ASCII)
+// 不做英文字母大寫(與案名 normalizeName 不同),避免動到一般內文。
+function normalizeNeedSymbols(s){
+  s = String(s == null ? "" : s);
+  if (!s) return s;
+  const URL_RE = /https?:\/\/[A-Za-z0-9\-._~:\/?#\[\]@!$&'()*+,;=%]+/g;
+  function convChunk(chunk){
+    let out = "";
+    for (const ch of chunk){
+      if (ch === "~"){ out += ch; continue; }
+      if (ch >= "!" && ch <= "~" && !((ch >= "0" && ch <= "9") || (ch >= "A" && ch <= "Z") || (ch >= "a" && ch <= "z"))){
+        out += String.fromCharCode(ch.charCodeAt(0) + 0xFEE0);
+      } else out += ch;
+    }
+    return out;
+  }
+  function convProtectUrls(text){
+    let out = "", last = 0, m;
+    URL_RE.lastIndex = 0;
+    while ((m = URL_RE.exec(text))){
+      out += convChunk(text.slice(last, m.index));
+      out += m[0];
+      last = m.index + m[0].length;
+    }
+    out += convChunk(text.slice(last));
+    return out;
+  }
+  return s.split("\n").map(line => {
+    const m = /^(#\s+)([\s\S]*)$/.exec(line);
+    return m ? (m[1] + convProtectUrls(m[2])) : convProtectUrls(line);
+  }).join("\n");
+}
+// 刪線 ~~..~~ 正後方若緊黏下一筆(無換行) → 補 \n。典型壞資料:「~~無視~~富宇山河匯」黏成一團
+// 注意:內文為空／只有空白換行時不要動(否則「~~\\n~~下一行」會被拆成幽靈 ~~ 行)
+function repairNeedStrikeNewlines(t){
+  t = String(t == null ? "" : t);
+  if (!t || t.indexOf("~~") < 0) return t;
+  return t.replace(/~~((?:(?!~~)[\s\S])*?)~~(?!\n)(?=\S)/g, (m, inner) => {
+    if (!String(inner).replace(/[\u200B\s]/g, "")) return m;
+    return "~~" + inner + "~~\n";
+  });
+}
+// ~~...~~ 若內含換行 → 拆成逐行標記。否則展開(逐行解析)看不到刪線,表格(舊整段解析)卻看得到
+function repairNeedCrossLineMarks(t){
+  t = String(t == null ? "" : t);
+  if (!t || t.indexOf("~~") < 0) return t;
+  return t.replace(/~~((?:(?!~~)[\s\S])*?)~~/g, (_, inner) => {
+    if (inner.indexOf("\n") < 0) return "~~" + inner + "~~";
+    return inner.split("\n").map(line => {
+      if (!String(line).replace(/[\u200B\s]/g, "") && !/https?:\/\//i.test(line)) return line;
+      return "~~" + line + "~~";
+    }).join("\n");
+  });
+}
+// 修復曾被誤傷的「~~\\n本文~~」→「~~本文~~」。
+// 不可匹配「~~\\n~~」(兩行刪線交界),否則會把多行刪線黏回一大段。
+function repairNeedBrokenStrikeLines(t){
+  t = String(t == null ? "" : t);
+  if (!t || t.indexOf("~~") < 0) return t;
+  return t.replace(/~~\n((?:(?!~~)[\s\S])+?)~~/g, (m, inner) => {
+    if (!String(inner).replace(/[\u200B\s]/g, "")) return m;
+    return "~~" + inner + "~~";
+  });
+}
 function normalizeNeedStorage(t){
-  return String(t == null ? "" : t).replace(/\u200B/g, "").replace(/~~[\u200B\s]*~~/g, "");
+  // 只清「同一行內」的空 ~~ / 零寬字;不可用 \\s(含換行),否則相鄰兩行 ~~\\n~~ 會被刪掉、多行刪線黏成一大段
+  t = String(t == null ? "" : t).replace(/\u200B/g, "").replace(/~~[\u200B\t ]*~~/g, "");
+  t = repairNeedCrossLineMarks(t);
+  t = repairNeedBrokenStrikeLines(t);
+  t = repairNeedStrikeNewlines(t);
+  return normalizeNeedSymbols(t);
+}
+// 存檔後若有符號轉換,把編輯區重繪成正規化內容(不在打字時 execCommand,避免多行+連結被弄扁)
+function syncNeedEdFromStorage(ed, val){
+  if (!ed || ed.getAttribute("contenteditable") !== "true") return;
+  if (ed.classList && ed.classList.contains("needexp-view")) return;
+  const htmlFn = ed.classList.contains("fneed-ed") ? needToFormHTML : needToEditHTML;
+  ed.innerHTML = htmlFn(val) || "<div><br></div>";
 }
 function needCurLine(ed){
   const sel = window.getSelection(); if (!sel || !sel.rangeCount) return null;
@@ -4863,7 +5074,7 @@ function fragToNeedText(box){
     if (n.nodeType !== 1) return;
     if (n.classList && n.classList.contains("need-link-chip")){ cur += (n.getAttribute("data-url") || ""); return; }
     if (n.classList && n.classList.contains("need-link")){ cur += (n.getAttribute("data-url") || n.getAttribute("href") || ""); return; }   // 正常模式的「連結」(span data-url;舊 <a> href 相容)也還原成網址
-    if (isStrikeEl(n)){ cur += "~~"; n.childNodes.forEach(walk); cur += "~~"; return; }   // 刪除線 → ~~..~~
+    if (isStrikeEl(n)){ cur += wrapNeedMark(needNodeText(n), "~~", "~~"); return; }   // 刪除線 → ~~..~~(逐行,與存檔一致)
     if (n.tagName === "BR"){ flush(); return; }
     const isLine = (n.tagName === "DIV" || n.tagName === "P");
     if (isLine){ if (cur.trim()) flush(); else cur = ""; }   // 行區塊前的殘留:有內容才成行,純空白(HTML 排版縫隙)直接丟棄
@@ -4966,7 +5177,7 @@ function pasteNeedInline(ed, tx){
 // 卡片表單備註欄(.fneed-ed):貼上網址→「連結」標籤(與表格展開區同一套)
 function pasteNeedField(ed, tx){
   if (!ed) return;
-  tx = String(tx == null ? "" : tx);
+  tx = normalizeNeedSymbols(String(tx == null ? "" : tx));
   if (tx && caretAfterChip(ed)) tx = " " + tx;
   if (tx.indexOf("\n") < 0) pasteNeedInline(ed, tx);
   else {
@@ -4978,6 +5189,11 @@ function pasteNeedField(ed, tx){
 }
 [F.note, F.note2, F.note3].forEach(ed => {
   if (!ed) return;
+  ed.addEventListener("blur", () => {
+    const raw = editToNeed(ed);
+    const norm = normalizeNeedStorage(raw);
+    if (norm !== raw) syncNeedEdFromStorage(ed, norm);
+  });
   ed.addEventListener("paste", e => {
     e.preventDefault();
     const cd = e.clipboardData || window.clipboardData;
