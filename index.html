@@ -1040,7 +1040,8 @@
   tr.needexp.editing > td{background:var(--surface-3) !important;border-bottom-color:var(--line) !important;box-shadow:inset 3px 0 0 var(--border-2), 0 18px 26px -12px rgba(22,34,42,.1) !important;}
   .needexp-wrap{position:sticky;left:0;box-sizing:border-box;padding:13px 16px 15px;}
   /* 展開聚焦模式:有展開列時,其他列淡化,視線集中在展開區塊 */
-  .exp-focus-on .tbody-wrap table:has(tr.exp-open) tbody tr:not(.exp-open):not(.needexp){opacity:.32;transition:opacity .2s;}
+  /* opacity on <tr> is ignored by Chromium table layout — fade cells instead */
+  .exp-focus-on .tbody-wrap table:has(tr.exp-open) tbody tr:not(.exp-open):not(.needexp) > td{opacity:.32;transition:opacity .2s;}
   /* 展開聚焦切換鈕(只在表格檢視顯示) */
   .exp-focus-btn{display:none;}
   .table-mode .exp-focus-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink-soft);cursor:pointer;flex:none;transition:all .15s;}
@@ -1105,8 +1106,8 @@
   .nseg-t[contenteditable="true"]{border-bottom:1px dashed var(--border-2);cursor:text;}
   .nseg-t[contenteditable="false"]{border-bottom:1px solid transparent;}  /* 正常模式保留同樣 1px 高度,切換時標題列不跳 */
   .nseg-t[contenteditable="true"]:focus{background:var(--surface-1);border-bottom-color:var(--accent);}
-  .nseg-hbtn{flex:none;font-family:inherit;font-size:.76rem;font-weight:600;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 11px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s;}
-  .nseg-hbtn:hover{background:var(--surface-1);border-color:var(--border-2);}
+  .nseg-hbtn{flex:none;font-family:inherit;font-size:.72rem;font-weight:400;color:var(--text-faint);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;cursor:pointer;white-space:nowrap;opacity:.92;transition:background .15s,border-color .15s,color .15s,opacity .15s;}
+  .nseg-hbtn:hover{background:var(--surface-1);border-color:var(--border-2);color:var(--ink-soft);opacity:1;}
   .nseg-hbtn:active{opacity:.55;}
   .nseg-hbtn-ph{visibility:hidden;pointer-events:none;}
   @media (max-width:860px){ .nseg-grid{grid-template-columns:1fr;} }
@@ -1128,13 +1129,22 @@
   @media (hover:hover){ .exp-open .tcell:hover{background:transparent;} }
   #needHover{position:fixed;z-index:220;display:none;width:min(1000px,94vw);pointer-events:none;background:var(--accent-tint);border:1px solid var(--accent-tint-bd);border-top:none;border-radius:0 0 14px 14px;padding:13px 16px 15px;box-shadow:0 16px 44px rgba(22,34,42,.26);}
   #needHover.above{border-top:1px solid var(--accent-tint-bd);border-bottom:none;border-radius:14px 14px 0 0;box-shadow:0 -16px 44px rgba(22,34,42,.26);}
-  #needHover.show{display:flex;gap:12px;align-items:stretch;}
+  #needHover.show{display:flex;flex-direction:row;gap:12px;align-items:stretch;}
   #needHover .nh-seg{flex:1;min-width:0;margin:0;display:flex;flex-direction:column;}
   #needHover .nh-tt{font-size:.8rem;font-weight:700;color:var(--accent-deep);margin-bottom:8px;padding:2px 0;}
   #needHover .nh-bd{flex:1;font-size:.92rem;line-height:1.7;color:var(--ink);white-space:pre-wrap;word-break:break-word;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px 14px;min-height:96px;max-height:60vh;overflow:hidden;}
   #needHover .nh-bd div{min-height:1.4em;}
   #needHover .nh-bd .nh{font-weight:800;font-size:1.05em;color:var(--accent-deep);}
   #needHover .nh-empty{color:var(--text-faint);}
+  /* 與展開 .nseg-grid 同一斷點:窄螢幕改上中下,寬螢幕維持左中右(.stacked 由 JS 依視窗／表格寬度同步) */
+  #needHover.show.stacked{flex-direction:column;align-items:stretch;gap:10px;}
+  #needHover.show.stacked .nh-seg{flex:0 1 auto;}
+  #needHover.show.stacked .nh-bd{flex:0 1 auto;max-height:min(28vh,220px);}
+  @media (max-width:860px){
+    #needHover.show{flex-direction:column;align-items:stretch;gap:10px;}
+    #needHover .nh-seg{flex:0 1 auto;}
+    #needHover .nh-bd{flex:0 1 auto;max-height:min(28vh,220px);}
+  }
   @media (hover:none){ #needHover{display:none !important;} }
   .tempty{padding:40px 20px;text-align:center;color:var(--ink-soft);font-size:.9rem;}
   tr.trow-removing{opacity:0;transform:translateX(8px);transition:opacity .22s,transform .22s;}
@@ -1540,7 +1550,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.24ZE";
+const APP_VERSION = "2026.07.24ZM";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -1551,13 +1561,17 @@ const SEED = [
 const layoutText = g => ({"322":"3房2廳2衛","221":"2房2廳1衛","3改2/22":"3改2房2廳2衛"}[g]) || (g==="開放"?"開放空間":g||"");
 // 搜尋比對用的字串來源:各欄位之間夾一個分隔字元(U+001F),避免「甲欄結尾＋乙欄開頭」被拼成假命中
 const SEARCH_FIELDS = ["name","addr","agent","store","cat","layout","floor","price","note","note2","note3","t1","t2","t3"];   // 不含 due(到期日):關鍵字搜尋不比對到期
+const SEARCH_URL_RE = /https?:\/\/[A-Za-z0-9\-._~:\/?#\[\]@!$&'()*+,;=%]+/gi;   // 與 linkify 同一套;搜尋略過連結網址
 function searchHay(d){
   let s = "";
   const NOTE_KEYS = { note:1, note2:1, note3:1 };
   for (const k of SEARCH_FIELDS){
     let v = d[k];
     v = (v == null) ? "" : String(v);
-    if (NOTE_KEYS[k]) v = v.replace(/[\u00a7\u200b]|~~/g, "");   // 備註三段:去掉 §標題/~~刪線/零寬錨點 等標記,讓「近§捷運§站」也能被「捷運站」搜到(比對貼近顯示文字)
+    if (NOTE_KEYS[k]){
+      v = v.replace(/[\u00a7\u200b]|~~/g, "");   // 備註三段:去掉 §標題/~~刪線/零寬錨點 等標記,讓「近§捷運§站」也能被「捷運站」搜到(比對貼近顯示文字)
+      v = v.replace(SEARCH_URL_RE, " ");         // 不比對「連結」背後的網址
+    }
     s += v + "\u001F";
   }
   s += layoutText(d.layout) + "\u001F";   // 格局展開字(322 → 3房2廳2衛)也能搜
@@ -4207,9 +4221,10 @@ function openNeedExp(tr, doFocus){
   const head = (sg) => {
     const ti = needTitle(it, sg);
     const thtml = `<span class="nseg-t" contenteditable="${editMode?"true":"false"}" data-seg="${sg}" data-titleedit="1" spellcheck="false">${esc(ti)}</span>`;
-    const bhtml = (sg === 3 && editMode)
-      ? `<span class="nseg-btns"><button type="button" class="nseg-hbtn nseg-sbtn" title="把選取中的文字加上／取消刪除線">刪線</button><button type="button" class="nseg-hbtn" title="把選取中的文字設為／取消標題">標題</button></span>`
-      : `<span class="nseg-btns"><span class="nseg-hbtn nseg-hbtn-ph" aria-hidden="true">刪線</span><span class="nseg-hbtn nseg-hbtn-ph" aria-hidden="true">標題</span></span>`;   // 三格標題列都放同樣的按鈕佔位(僅 seg3 編輯模式為真按鈕),高度一致 → 備註/注意/其它三個框對齊
+    // 編輯模式:三段都放真「刪線／標題」(窄螢幕直排時備註/注意也要能按;寬螢幕三欄並排仍各自一組)
+    const bhtml = editMode
+      ? `<span class="nseg-btns"><button type="button" class="nseg-hbtn nseg-sbtn" data-seg="${sg}" title="把選取中的文字加上／取消刪除線">刪線</button><button type="button" class="nseg-hbtn nseg-tbtn" data-seg="${sg}" title="把選取中的文字設為／取消標題">標題</button></span>`
+      : `<span class="nseg-btns"><span class="nseg-hbtn nseg-hbtn-ph" aria-hidden="true">刪線</span><span class="nseg-hbtn nseg-hbtn-ph" aria-hidden="true">標題</span></span>`;
     return `<div class="nseg-head">${thtml}${bhtml}</div>`;
   };
   const body = (sg) => editMode
@@ -4231,15 +4246,17 @@ function openNeedExp(tr, doFocus){
     ed.innerHTML = v ? (editMode ? needToEditHTML(v) : needToViewHTML(v)) : (editMode ? "<div><br></div>" : '<div class="tneed-ph">（無內容）</div>');
   });
   if (editMode){
-    const hb = exp.querySelector("button.nseg-hbtn:not(.nseg-sbtn)");   // 限定 button:三格都有 placeholder(span)後,要精確抓 seg3「標題」真按鈕,不能抓到隱形佔位(否則點了沒反應)
-    if (hb) hb.addEventListener("pointerdown", ev => {
-      ev.preventDefault();                                          // 與刪線鈕同模式:不搶焦點,選取範圍保留
-      toggleNeedHeading(exp);
+    exp.querySelectorAll("button.nseg-tbtn").forEach(hb => {
+      hb.addEventListener("pointerdown", ev => {
+        ev.preventDefault();
+        toggleNeedHeading(exp);
+      });
     });
-    const sb = exp.querySelector("button.nseg-sbtn");
-    if (sb) sb.addEventListener("pointerdown", ev => {
-      ev.preventDefault();                                          // 與標題鈕同模式:不搶焦點,選取範圍保留
-      toggleNeedStrike(exp);
+    exp.querySelectorAll("button.nseg-sbtn").forEach(sb => {
+      sb.addEventListener("pointerdown", ev => {
+        ev.preventDefault();
+        toggleNeedStrike(exp);
+      });
     });
     if (doFocus){ const f = exp.querySelector('.nseg-ed[data-seg="1"]'); if (f) f.focus(); }
   }
@@ -4400,6 +4417,8 @@ function expandNeedSoftBreaks(ed){
     if (mk.isConnected) splitNeedMarkAtBr(mk);
   });
   [...ed.querySelectorAll(":scope > div")].forEach(div => {
+    // 純空列佔位 <div><br></div> 不要拆:BR 當分隔會「空+再空」→ 每次 cleanup 空行加倍(連續貼上變一堆空白)
+    if (typeof needLineOnlyBr === "function" && needLineOnlyBr(div)) return;
     const hasBr = [...div.childNodes].some(n => n.nodeType === 1 && n.tagName === "BR");
     if (!hasBr) return;
     const nh = div.classList && div.classList.contains("nh");
@@ -5325,6 +5344,19 @@ function pasteNeedInline(ed, tx){
   });
   if (!lastNode) return;
   rg.insertNode(frag);
+  // 插入到空列佔位時,清掉後方殘留 <br>,避免 cleanup→expandNeedSoftBreaks 拆出尾端空行、游標掉進空行
+  try {
+    let n = lastNode.nextSibling;
+    while (n && n.nodeType === 3 && !String(n.textContent || "").replace(/\u200B/g, "").trim()) n = n.nextSibling;
+    if (n && n.nodeType === 1 && n.tagName === "BR"){
+      let onlyEmpty = true;
+      for (let x = n.nextSibling; x; x = x.nextSibling){
+        if (x.nodeType === 3 && String(x.textContent || "").replace(/\u200B/g, "").trim()){ onlyEmpty = false; break; }
+        if (x.nodeType === 1 && x.tagName !== "BR"){ onlyEmpty = false; break; }
+      }
+      if (onlyEmpty) n.remove();
+    }
+  } catch(_){}
   try { const nr = document.createRange(); nr.setStartAfter(lastNode); nr.collapse(true);
     sel.removeAllRanges(); sel.addRange(nr); } catch(_){}
 }
@@ -5333,13 +5365,27 @@ function pasteNeedField(ed, tx){
   if (!ed) return;
   tx = normalizeNeedSymbols(String(tx == null ? "" : tx));
   if (tx && caretAfterChip(ed)) tx = " " + tx;
-  if (tx.indexOf("\n") < 0) pasteNeedInline(ed, tx);
-  else {
+  if (tx.indexOf("\n") < 0){
+    pasteNeedInline(ed, tx);
+    cleanupNeedEd(ed);
+    try {
+      let target = null;
+      for (let i = ed.childNodes.length - 1; i >= 0; i--){
+        const n = ed.childNodes[i];
+        if (n.nodeType === 3 && String(n.textContent || "").replace(/\u200B/g, "").trim()){ target = n; break; }
+        if (n.nodeType === 1 && !(typeof needLineOnlyBr === "function" && needLineOnlyBr(n))){ target = n; break; }
+      }
+      if (target){
+        const r = document.createRange(); r.selectNodeContents(target); r.collapse(false);
+        const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      }
+    } catch(_){}
+  } else {
     try { document.execCommand("insertText", false, tx); } catch(err){}
     ed.innerHTML = needToFormHTML(editToNeed(ed)) || "<div><br></div>";
     placeNeedCaretEnd(ed);
+    cleanupNeedEd(ed);
   }
-  cleanupNeedEd(ed);
 }
 [F.note, F.note2, F.note3].forEach(ed => {
   if (!ed) return;
@@ -5385,17 +5431,18 @@ function showNeedHover(cell, it){
   needHover.innerHTML = seg(1,"備註") + seg(2,"注意") + seg(3,"其它");
   needHover.style.visibility = "hidden";
   needHover.classList.add("show");
-  // 位置:貼齊該列正下方、寬度與表格可視範圍相同(跟展開出現的位置一致);太靠底部則翻到列上方
+  // 位置:永遠貼該列正下方(跟展開一致)。內容再高也不翻到列上方,避免遮住觸發列／表頭
   const tr = cell.closest("tr");
   const rowR = (tr || cell).getBoundingClientRect();
   const twR = tableWrap.getBoundingClientRect();
   needHover.style.width = Math.max(320, twR.width) + "px";
-  const h = needHover.offsetHeight;
+  needHover.style.maxHeight = "";
+  needHover.style.overflow = "";
+  const narrow = (window.matchMedia && window.matchMedia("(max-width:860px)").matches) || twR.width < 860;
+  needHover.classList.toggle("stacked", narrow);
   let left = Math.max(8, twR.left);
-  let above = false;
-  let top = rowR.bottom;                       // 緊貼該列底線,不留縫
-  if (top + h > window.innerHeight - 8){ top = Math.max(8, rowR.top - h); above = true; }
-  needHover.classList.toggle("above", above);   // 翻到上方時,改成下緣貼合
+  let top = rowR.bottom;
+  needHover.classList.remove("above");         // 內容再高也不翻上,避免遮住觸發列／表頭
   needHover.style.left = left + "px";
   needHover.style.top = top + "px";
   needHover.style.visibility = "";
