@@ -1552,7 +1552,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.24ZN";
+const APP_VERSION = "2026.07.24ZO";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -3455,6 +3455,7 @@ function isTabStop(el){
   if (el.tabIndex < 0) return false;
   if (el.getAttribute("aria-hidden") === "true") return false;
   if (el.closest("[inert]")) return false;
+  if (el.closest(".need-link, .need-link-chip")) return false;   // 「連結」只滑鼠點,不進 TAB
   const bg = el.closest(".modal-bg");
   if (bg && !bg.classList.contains("open")) return false;
   const ib = el.closest("#installBar");
@@ -3471,28 +3472,30 @@ function getTabStops(container){
   if (!container) return [];
   return Array.prototype.filter.call(container.querySelectorAll(TAB_SEL), isTabStop);
 }
+/* 一律自行搬焦點:只在邊界才 preventDefault 時,中段仍可能被瀏覽器帶到視窗「三個點」 */
 function trapFocusKey(e, container){
   if (e.key !== "Tab" || !container) return;
   const nodes = getTabStops(container);
-  if (!nodes.length){ e.preventDefault(); return; }
-  const first = nodes[0], last = nodes[nodes.length - 1];
+  e.preventDefault();
+  if (!nodes.length) return;
   const active = document.activeElement;
-  if (!container.contains(active)){ e.preventDefault(); try { first.focus(); } catch(err){} return; }
-  if (active === container){ e.preventDefault(); try { (e.shiftKey ? last : first).focus(); } catch(err){} return; }
-  const idx = nodes.indexOf(active);
-  if (idx < 0){
-    e.preventDefault();
-    let prev = null, next = null;
-    for (let i = 0; i < nodes.length; i++){
-      const pos = active.compareDocumentPosition(nodes[i]);
-      if (pos & Node.DOCUMENT_POSITION_FOLLOWING){ next = nodes[i]; break; }
-      prev = nodes[i];
+  const n = nodes.length;
+  let i = nodes.indexOf(active);
+  if (i < 0){
+    if (!container.contains(active)){
+      try { (e.shiftKey ? nodes[n - 1] : nodes[0]).focus(); } catch(err){}
+      return;
     }
-    try { (e.shiftKey ? (prev || last) : (next || first)).focus(); } catch(err){}
+    let prev = -1, nextI = n;
+    for (let j = 0; j < n; j++){
+      if (active.compareDocumentPosition(nodes[j]) & Node.DOCUMENT_POSITION_FOLLOWING){ nextI = j; break; }
+      prev = j;
+    }
+    try { (e.shiftKey ? (prev >= 0 ? nodes[prev] : nodes[n - 1]) : (nextI < n ? nodes[nextI] : nodes[0])).focus(); } catch(err){}
     return;
   }
-  if (e.shiftKey && idx === 0){ e.preventDefault(); try { last.focus(); } catch(err){} }
-  else if (!e.shiftKey && idx === nodes.length - 1){ e.preventDefault(); try { first.focus(); } catch(err){} }
+  const j = e.shiftKey ? (i - 1 + n) % n : (i + 1) % n;
+  try { nodes[j].focus(); } catch(err){}
 }
 function tabTrapTarget(){
   if (confirmBg && confirmBg.classList.contains("open")) return confirmBg.querySelector(".confirm");
@@ -3535,11 +3538,11 @@ confirmBg.addEventListener("pointerdown", e => { _confirmDownOnBg = e.target ===
 confirmBg.addEventListener("click", e => { if (e.target === confirmBg && _confirmDownOnBg) closeConfirm(); _confirmDownOnBg = false; });
 // ---- Esc 鍵:關閉最上層的浮層/對話框(依疊層順序一次關一層;桌機體貼) ----
 document.addEventListener("keydown", e => {
+  if (e.key === "Tab"){ trapFocusKey(e, tabTrapTarget()); }
+}, true);
+document.addEventListener("keydown", e => {
   if (e.key === "Enter" && confirmBg.classList.contains("open")){ e.preventDefault(); document.getElementById("confirmOk").click(); return; }
-  if (e.key === "Tab"){
-    trapFocusKey(e, tabTrapTarget());
-    return;
-  }
+  if (e.key === "Tab") return;   // Tab 已由 capture 階段 trapFocusKey 處理
   if (e.key !== "Escape") return;
   const ib = document.getElementById("installBar");
   if (ib && ib.classList.contains("show")){ ib.classList.remove("show"); try { localStorage.setItem("property_app_install_dismiss_v1", "1"); } catch(err){} return; }
@@ -3770,7 +3773,6 @@ function openDetail(id){
   const seg = (t, c, ic) => `<div class="dtl-sec"><div class="dtl-h">${ic}${esc(t)}</div><div class="needexp-ed needexp-view">${c ? needToViewHTML(c) : '<span class="tneed-ph">—</span>'}</div></div>`;
   const segHTML = seg(needTitle(d,1), d.note, IC_DOC) + seg(needTitle(d,2), d.note2, IC_EYE) + seg(needTitle(d,3), d.note3, IC_CHECK);
   document.getElementById("detailBody").innerHTML = basic + agent + links + segHTML;
-  document.getElementById("detailBody").querySelectorAll(".need-link").forEach(a => { a.tabIndex = 0; });   // 詳情內「連結」納入 TAB 循環(表格仍用 -1)
   detailBg.classList.add("open");
   lockOverlay();
 }
