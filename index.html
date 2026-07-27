@@ -570,8 +570,9 @@
     transform-origin:50% 100%;
     display:flex;align-items:center;gap:10px;
     background:var(--ink);color:#fff;border-radius:16px;padding:10px 12px 10px 18px;
-    box-shadow:0 12px 32px rgba(0,0,0,.3);transition:transform .26s cubic-bezier(.2,.75,.3,1);}
-  .selbar.show{transform:translate(calc(-50% + var(--vvx)), var(--vvy)) scale(var(--vvs));}
+    box-shadow:0 12px 32px rgba(0,0,0,.3);transition:transform .26s cubic-bezier(.2,.75,.3,1);
+    visibility:hidden;}   /* 藏在螢幕外時不可被 TAB 聚焦(否則會「空 TAB」再跳到視窗三個點) */
+  .selbar.show{transform:translate(calc(-50% + var(--vvx)), var(--vvy)) scale(var(--vvs));visibility:visible;}
   /* 拖曳連選進行中:讓底部工具列/列表頁首/表格表頭「穿透」——
      手指壓在上面時,底下的卡片/列仍能被偵測並即時打勾(拖曳時本來也按不了這些鈕,穿透零副作用) */
   body.dragsel .selbar,body.dragsel .list-header,body.dragsel .thead-wrap{pointer-events:none;}
@@ -1196,8 +1197,9 @@
   .install-bar{position:fixed;z-index:60;left:50%;bottom:calc(16px + var(--safe-bottom));transform:translateX(-50%) translateY(220%);
     width:min(470px,calc(100% - 24px));display:flex;align-items:center;gap:11px;
     background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 13px;
-    box-shadow:0 14px 36px rgba(0,0,0,.30);transition:transform .32s cubic-bezier(.2,.75,.3,1);}
-  .install-bar.show{transform:translateX(-50%) translateY(0);}
+    box-shadow:0 14px 36px rgba(0,0,0,.30);transition:transform .32s cubic-bezier(.2,.75,.3,1);
+    visibility:hidden;}   /* 未顯示時不可 TAB(螢幕外仍占焦點順序會造成空 TAB／跳到視窗三個點) */
+  .install-bar.show{transform:translateX(-50%) translateY(0);visibility:visible;}
   .install-bar .ib-ic{flex:none;width:40px;height:40px;border-radius:11px;background:var(--accent-tint);
     display:grid;place-items:center;color:var(--accent-deep);}
   .install-bar .ib-ic svg{width:22px;height:22px;}
@@ -1550,7 +1552,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.07.24ZM";
+const APP_VERSION = "2026.07.24ZN";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -3443,21 +3445,74 @@ function unlockOverlay(){
 }
 function focusTrapEl(el){
   if (!el) return;
-  const t = el.querySelector('button, [href], input, select, textarea, [contenteditable="true"], [tabindex]:not([tabindex="-1"])');
+  const nodes = getTabStops(el);
+  const t = nodes[0] || el.querySelector(TAB_SEL);
   setTimeout(() => { try { (t || el).focus(); } catch(e){} }, 50);
+}
+const TAB_SEL = 'button, [href], input, select, textarea, [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
+function isTabStop(el){
+  if (!el || el.disabled) return false;
+  if (el.tabIndex < 0) return false;
+  if (el.getAttribute("aria-hidden") === "true") return false;
+  if (el.closest("[inert]")) return false;
+  const bg = el.closest(".modal-bg");
+  if (bg && !bg.classList.contains("open")) return false;
+  const ib = el.closest("#installBar");
+  if (ib && !ib.classList.contains("show")) return false;
+  const sb = el.closest("#selbar");
+  if (sb && !sb.classList.contains("show")) return false;
+  try {
+    const st = window.getComputedStyle(el);
+    if (st.display === "none" || st.visibility === "hidden") return false;
+  } catch(err){}
+  return true;
+}
+function getTabStops(container){
+  if (!container) return [];
+  return Array.prototype.filter.call(container.querySelectorAll(TAB_SEL), isTabStop);
 }
 function trapFocusKey(e, container){
   if (e.key !== "Tab" || !container) return;
-  const nodes = Array.prototype.filter.call(
-    container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
-    el => el.tabIndex >= 0 && !el.disabled && el.getAttribute("aria-hidden") !== "true"
-  );
-  if (!nodes.length) return;
+  const nodes = getTabStops(container);
+  if (!nodes.length){ e.preventDefault(); return; }
   const first = nodes[0], last = nodes[nodes.length - 1];
-  if (!container.contains(document.activeElement)){ e.preventDefault(); first.focus(); return; }
-  if (document.activeElement === container){ e.preventDefault(); (e.shiftKey ? last : first).focus(); return; }
-  if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
-  else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  const active = document.activeElement;
+  if (!container.contains(active)){ e.preventDefault(); try { first.focus(); } catch(err){} return; }
+  if (active === container){ e.preventDefault(); try { (e.shiftKey ? last : first).focus(); } catch(err){} return; }
+  const idx = nodes.indexOf(active);
+  if (idx < 0){
+    e.preventDefault();
+    let prev = null, next = null;
+    for (let i = 0; i < nodes.length; i++){
+      const pos = active.compareDocumentPosition(nodes[i]);
+      if (pos & Node.DOCUMENT_POSITION_FOLLOWING){ next = nodes[i]; break; }
+      prev = nodes[i];
+    }
+    try { (e.shiftKey ? (prev || last) : (next || first)).focus(); } catch(err){}
+    return;
+  }
+  if (e.shiftKey && idx === 0){ e.preventDefault(); try { last.focus(); } catch(err){} }
+  else if (!e.shiftKey && idx === nodes.length - 1){ e.preventDefault(); try { first.focus(); } catch(err){} }
+}
+function tabTrapTarget(){
+  if (confirmBg && confirmBg.classList.contains("open")) return confirmBg.querySelector(".confirm");
+  const calOpen = document.getElementById("calBg");
+  if (calOpen && calOpen.classList.contains("open")) return calOpen.querySelector(".cal");
+  const flt = document.getElementById("fltBg");
+  if (flt && flt.classList.contains("open")) return flt.querySelector(".fpanel");
+  const cat = document.getElementById("catBg");
+  if (cat && cat.classList.contains("open")) return cat.querySelector(".modal");
+  const mbg = document.getElementById("modalBg");
+  if (mbg && mbg.classList.contains("open")) return mbg.querySelector(".modal");
+  const dbg = document.getElementById("detailBg");
+  if (dbg && dbg.classList.contains("open")) return dbg.querySelector(".modal");
+  const settings = document.getElementById("settings");
+  if (settings && settings.classList.contains("active")) return settings;
+  const list = document.getElementById("list");
+  if (list && list.classList.contains("active")) return list;
+  const cover = document.getElementById("cover");
+  if (cover && cover.style.display !== "none") return cover;
+  return document.getElementById("app");
 }
 const confirmBg = document.getElementById("confirmBg");
 let confirmCb = null, confirmCancelCb = null, _confirmDownOnBg = false;
@@ -3482,12 +3537,8 @@ confirmBg.addEventListener("click", e => { if (e.target === confirmBg && _confir
 document.addEventListener("keydown", e => {
   if (e.key === "Enter" && confirmBg.classList.contains("open")){ e.preventDefault(); document.getElementById("confirmOk").click(); return; }
   if (e.key === "Tab"){
-    if (confirmBg.classList.contains("open")){ trapFocusKey(e, confirmBg.querySelector(".confirm")); return; }
-    const calOpen = document.getElementById("calBg");
-    if (calOpen && calOpen.classList.contains("open")){ trapFocusKey(e, calOpen.querySelector(".cal")); return; }
-    const mbg = document.getElementById("modalBg");
-    const modal = mbg && mbg.classList.contains("open") ? mbg.querySelector(".modal") : null;
-    if (modal){ trapFocusKey(e, modal); return; }
+    trapFocusKey(e, tabTrapTarget());
+    return;
   }
   if (e.key !== "Escape") return;
   const ib = document.getElementById("installBar");
@@ -3719,6 +3770,7 @@ function openDetail(id){
   const seg = (t, c, ic) => `<div class="dtl-sec"><div class="dtl-h">${ic}${esc(t)}</div><div class="needexp-ed needexp-view">${c ? needToViewHTML(c) : '<span class="tneed-ph">—</span>'}</div></div>`;
   const segHTML = seg(needTitle(d,1), d.note, IC_DOC) + seg(needTitle(d,2), d.note2, IC_EYE) + seg(needTitle(d,3), d.note3, IC_CHECK);
   document.getElementById("detailBody").innerHTML = basic + agent + links + segHTML;
+  document.getElementById("detailBody").querySelectorAll(".need-link").forEach(a => { a.tabIndex = 0; });   // 詳情內「連結」納入 TAB 循環(表格仍用 -1)
   detailBg.classList.add("open");
   lockOverlay();
 }
