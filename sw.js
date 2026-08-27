@@ -1,11 +1,13 @@
-/* ?拐辣蝮質汗 ??Service Worker
-   ?桃?:
-   1) 霈?Chrome / Edge ?函雯???＊蝷箝?鋆?蝷?摰??內?閬?fetch ??撣詨?)??   2) 霈?App ?臭誑?Ｙ???(?～雯頝臬?蝺??敹怠?????蝺?銝敺??啁?,
-      ?隞乩?銋?瘥活?函蔡?啁??賣?擐砌???,銝??∪??)??   瘜冽?:Google ?脩垢?郊蝑楊蝬脣?隢?銝敺漱蝯衣雯頝?銝??翰??*/
+/* 物件總覽 — Service Worker
+   用途:
+   1) 讓 Chrome / Edge 願意顯示「安裝」提示(PWA 必須註冊 fetch 事件)。
+   2) 讓 App 可以離線開啟(網路優先,失敗才回快取;先取新版、拿不到才用舊版)。
+   注意:Google 雲端同步等跨網域請求一律直接走網路,不攔截、不快取。
+*/
 
-const CACHE = "property-app-shell-v20260817-C";
+const CACHE = "property-app-shell-v20260828-A";
 const SHELL = ["./", "./index.html", "./sw.js", "./icon-192.png", "./icon-180.png", "./icon-512.png"];
-const OFFLINE_HTML = "<!DOCTYPE html><html lang=\"zh-Hant\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>?Ｙ?</title></head><body style=\"font-family:sans-serif;padding:2rem;text-align:center\"><h1>?桀??Ｙ?</h1><p>隢??蝬脰楝敺??圈????Ⅱ隤?冽迨鋆蔭????? App??/p></body></html>";
+const OFFLINE_HTML = "<!DOCTYPE html><html lang=\"zh-Hant\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>目前離線</title></head><body style=\"font-family:sans-serif;padding:2rem;text-align:center\"><h1>目前離線</h1><p>請連上網路後重新整理，或改用已安裝在本機的 App。</p></body></html>";
 
 self.addEventListener("install", function (e) {
   self.skipWaiting();
@@ -37,7 +39,7 @@ self.addEventListener("fetch", function (e) {
   var url;
   try { url = new URL(req.url); } catch (err) { return; }
 
-  // ?芾???皞?瘙?頝函雯??靘? Google API)鈭斤策?汗?函?仿?雯
+  // 跨網域請求(例如 Google 雲端 API)不攔截、不快取,直接走網路
   if (url.origin !== self.location.origin) return;
 
   e.respondWith(
