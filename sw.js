@@ -5,7 +5,7 @@
    注意:Google 雲端同步等跨網域請求一律直接走網路,不攔截、不快取。
 */
 
-const CACHE = "property-app-shell-v20260828-A";
+const CACHE = "property-app-shell-v20260828-B";
 const SHELL = ["./", "./index.html", "./sw.js", "./icon-192.png", "./icon-180.png", "./icon-512.png"];
 const OFFLINE_HTML = "<!DOCTYPE html><html lang=\"zh-Hant\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>目前離線</title></head><body style=\"font-family:sans-serif;padding:2rem;text-align:center\"><h1>目前離線</h1><p>請連上網路後重新整理，或改用已安裝在本機的 App。</p></body></html>";
 

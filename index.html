@@ -6,7 +6,7 @@
 <title>物件總覽</title>
 <link rel="icon" type="image/png" href="icon-192.png?v=4">
 <link rel="apple-touch-icon" href="icon-180.png?v=4">
-<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi54mp5Lu257i96Ka9Iiwic2hvcnRfbmFtZSI6IueJqeS7tue4veimvSIsInN0YXJ0X3VybCI6Ii4vIiwic2NvcGUiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNGNEY2RjciLCJ0aGVtZV9jb2xvciI6IiMwRjdBNUYiLCJpY29ucyI6W3sic3JjIjoiaWNvbi0xOTIucG5nP3Y9NCIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55In0seyJzcmMiOiJpY29uLTUxMi5wbmc/dj00Iiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyIsInB1cnBvc2UiOiJhbnkifV19">
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi54mp5Lu257i96Ka9Iiwic2hvcnRfbmFtZSI6IueJqeS7tue4veimvSIsInN0YXJ0X3VybCI6Ii4vIiwic2NvcGUiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwib3JpZW50YXRpb24iOiJwb3J0cmFpdCIsImJhY2tncm91bmRfY29sb3IiOiIjRjRGNkY3IiwidGhlbWVfY29sb3IiOiIjMEY3QTVGIiwiaWNvbnMiOlt7InNyYyI6Imljb24tMTkyLnBuZz92PTQiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIiwicHVycG9zZSI6ImFueSJ9LHsic3JjIjoiaWNvbi01MTIucG5nP3Y9NCIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55In1dfQ==">
 <meta name="theme-color" content="#0F7A5F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -19,6 +19,53 @@
   }
   /* 開頁前先套用主題(預設淺色),避免閃一下 */
   try { var _t = localStorage.getItem("property_app_theme_v1"); document.documentElement.setAttribute("data-theme", _t === "dark" ? "dark" : "light"); } catch (e) {}
+  /* ===== 鎖定直向 =====
+     第一道:manifest 的 orientation:portrait。Android 安裝成 App 後由系統直接鎖住,這是主力。
+     第二道:Screen Orientation API。安裝檔還在用舊 manifest 時的補救,鎖不住就安靜略過。
+             在 <head> 解析當下呼叫常會被拒絕(文件尚未就緒),所以改成載入後再鎖,
+             並在每次回到前景時補鎖一次。只鎖手機,桌機一律不動。
+     第三道:#rotateGate 提示層。iPhone 不支援前兩道,手機橫躺時直接蓋住畫面。 */
+  (function () {
+    function isPhone() {
+      try {
+        if (!window.matchMedia || !matchMedia("(pointer:coarse)").matches) return false;   // 桌機滑鼠一律不套用
+        var s = window.screen || {};
+        var shortSide = Math.min(s.width || 0, s.height || 0);
+        return shortSide > 0 && shortSide <= 500;                                          // 手機才擋,平板不擋
+      } catch (e) { return false; }
+    }
+    function lockPortrait() {
+      if (!isPhone()) return;
+      try {
+        var so = window.screen && window.screen.orientation;
+        if (!so || !so.lock) return;
+        var r = so.lock("portrait");
+        if (r && r["catch"]) r["catch"](function () {});
+      } catch (e) {}
+    }
+    /* 判斷用「裝置方向」而非視窗長寬比:直向打字時鍵盤彈出會壓扁視窗,用長寬比會誤判成橫向 */
+    function isLandscape() {
+      try {
+        var t = (window.screen && window.screen.orientation && window.screen.orientation.type) || "";
+        if (t) return t.indexOf("landscape") === 0;
+        if (typeof window.orientation === "number") return Math.abs(window.orientation) === 90;
+      } catch (e) {}
+      return window.innerWidth > window.innerHeight;
+    }
+    function sync() {
+      try { document.documentElement.classList.toggle("rot-block", isPhone() && isLandscape()); } catch (e) {}
+    }
+    function apply() { lockPortrait(); sync(); }
+    apply();
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", apply);
+    window.addEventListener("load", apply);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) apply(); });
+    window.addEventListener("orientationchange", function () { setTimeout(apply, 60); });
+    try {
+      var so = window.screen && window.screen.orientation;
+      if (so && so.addEventListener) so.addEventListener("change", sync);
+    } catch (e) {}
+  })();
 </script>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="物件總覽">
@@ -1205,6 +1252,22 @@
   .cover-search:hover{background:var(--surface-2);}
   .cover-search svg{width:19px;height:19px;flex:none;}
   .cover-search span{flex:1;}
+  /* ===== 手機橫躺:蓋住畫面,提示轉回直向 =====
+     只在「觸控裝置 + 手機尺寸 + 裝置真的橫躺」時出現。桌機(滑鼠)、平板、手機直向一律不觸發,
+     原本的顯示完全不受影響。Android 安裝成 App 後由 manifest 直接不轉,根本走不到這層;
+     iPhone 不支援方向鎖定,靠這層擋。 */
+  #rotateGate{display:none;place-items:center;position:fixed;inset:0;z-index:9999;
+    background:var(--paper);color:var(--ink);touch-action:none;overscroll-behavior:none;
+    padding:calc(14px + var(--safe-top)) calc(14px + var(--safe-right)) calc(14px + var(--safe-bottom)) calc(14px + var(--safe-left));}
+  #rotateGate .rg-in{display:grid;gap:12px;justify-items:center;text-align:center;}
+  #rotateGate svg{width:46px;height:46px;stroke:var(--accent);fill:none;
+    stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  #rotateGate .rg-t{font-size:1.02rem;font-weight:700;letter-spacing:.03em;}
+  #rotateGate .rg-s{font-size:.84rem;color:var(--ink-soft);}
+  html.rot-block #rotateGate{display:grid;}                                    /* 主要:JS 依裝置方向掛上 */
+  @media (orientation:landscape) and (max-height:560px) and (pointer:coarse){   /* 備援:JS 被擋時仍有效 */
+    #rotateGate{display:grid;}
+  }
 </style>
 </head>
 <body>
@@ -1523,7 +1586,7 @@
 </div>
 
 <script>
-const APP_VERSION = "2026.08.28A";
+const APP_VERSION = "2026.08.28B";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -6869,5 +6932,13 @@ let syncConnected = false, syncEmail = null;
   });
 })();
 </script>
+<!-- 手機橫躺時才顯示(見上方 #rotateGate 樣式);其餘裝置與方向永遠 display:none -->
+<div id="rotateGate" role="alertdialog" aria-live="polite" aria-label="請轉回直向使用">
+  <div class="rg-in">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><line x1="10.6" y1="19" x2="13.4" y2="19"/><path d="M3.2 9.6a9 9 0 0 1 2-3.1"/><path d="m2.4 7.2.8 2.6 2.6-.8"/><path d="M20.8 14.4a9 9 0 0 1-2 3.1"/><path d="m21.6 16.8-.8-2.6-2.6.8"/></svg>
+    <div class="rg-t">請轉回直向使用</div>
+    <div class="rg-s">物件總覽為手機直向設計</div>
+  </div>
+</div>
 </body>
 </html>
