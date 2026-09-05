@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20260905H">
-<link rel="apple-touch-icon" href="icon-180.png?v=20260905H">
+<link rel="icon" type="image/png" href="icon-192.png?v=20260905I">
+<link rel="apple-touch-icon" href="icon-180.png?v=20260905I">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20260905H"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20260905H"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20260905I"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20260905I"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1073,8 +1073,8 @@
   @media (hover:hover){ .tneed:hover{color:var(--accent-deep);} }   /* 展開時「備註」欄不再加粗/加深(展開重點在下方三個框,上面這欄回原本字重);只保留 hover 的深色當可點提示 */
   /* 展開中:父列與展開區同用淡藍底,連成一塊聚焦區;用 !important 鎖定,任何 hover 都不會蓋掉 */
   .ptable tbody tr.exp-open td{background:var(--accent-tint) !important;border-bottom:none;}
-  /* 已展開的那一列:整列先不可編輯/不可開下拉,點一下=收合;收合後自動恢復 */
-  tr.exp-open .tcell[contenteditable],tr.exp-open .tcat-trigger,tr.exp-open .tchip,tr.exp-open .tdue-btn,tr.exp-open .gen-btn,tr.exp-open button[data-act="del"]{pointer-events:none;}   /* 展開列鎖定:含我方到期日鈕/生成鈕/刪除鈕 */
+  /* 已展開的那一列:欄位與下拉先鎖定,點一下=收合;垃圾桶保留操作並顯示刪除確認。 */
+  tr.exp-open .tcell[contenteditable],tr.exp-open .tcat-trigger,tr.exp-open .tchip,tr.exp-open .tdue-btn,tr.exp-open .gen-btn{pointer-events:none;}   /* 展開列鎖定:到期日鈕與生成鈕;不鎖定刪除鈕 */
   .ptable tbody tr.exp-open td:first-child{box-shadow:inset 3px 0 0 var(--accent);}
   tr.needexp > td{padding:0;height:auto;background:var(--accent-tint) !important;border-bottom:1px solid var(--accent-tint-bd);border-right:none;border-radius:0 0 13px 13px;box-shadow:inset 3px 0 0 var(--accent), 0 18px 26px -12px rgba(22,34,42,.24);}
   /* 編輯模式:展開區(父列+展開列)背景改灰、左側邊線改中性色,與正常(唯讀)淺藍一眼可辨 */
@@ -1623,7 +1623,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.09.05H：資料驗證、單一視窗編輯、原子儲存與欄位合併。 */
+/* 物件總覽 2026.09.05I：資料驗證、單一視窗編輯、原子儲存與欄位合併。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -1959,7 +1959,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.09.05H";
+const APP_VERSION = "2026.09.05I";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
