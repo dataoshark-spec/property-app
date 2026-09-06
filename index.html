@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20260906B">
-<link rel="apple-touch-icon" href="icon-180.png?v=20260906B">
+<link rel="icon" type="image/png" href="icon-192.png?v=20260906C">
+<link rel="apple-touch-icon" href="icon-180.png?v=20260906C">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20260906B"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20260906B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20260906C"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20260906C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1155,6 +1155,7 @@
   .nseg-hbtn.need-font-btn{color:var(--ink);font-weight:500;min-height:26px;touch-action:manipulation;}
   .need-font-btn:disabled{opacity:.35;cursor:default;}
   .fneed-head{margin-bottom:0;}
+  .fneed-head .nseg-hbtn{min-height:26px;}
   .f-need3 .fneed-head .fneed-t{flex:1;min-width:48px;width:0;}
   .dtl-need-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
   .dtl-need-head .nseg-btns{margin-left:auto;}
@@ -1292,7 +1293,7 @@
 
 /* 每筆物件的三欄交換：只加入小把手，保留原標題及工具列。 */
 .need-order-title{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%}
-.fneed-head .need-order-title{flex:1}
+.fneed-head .need-order-title{flex:1;min-width:76px}
 .need-order-title .nseg-t{min-width:0;overflow-wrap:anywhere}
 .need-order-handle{display:inline-flex;align-items:center;justify-content:center;flex:none;width:24px;height:26px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--text-faint);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 .need-order-handle:hover,.need-order-handle:focus-visible{color:var(--accent-deep);background:var(--surface-2);outline:2px solid var(--accent);outline-offset:1px}
@@ -1626,7 +1627,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.09.06B：資料驗證、單一視窗編輯、原子儲存與欄位合併。 */
+/* 物件總覽 2026.09.06C：資料驗證、單一視窗編輯、原子儲存與欄位合併。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -1962,7 +1963,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.09.06B";
+const APP_VERSION = "2026.09.06C";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -4111,7 +4112,16 @@ function setupFormNeedFonts(d){
  formNeedFontSizes=needFontPrefs(d);
  formNeedOrder=needOrder(d);
  modalBg.querySelectorAll(".fneed-seg[data-need-font-seg]").forEach(seg=>{
-  seg.querySelector(".nseg-btns").innerHTML=needFontButtons(+seg.dataset.needFontSeg);
+  const sg=+seg.dataset.needFontSeg;
+  seg.querySelector(".nseg-btns").innerHTML=needFormatButtons(sg)+needFontButtons(sg);
+  seg.querySelectorAll(".nseg-tbtn,.nseg-sbtn").forEach(button=>{
+   button.addEventListener("pointerdown",e=>{if(e.button===0)e.preventDefault();});
+   button.addEventListener("click",e=>{
+    e.preventDefault();e.stopPropagation();
+    if(button.classList.contains("nseg-tbtn"))toggleNeedHeading(seg);
+    else toggleNeedStrike(seg);
+   });
+  });
  });
  initNeedFontControls(modalBg,
   ()=>({...formNeedFontSizes,t1:F.t1.value,t2:F.t2.value,t3:F.t3.value}),
@@ -4899,6 +4909,9 @@ function initNeedOrderControls(scope,readRecord,writeOrder){
 function needFontKey(sg){return sg===2?"noteFont2":sg===3?"noteFont3":"noteFont1"}
 function needFontPercent(it,sg){return PropertyCore.fontSize(it && it[needFontKey(sg)])}
 function needFontPrefs(it){return {noteFont1:needFontPercent(it,1),noteFont2:needFontPercent(it,2),noteFont3:needFontPercent(it,3)}}
+function needFormatButtons(sg){
+ return '<button type="button" class="nseg-hbtn nseg-tbtn" data-seg="'+sg+'" title="把選取中的文字設為／取消標題">標題</button><button type="button" class="nseg-hbtn nseg-sbtn" data-seg="'+sg+'" title="把選取中的文字加上／取消刪除線">刪線</button>';
+}
 function needFontButtons(sg){
  return '<button type="button" class="nseg-hbtn need-font-btn" data-seg="'+sg+'" data-font-delta="10">字＋</button><button type="button" class="nseg-hbtn need-font-btn" data-seg="'+sg+'" data-font-delta="-10">字－</button>';
 }
@@ -5414,12 +5427,26 @@ function wrapRangeByLine(ed, srcRg, wrapFn, savedAfter){
   }
   return made;
 }
+// 表格與卡片表單共用格式操作；選取範圍必須完整位於同一欄。
+function needFormatEditor(scope,range){
+ const node=range.startContainer;
+ const ed=needContentEditorFrom(node.nodeType===1?node:node.parentElement);
+ return ed&&scope.contains(ed)&&ed.contains(range.endContainer)?ed:null;
+}
+function commitNeedFormatChange(scope,ed,value){
+ if(ed.classList.contains("fneed-ed")){
+  syncNeedEdFromStorage(ed,value);
+  saveFormDraft(); // 表單只保存草稿，正式物件由「儲存」統一提交。
+ }else{
+  commitNeedSeg(scope.dataset.for,+ed.dataset.seg,value);
+  syncNeedEdFromStorage(ed,value);
+ }
+}
 function toggleNeedStrike(exp){
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount || sel.isCollapsed){ toast("先選取要加刪除線的文字"); return; }
   const rg = sel.getRangeAt(0);
-  const an = sel.anchorNode, el = an && (an.nodeType === 1 ? an : an.parentElement);
-  const ed = el && el.closest ? el.closest('.needexp-ed[contenteditable="true"]') : (an === undefined ? null : (an && an.nodeType === 1 && an.classList && an.classList.contains("needexp-ed") ? an : null));
+  const ed = needFormatEditor(exp,rg);
   if (!ed || !exp.contains(ed)){ toast("先選取要加刪除線的文字"); return; }
   const before = editToNeed(ed);
   const bookmark = saveNeedBookmark(ed, rg);
@@ -5437,8 +5464,7 @@ function toggleNeedStrike(exp){
   cleanupNeedEd(ed);
   const after = editToNeed(ed);
   if (after !== before){
-    commitNeedSeg(exp.dataset.for, +ed.dataset.seg, after);
-    syncNeedEdFromStorage(ed, after);   // 正規化成「一行一個 div」,避免 <s> 內含 <br> 重開亂掉
+    commitNeedFormatChange(exp,ed,after);
   }
   reselectAfterNeedOp(ed, bookmark, pick);
 }
@@ -5473,8 +5499,7 @@ function toggleNeedHeading(exp){
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount || sel.isCollapsed){ toast("先選取要設為標題的文字"); return; }
   const rg = sel.getRangeAt(0);
-  const an = sel.anchorNode, el = an && (an.nodeType === 1 ? an : an.parentElement);
-  const ed = el && el.closest ? el.closest('.needexp-ed[contenteditable="true"]') : null;
+  const ed = needFormatEditor(exp,rg);
   if (!ed || !exp.contains(ed)){ toast("先選取要設為標題的文字"); return; }
   const before = editToNeed(ed);
   const bookmark = saveNeedBookmark(ed, rg);
@@ -5491,8 +5516,7 @@ function toggleNeedHeading(exp){
   cleanupNeedEd(ed);
   const after = editToNeed(ed);
   if (after !== before){
-    commitNeedSeg(exp.dataset.for, +ed.dataset.seg, after);
-    syncNeedEdFromStorage(ed, after);   // 正規化成「一行一個 div」,避免 <s> 內含 <br> 重開亂掉
+    commitNeedFormatChange(exp,ed,after);
   }
   reselectAfterNeedOp(ed, bookmark, pick);
 }
