@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20260905I">
-<link rel="apple-touch-icon" href="icon-180.png?v=20260905I">
+<link rel="icon" type="image/png" href="icon-192.png?v=20260906B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20260906B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20260905I"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20260905I"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20260906B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20260906B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1626,7 +1626,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.09.05I：資料驗證、單一視窗編輯、原子儲存與欄位合併。 */
+/* 物件總覽 2026.09.06B：資料驗證、單一視窗編輯、原子儲存與欄位合併。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -1962,7 +1962,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.09.06A";
+const APP_VERSION = "2026.09.06B";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -4981,8 +4981,8 @@ function openNeedExp(tr, doFocus){
     const thtml = `<span class="nseg-t" tabindex="0" contenteditable="${editMode?"true":"false"}" data-seg="${sg}" data-titleedit="1" spellcheck="false">${esc(ti)}</span>`;
     // 編輯模式:三段都放真「刪線／標題」(窄螢幕直排時備註/注意也要能按;寬螢幕三欄並排仍各自一組)
     const bhtml = editMode
-      ? `<span class="nseg-btns">${needFontButtons(sg)}<button type="button" class="nseg-hbtn nseg-sbtn" data-seg="${sg}" title="把選取中的文字加上／取消刪除線">刪線</button><button type="button" class="nseg-hbtn nseg-tbtn" data-seg="${sg}" title="把選取中的文字設為／取消標題">標題</button></span>`
-      : `<span class="nseg-btns">${needFontButtons(sg)}<span class="nseg-hbtn nseg-hbtn-ph" aria-hidden="true">刪線</span><span class="nseg-hbtn nseg-hbtn-ph" aria-hidden="true">標題</span></span>`;
+      ? `<span class="nseg-btns"><button type="button" class="nseg-hbtn nseg-tbtn" data-seg="${sg}" title="把選取中的文字設為／取消標題">標題</button><button type="button" class="nseg-hbtn nseg-sbtn" data-seg="${sg}" title="把選取中的文字加上／取消刪除線">刪線</button>${needFontButtons(sg)}</span>`
+      : `<span class="nseg-btns"><span class="nseg-hbtn nseg-hbtn-ph" aria-hidden="true">標題</span><span class="nseg-hbtn nseg-hbtn-ph" aria-hidden="true">刪線</span>${needFontButtons(sg)}</span>`;
     return `<div class="nseg-head">${thtml}${bhtml}</div>`;
   };
   const body = (sg) => editMode
