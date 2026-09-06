@@ -1112,6 +1112,9 @@
   .needexp-view{user-select:text;-webkit-user-select:text;cursor:text;}
   /* ===== 物件明細頁(點卡片開啟的唯讀詳情) ===== */
   .dtl-body{gap:15px;}
+  /* 其它/注意/備註 三段的外層:原本沒有任何樣式,三段是零間距硬疊,標題會貼到上一段的內容框。
+     改用與 .dtl-body 相同的 15px 節奏;段內標題→自己的內容框仍是 8px,分群才清楚。 */
+  .dtl-notes{display:flex;flex-direction:column;gap:15px;}
   .dtl-sec{display:flex;flex-direction:column;gap:8px;}
   .dtl-h{display:flex;align-items:center;gap:7px;font-size:.86rem;font-weight:800;color:var(--ink);letter-spacing:.02em;}
   .dtl-h svg{width:15px;height:15px;color:var(--accent);flex:none;}
@@ -1959,7 +1962,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.09.05I";
+const APP_VERSION = "2026.09.06A";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -4736,7 +4739,61 @@ function initNeedOrderControls(scope,readRecord,writeOrder){
    btn.setAttribute("aria-label",label);btn.title=label+"："+instruction;
   }
  }
+ /* ── 拖曳中的自動捲動 ──
+    把手是 touch-action:none,拖曳期間瀏覽器不會自己捲動;內容一長,要交換的目標欄位就落在
+    畫面外,手指再怎麼拖也碰不到,交換等於做不到。這裡在手指靠近捲動容器邊緣時持續捲動,
+    並且每一幀重算指標下方的目標(手指不動、內容在動時不會有 pointermove 可用)。 */
+ const EDGE=52,MAX_V=14;
+ let autoRaf=0;
+ function scrollerFor(axis){
+  const ov=axis==="y"?"overflowY":"overflowX",
+        size=axis==="y"?"scrollHeight":"scrollWidth",
+        client=axis==="y"?"clientHeight":"clientWidth";
+  for(let n=scope;n;n=n.parentElement){
+   try{ if(/(auto|scroll)/.test(getComputedStyle(n)[ov])&&n[size]-n[client]>1)return n; }catch(e){}
+  }
+  const de=document.scrollingElement||document.documentElement;
+  return de&&de[size]-de[client]>1?de:null;                       // 沒有可捲的祖先就退回整頁
+ }
+ function viewRect(el){
+  const de=document.scrollingElement||document.documentElement;
+  if(el===de||el===document.documentElement||el===document.body)
+   return {top:0,left:0,bottom:window.innerHeight,right:window.innerWidth};
+  const r=el.getBoundingClientRect();
+  return {top:r.top,left:r.left,bottom:r.bottom,right:r.right};
+ }
+ function edgeVelocity(pos,lo,hi){                                 // 越靠邊捲越快,上限 MAX_V
+  if(pos<lo+EDGE)return -MAX_V*Math.min(1,(lo+EDGE-pos)/EDGE);
+  if(pos>hi-EDGE)return MAX_V*Math.min(1,(pos-(hi-EDGE))/EDGE);
+  return 0;
+ }
+ function autoTick(){
+  autoRaf=0;
+  if(!drag||!drag.moved)return;
+  for(const axis of ["y","x"]){
+   const sc=scrollerFor(axis);if(!sc)continue;
+   const r=viewRect(sc);
+   const v=axis==="y"?edgeVelocity(drag.py,r.top,r.bottom):edgeVelocity(drag.px,r.left,r.right);
+   if(!v)continue;
+   const key=axis==="y"?"scrollTop":"scrollLeft",before=sc[key];
+   sc[key]=before+v;
+   if(sc[key]!==before)hover();                                    // 捲到底就不再重算
+  }
+  autoRaf=requestAnimationFrame(autoTick);
+ }
+ function startAutoScroll(){ if(!autoRaf)autoRaf=requestAnimationFrame(autoTick); }
+ function stopAutoScroll(){ if(autoRaf){cancelAnimationFrame(autoRaf);autoRaf=0;} }
+ /* 依目前指標座標決定要交換的目標欄位(拖曳與自動捲動共用) */
+ function hover(){
+  if(!drag)return;
+  const source=segments.find(el=>+el.dataset.needFontSeg===drag.sg);
+  const hit=document.elementFromPoint?document.elementFromPoint(drag.px,drag.py):null;
+  const target=hit&&hit.closest?hit.closest("[data-need-font-seg]"):null;
+  drag.target=segments.includes(target)&&target!==source?+target.dataset.needFontSeg:null;
+  segments.forEach(el=>el.classList.toggle("need-order-target",+el.dataset.needFontSeg===drag.target));
+ }
  function cleanup(){
+  stopAutoScroll();
   const active=drag;drag=null;
   if(active&&active.btn.hasPointerCapture(active.id))active.btn.releasePointerCapture(active.id);
   segments.forEach(el=>el.classList.remove("need-order-source","need-order-target"));
@@ -4816,17 +4873,15 @@ function initNeedOrderControls(scope,readRecord,writeOrder){
   btn.onpointerdown=e=>{
    if(e.button!==0||!e.isPrimary)return;
    e.preventDefault();e.stopPropagation();suppressClick=false;begin(btn);
-   drag={id:e.pointerId,btn,sg,x:e.clientX,y:e.clientY,moved:false,target:null};
+   drag={id:e.pointerId,btn,sg,x:e.clientX,y:e.clientY,px:e.clientX,py:e.clientY,moved:false,target:null};
    btn.setPointerCapture(e.pointerId);
   };
   btn.onpointermove=e=>{
    if(!drag||drag.id!==e.pointerId)return;
    if(!drag.moved&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<6)return;
    drag.moved=true;e.preventDefault();seg.classList.add("need-order-source");
-   const hit=document.elementFromPoint(e.clientX,e.clientY);
-   const target=hit&&hit.closest("[data-need-font-seg]");
-   drag.target=segments.includes(target)&&target!==seg?+target.dataset.needFontSeg:null;
-   segments.forEach(el=>el.classList.toggle("need-order-target",+el.dataset.needFontSeg===drag.target));
+   drag.px=e.clientX;drag.py=e.clientY;
+   hover();startAutoScroll();
   };
   btn.onpointerup=e=>{
    if(!drag||drag.id!==e.pointerId)return;
