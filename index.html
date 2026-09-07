@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20260906C">
-<link rel="apple-touch-icon" href="icon-180.png?v=20260906C">
+<link rel="icon" type="image/png" href="icon-192.png?v=20260907A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20260907A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20260906C"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20260906C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20260907A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20260907A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1417,7 +1417,7 @@
 
       <div class="set-card">
         <div class="set-card-title">資料與備份</div>
-        <p class="set-card-desc">表格變更會自動儲存；物件表單按「儲存」才正式更新，切到背景只保存草稿。同一瀏覽器一次由一個視窗編輯。建議定期匯出備份。</p>
+        <p class="set-card-desc">表格變更會自動儲存；物件表單按「儲存」才正式更新，切到背景只保存草稿。多個視窗的修改會在背景合併，編輯結束後更新畫面。建議定期匯出備份。</p>
         <div class="set-actions">
           <button class="s-btn" id="exportBtn">匯出備份檔</button>
           <button class="s-btn" id="importBtn">匯入備份檔</button>
@@ -1627,7 +1627,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.09.06C：資料驗證、單一視窗編輯、原子儲存與欄位合併。 */
+/* 物件總覽 2026.09.07A：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -1846,43 +1846,153 @@ function restore(old,imported,now){
  return next;
 }
 function createStore(storage){
- let current=null,expected=null,blocked=false;
+ const prefix=KEY+":pending:";
+ let current=null,blocked=false,seedState=null,compacting=null;
+ const stable=v=>JSON.stringify((function order(x){if(Array.isArray(x))return x.map(order);if(x&&typeof x==="object"){const y={};for(const k of Object.keys(x).sort())y[k]=order(x[k]);return y;}return x})(v));
+ const prefValue=s=>{const v=clone(s);delete v._updatedAt;return v};
+ const content=s=>{const v=validateState(s);delete v.revision;v.settings=prefValue(v.settings);v.items.sort((a,b)=>String(a.id).localeCompare(String(b.id)));return stable(v)};
+ const fieldValues=r=>Object.fromEntries(FIELDS.map(f=>[f,r[f]]));
+ const intent=s=>stable({items:s.items.map(r=>({id:r.id,...fieldValues(r)})).sort((a,b)=>String(a.id).localeCompare(String(b.id))),cats:s.cats,settings:prefValue(s.settings),deleted:s.deleted,resetAt:s.resetAt});
+ function join(a,b){
+  if(!a)return clone(b);if(!b)return clone(a);
+  const s=stateFromMain(merge(mainFrom(a),mainFrom(b)));
+  s.revision=Math.max(a.revision||0,b.revision||0);return s;
+ }
+ function rawEntries(){
+  const entries=[];
+  // Read immutable journals first and the head last. Compaction always writes
+  // the combined head before deleting journals, so readers retain every value.
+  const keys=[];for(let i=0;i<storage.length;i++){const k=storage.key(i);if(k&&k.startsWith(prefix))keys.push(k)}
+  for(const key of keys){const raw=storage.getItem(key);if(raw!==null)entries.push({key,raw})}
+  const raw=storage.getItem(KEY);if(raw!==null)entries.push({key:KEY,raw});
+  return entries;
+ }
+ function capture(allowCorrupt=false){
+  const entries=rawEntries(),valid=[],bad=[],replaced=[];
+  for(const e of entries){
+   try{
+    const p=JSON.parse(e.raw);
+    if(e.key===KEY)valid.push(validateState(p));
+    else{
+     if(!p||p.app!=="property-pending"||p.version!==1||!p.state)fail("待合併資料格式不正確");
+     valid.push(validateState(p.state));
+     if(p.recovery&&Array.isArray(p.recovery.replaced)){
+      for(const r of p.recovery.replaced)if(r&&typeof r.key==="string"&&typeof r.raw==="string")replaced.push(r);
+     }
+    }
+   }catch(error){bad.push({...e,error})}
+  }
+  const unresolved=bad.filter(e=>!replaced.some(r=>r.key===e.key&&r.raw===e.raw));
+  if(unresolved.length&&!allowCorrupt)throw new Error("本機資料無法安全讀取："+unresolved[0].error.message);
+  let state=null;for(const s of valid)state=join(state,s);
+  if(!state)state=seedState?clone(seedState):null;
+  return {state,entries,bad:unresolved};
+ }
  function load(seed){
-  if(current) return clone(current);
+  if(current)return clone(current);
   try{
-   expected=storage.getItem(KEY);
-   if(expected!=null) current=validateState(JSON.parse(expected));
-   else {
+   // Legacy data is used only when neither a head nor a pending write exists.
+   if(!rawEntries().length){
     const raw=storage.getItem("property_app_data_v4");
-    current=validateState({items:raw!=null?JSON.parse(raw):seed.map((r,i)=>({...r,id:"seed"+i,updatedAt:1700000000000})),
+    seedState=validateState({items:raw!=null?JSON.parse(raw):(seed||[]).map((r,i)=>({...r,id:"seed"+i,updatedAt:1700000000000})),
      cats:JSON.parse(storage.getItem("property_app_cats_v4")||JSON.stringify(defaults)),
      deleted:JSON.parse(storage.getItem("property_app_deleted_v1")||"{}"),settings:{}});
    }
+   current=capture().state||validateState({items:[],cats:defaults,deleted:{},settings:{}});
    return clone(current);
-  }catch(e){blocked=true;throw new Error("本機資料無法安全讀取："+e.message);}
+  }catch(e){blocked=true;throw new Error("本機資料無法安全讀取："+e.message)}
+ }
+ function readLatest(){
+  if(blocked)fail("資料需要先還原，已停止覆寫");
+  try{return clone(capture().state||current||validateState({items:[],cats:defaults,deleted:{},settings:{}}))}
+  catch(e){blocked=true;throw e}
+ }
+ function acknowledge(next){current=validateState(next);return clone(current)}
+ function noteError(e){if(typeof root.onPropertyStorageError==="function")root.onPropertyStorageError(e)}
+ async function compact(){
+  if(compacting)return compacting;
+  const locks=root.navigator&&root.navigator.locks;
+  if(!locks||typeof locks.request!=="function")return false;
+  compacting=locks.request("property-app-storage-compact-v1",async()=>{
+   if(blocked)return false;
+   const snap=capture();if(!snap.state)return true;
+   const journals=snap.entries.filter(e=>e.key!==KEY);if(!journals.length)return true;
+   const previous=snap.entries.find(e=>e.key===KEY);
+   if(previous){
+    let old=null;try{old=validateState(JSON.parse(previous.raw))}catch(e){}
+    if(old&&content(old)!==content(snap.state))storage.setItem(KEY+":before-merge",JSON.stringify({app:"property-local-recovery",exportedAt:new Date().toISOString(),state:old}));
+   }
+   storage.setItem(KEY,JSON.stringify(snap.state));
+   // Keys are unique and never reused. Only the immutable entries included in
+   // this head are removed; a concurrent commit remains in its own journal.
+   for(const e of journals)if(storage.getItem(e.key)===e.raw)storage.removeItem(e.key);
+   return true;
+  });
+  let done=false;
+  try{done=await compacting;return done}catch(e){noteError(e);return false}finally{
+   compacting=null;
+   // A write can arrive after this compaction took its snapshot. Release the
+   // short lock first, then collect any remainder; never loop on storage errors.
+   if(done){try{if(rawEntries().some(e=>e.key!==KEY))setTimeout(()=>{compact().catch(noteError)},0)}catch(e){noteError(e)}}
+  }
  }
  function commit(next,opts){
   opts=opts||{};
-  if(blocked&&!opts.recover) fail("資料需要先還原，已停止覆寫");
-  if(storage.getItem(KEY)!==expected&&!opts.recover) fail("其他視窗已變更資料，請保留未儲存內容後重新開啟");
+  if(blocked&&!opts.recover)fail("資料需要先還原，已停止覆寫");
   next=validateState(next);
-  if(opts.track!==false) next.items=track(next.items,current?current.items:[],Date.now());
-  next.revision=(current?current.revision:0)+1;
-  const raw=JSON.stringify(next);
-  // One storage operation commits properties, categories, tombstones and settings together.
-  storage.setItem(KEY,raw);
-  expected=raw;current=next;blocked=false;return clone(current);
+  let snap;
+  try{snap=capture(!!opts.recover)}catch(e){blocked=true;throw e}
+  const latest=snap.state||current,base=current;
+  const original=clone(next);
+  const localChanged=!base||intent(next)!==intent(base);
+  if(opts.track!==false&&latest&&next.resetAt<latest.resetAt&&localChanged){
+   const e=new Error("另一個視窗已完整還原資料，這份草稿仍保留，請重新開啟物件後確認修改");e.code="PROPERTY_RESET";throw e;
+  }
+  if(opts.track!==false&&base&&latest){
+   const previous=new Map(base.items.map(r=>[r.id,r])),alive=new Set(latest.items.map(r=>r.id));
+   for(const r of next.items){const was=previous.get(r.id);if(was&&!alive.has(r.id)&&(latest.deleted[r.id]||0)>=was.updatedAt&&stable(fieldValues(r))!==stable(fieldValues(was))){
+    const e=new Error("此物件已在另一個視窗刪除，目前輸入仍保留，請先匯出再確認");e.code="PROPERTY_DELETED";throw e;
+   }}
+  }
+  if(opts.track!==false){
+   next.items=track(next.items,base?base.items:[],Date.now());
+   if(!base||stable(next.cats)!==stable(base.cats))next.catsTs=Math.max(Date.now(),(base?base.catsTs:0)+1,(latest?latest.catsTs:0)+1);
+   if(!base||stable(prefValue(next.settings))!==stable(prefValue(base.settings)))next.settingsTs=Math.max(Date.now(),(base?base.settingsTs:0)+1,(latest?latest.settingsTs:0)+1);
+  }
+  if(opts.recover){
+   const before=latest||base||{items:[],resetAt:0};
+   next=restore(before,original,Math.max(Date.now(),original.resetAt||0));
+  }else next=join(join(base,latest),next);
+  next=validateState(next);
+  const comparable=latest||base;
+  if(!opts.recover&&comparable&&content(next)===content(comparable)&&snap.entries.length){
+   current=next;blocked=false;
+   if(snap.entries.some(e=>e.key!==KEY))Promise.resolve().then(()=>compact()).catch(noteError);
+   return clone(current);
+  }
+  next.revision=Math.max(base?base.revision:0,latest?latest.revision:0,next.revision||0)+1;
+  const packet={app:"property-pending",version:1,state:next};
+  if(opts.recover&&snap.bad.length)packet.recovery={replaced:snap.bad.map(({key,raw})=>({key,raw}))};
+  let key;
+  do{const id=root.crypto&&typeof root.crypto.randomUUID==="function"?root.crypto.randomUUID():Date.now().toString(36)+"-"+Math.random().toString(36).slice(2)+"-"+Math.random().toString(36).slice(2);key=prefix+id}while(storage.getItem(key)!==null);
+  // Success is reported only after this window's immutable write is durable.
+  // Concurrent windows cannot replace one another's pending writes.
+  storage.setItem(key,JSON.stringify(packet));
+  current=next;blocked=false;
+  Promise.resolve().then(()=>compact()).catch(noteError);
+  return clone(current);
  }
  function rawBackup(){
   const out={app:"property-recovery",exportedAt:new Date().toISOString(),raw:{}};
-  for(const k of [KEY,"property_app_data_v4","property_app_cats_v4","property_app_deleted_v1"]) {
-   try{out.raw[k]=storage.getItem(k)}catch(e){out.raw[k]="無法讀取："+e.message}
-  }
+  const keys=new Set([KEY,KEY+":before-merge","property_app_data_v4","property_app_cats_v4","property_app_deleted_v1"]);
+  try{for(let i=0;i<storage.length;i++){const k=storage.key(i);if(k&&k.startsWith(prefix))keys.add(k)}}catch(e){}
+  for(const k of keys){try{out.raw[k]=storage.getItem(k)}catch(e){out.raw[k]="無法讀取："+e.message}}
   return out;
  }
- return {load,commit,rawBackup,get current(){return current?clone(current):null},get blocked(){return blocked}};
+ return {load,commit,readLatest,acknowledge,compact,rawBackup,get current(){return current?clone(current):null},get blocked(){return blocked}};
 }
-const api={KEY,FIELDS,price,fontSize,noteOrder,draftValues,mergeDraft,deleteStamp,record,records,categories,settings,validateState,backup,fieldMerge,track,merge,restore,mainFrom,stateFromMain,createStore,clone,defaults,ownsLock:false};
+
+const api={KEY,FIELDS,price,fontSize,noteOrder,draftValues,mergeDraft,deleteStamp,record,records,categories,settings,validateState,backup,fieldMerge,track,merge,restore,mainFrom,stateFromMain,createStore,clone,defaults,ready:false};
 if(typeof module==="object"&&module.exports) module.exports=api;
 root.PropertyCore=api;
 if(!root.document) return;
@@ -1909,7 +2019,7 @@ function panel(title,message,buttons,alignActions=false){
   const b=document.createElement("button");b.type="button";b.textContent=label;
   b.style.cssText="margin:8px 8px 0 0;padding:10px 14px;border:0;border-radius:8px;background:#0F7A5F;color:white;cursor:pointer";
   if(alignActions)b.style.margin="0";
-  b.onclick=()=>{try{fn()}catch(e){p.textContent=e.message}};actions.appendChild(b);
+  b.onclick=async()=>{try{await fn()}catch(e){p.textContent=e.message}};actions.appendChild(b);
  }
  box.appendChild(card);box.focus();return box;
 }
@@ -1928,32 +2038,22 @@ api.showRecovery=e=>panel("資料需要先檢查",e.message+"。原始內容保�
 api.showSaveError=(e,retry,exportPending)=>{
  root._saveBlocked=true;
  panel("尚未儲存成功",e.message+"。目前輸入仍保留，請重試或先匯出。",[
-  ["重試儲存",()=>{if(retry()){root._saveBlocked=false;api.dismissPanel();if(root.onLocalChange)root.onLocalChange("data")}}],
-  ["匯出未儲存資料",exportPending]
+  ["重試儲存",async()=>{if(await retry()){root._saveBlocked=false;api.dismissPanel();if(root.onLocalChange)root.onLocalChange("data")}}],
+  ["匯出未儲存資料",exportPending],
+  ["匯出本機安全副本",()=>api.download(api.local().rawBackup(),"物件總覽_本機安全副本.json")]
  ]);
 };
-api.start=async function(src){
- panel("正在開啟物件總覽","正在確認資料與編輯視窗。");
- if(!navigator.locks || !navigator.locks.request){
-  panel("目前無法安全編輯","請使用最新版 Chrome、Edge 或 Safari，並以原本的 HTTPS 網址或本機伺服器開啟。");
-  return;
- }
- let acquired=false;
- setTimeout(()=>{if(!acquired) panel("另一個視窗正在使用物件總覽","為避免資料互相覆蓋，本視窗正在等待。關閉另一個物件總覽視窗後，這裡會自動開啟。")},400);
+api.start=function(src){
  try{
-  await navigator.locks.request("property-app-exclusive-editor-v1",async()=>{
-   acquired=true;api.ownsLock=true;api.dismissPanel();
-   const embedded=document.getElementById(src);
-   if(!embedded) throw new Error("內嵌程式遺失，請重新整理");
-   const script=document.createElement("script");
-   script.textContent=embedded.textContent;
-   document.body.appendChild(script);
-   await new Promise(()=>{});
-  });
- }catch(e){api.ownsLock=false;panel("無法開啟",e.message)}
+  const embedded=document.getElementById(src);
+  if(!embedded)throw new Error("內嵌程式遺失，請重新整理");
+  api.ready=true;
+  const script=document.createElement("script");script.textContent=embedded.textContent;
+  document.body.appendChild(script);
+ }catch(e){api.ready=false;panel("無法開啟",e.message)}
 };
 root.addEventListener("storage",e=>{
- if(api.ownsLock && (e.key==="property_app_data_v4"||e.key==="property_app_cats_v4")){
+ if(api.ready && (e.key==="property_app_data_v4"||e.key==="property_app_cats_v4")){
   root._saveBlocked=true;
   panel("偵測到舊版視窗修改資料","請關閉舊版物件總覽，先分別備份兩版資料，再從同一個新版視窗繼續。",[
    ["匯出本視窗資料",()=>{if(root.backupData)api.download(root.backupData(),"物件總覽_視窗資料備份.json")}]
@@ -1963,7 +2063,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.09.06C";
+const APP_VERSION = "2026.09.07A";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2148,7 +2248,7 @@ const storageOK = (() => {
 })();
 let uidc = Date.now();
 // id 加上裝置尾碼:避免兩台裝置毫秒級巧合撞 id,雲端合併誤把兩筆不同物件當同一筆。
-const uid = () => "p" + (uidc++).toString(36) + "-" + deviceId.slice(4, 8);
+const uid = () => "p" + (crypto.randomUUID ? crypto.randomUUID() : (uidc++).toString(36)+"-"+Math.random().toString(36).slice(2));
 
 // 每台裝置固定 id（第一次啟動產生一次，之後雲端同步用來標記「這筆是哪台寫的」）
 function loadDeviceId(){
@@ -2166,16 +2266,25 @@ function loadItems(){
   catch(e){ window._storageCorrupt=true; PropertyCore.showRecovery(e); throw e; }
 }
 let items = loadItems();
+let visiblePreferences=null;
 function persistLocal(opts){
   opts=opts||{};
-  if(!PropertyCore.ownsLock || (window._saveBlocked && !opts.retry)) return false;
+  if(!PropertyCore.ready || (window._saveBlocked && !opts.retry)) return false;
   try{
-    const previous=PropertyCore.local().current;
+    const previous=PropertyCore.local().current,shown=collectSettings();
+    // Keep unpainted remote preferences; only changes made in this view count as local edits.
+    const effective={...previous.settings};
+    for(const [key,value] of Object.entries(shown)){
+      if(!visiblePreferences || JSON.stringify(value)!==JSON.stringify(visiblePreferences[key]))effective[key]=value;
+    }
     const state=PropertyCore.local().commit({
-      items,cats,deleted,settings:collectSettings(),resetAt:window._resetAt||0,
+      items,cats,deleted,settings:effective,resetAt:window._resetAt||0,
       catsTs:window.__catsTs||previous.catsTs,settingsTs:window.__settingsTs||previous.settingsTs
     },{track:opts.track!==false});
-    items=state.items;cats=state.cats;deleted=state.deleted;window._saveBlocked=false;
+    items=state.items;cats=state.cats;deleted=state.deleted;window._resetAt=state.resetAt;
+    window.__catsTs=state.catsTs;window.__settingsTs=state.settingsTs;
+    visiblePreferences=PropertyCore.clone(shown);window._saveBlocked=false;
+    window.queuePropertyRefresh?.();
     return true;
   }catch(e){
     PropertyCore.showSaveError(e,()=>persistLocal({retry:true}),()=>PropertyCore.download(backupData(),"物件總覽_未儲存資料.json"));
@@ -2188,7 +2297,7 @@ function saveItems(){ return persistLocal(); }
 function loadDeleted(){ return PropertyCore.local().current.deleted; }
 function saveDeleted(){return persistLocal()}
 function markDeleted(ids){
- const stored=PropertyCore.local().current;
+ const stored=PropertyCore.local().readLatest();
  const previous=new Map((stored?stored.items:[]).map(r=>[r.id,r.updatedAt]));
  const current=new Map(items.map(r=>[r.id,r.updatedAt]));
  const ts=Date.now();
@@ -4105,7 +4214,7 @@ catSelMenu.addEventListener("click", e => { const o = e.target.closest(".cselect
 document.addEventListener("click", e => { if (!catSel.contains(e.target)) closeCatSel(); });
 renderCatOptions();
 let editingId = null;
-let formBaseRec=null;
+let formBaseRec=null,formBaseResetAt=0,formConflict=false;
 let formNeedFontSizes=needFontPrefs(null);
 let formNeedOrder=[1,2,3];
 function setupFormNeedFonts(d){
@@ -4134,6 +4243,7 @@ function setupFormNeedFonts(d){
 }
 
 function openForm(id){
+  window.applyPropertyRefresh?.(true);
   editingId = id || null;
   const d = id ? items.find(x => x.id === id) : null;
   document.getElementById("modalTitle").textContent = d ? "編輯物件" : "新增物件";
@@ -4161,7 +4271,7 @@ function openForm(id){
   setupFormNeedFonts(d);
   { const lg = document.getElementById("linkGroup"), lt = document.getElementById("linkToggle");   // 每次打開表單:連結群組一律預設收合(一排三欄)
     if (lg){ lg.classList.add("collapsed"); if (lt){ lt.setAttribute("aria-expanded","false"); lt.setAttribute("aria-label","展開連結欄位"); } } }
-  formBaseRec=readDraftRec();
+  formBaseRec=readDraftRec();formBaseResetAt=window._resetAt||0;formConflict=false;
   modalBg.classList.add("open");
   lockOverlay();
   const draft=loadFormDraft();
@@ -4170,6 +4280,8 @@ function openForm(id){
   if (!id) setTimeout(() => F.name.focus(), 50);
 }
 function applyPendingMergeIfAny(){
+  if(propertyViewBusy())return;
+  window.applyPropertyRefresh?.();
   if(window._pendingMerge && window.__mergeMain && !(window.isTableBusy && window.isTableBusy())){
     const merged=window.__mergeMain(window.__buildLocal(),window._pendingMerge);
     window._pendingMerge=null;
@@ -4178,7 +4290,7 @@ function applyPendingMergeIfAny(){
 }
 function closeForm(){
   closeNeedOrderUI();
-  clearFormDraft();
+  if(formConflict)saveFormDraft();else clearFormDraft();
   modalBg.classList.remove("open"); editingId=null;
   unlockOverlay(); applyPendingMergeIfAny();
 }
@@ -4186,6 +4298,7 @@ function closeForm(){
 // ===== 物件明細(唯讀,卡片檢視正常模式點卡片開啟) =====
 const detailBg = document.getElementById("detailBg");
 function openDetail(id){
+  window.applyPropertyRefresh?.(true);
   const d = items.find(x => x.id === id); if (!d) return;
   const _cat = d.cat ? `<span class="dtl-cat">${esc(d.cat)}</span>` : "";
   const _dueTop = d.due ? `<span class="dtl-due-top">到期 ${esc(d.due)}</span>` : "";
@@ -4293,18 +4406,33 @@ function readDraftRec(){
 function saveFormDraft(){
  if(!modalBg.classList.contains("open")||!formBaseRec)return;
  try{
-  const payload={version:3,id:editingId||null,base:PropertyCore.draftValues(formBaseRec),values:PropertyCore.draftValues(readDraftRec())};
-  localStorage.setItem(draftKey(),JSON.stringify(payload));
+  const payload={version:3,id:editingId||null,resetAt:formBaseResetAt,base:PropertyCore.draftValues(formBaseRec),values:PropertyCore.draftValues(readDraftRec())};
+  sessionStorage.setItem(draftKey(),JSON.stringify(payload));
+  if(formConflict)sessionStorage.setItem(draftKey()+":retained",JSON.stringify(payload));
  }catch(e){toast("草稿尚未保存，請先保持此視窗開啟")}
 }
 function loadFormDraft(){
  try{
-  const r=JSON.parse(localStorage.getItem(draftKey())||"null");
+  let raw=sessionStorage.getItem(draftKey());
+  if(!raw){
+    const old=localStorage.getItem(draftKey()),receipt=draftKey()+":migrated";
+    if(old && localStorage.getItem(receipt)!==old){
+      const candidate=JSON.parse(old);
+      if(candidate?.version===3 && candidate.id===(editingId||null)){
+        PropertyCore.draftValues(candidate.base);PropertyCore.draftValues(candidate.values);
+        raw=JSON.stringify({...candidate,resetAt:formBaseResetAt});
+        sessionStorage.setItem(draftKey(),raw);
+        localStorage.setItem(receipt,old); // Keep the original for recovery, import it only once.
+      }
+    }
+  }
+  const r=JSON.parse(raw||"null");
+  if(r && r.resetAt!==formBaseResetAt){sessionStorage.setItem(draftKey()+":retained",raw);sessionStorage.removeItem(draftKey());return null;}
   if(!r||r.version!==3||r.id!==(editingId||null))return null;
   return {base:PropertyCore.draftValues(r.base),values:PropertyCore.draftValues(r.values)};
  }catch(e){return null}
 }
-function clearFormDraft(){try{localStorage.removeItem(draftKey())}catch(e){}}
+function clearFormDraft(){try{sessionStorage.removeItem(draftKey())}catch(e){}}
 function showLegacyDraftNotice(){
  let notice=document.getElementById("legacyDraftNotice");
  if(!notice){
@@ -4313,15 +4441,19 @@ function showLegacyDraftNotice(){
   modalBg.querySelector(".modal-body").prepend(notice);
  }
  notice.hidden=true;notice.replaceChildren();
- let raw=null;try{raw=localStorage.getItem(legacyDraftKey())}catch(e){}
+ let raw=null,draftStorage=localStorage,key=legacyDraftKey();
+ try{
+  raw=localStorage.getItem(key);
+  const retained=sessionStorage.getItem(draftKey()+":retained");
+  if(retained){raw=retained;draftStorage=sessionStorage;key=draftKey()+":retained";}
+ }catch(e){}
  if(!raw)return;
- const key=legacyDraftKey();
  const p=document.createElement("div");p.textContent="找到舊版未完成的草稿，已保留原檔。為避免蓋掉新資料，請先匯出核對，再填入需要的內容。";
  notice.appendChild(p);
  const download=document.createElement("button");download.type="button";download.className="nseg-hbtn";download.textContent="匯出舊草稿";download.style.marginTop="8px";
  download.onclick=()=>{let fields;try{fields=JSON.parse(raw)}catch(e){fields={raw}}PropertyCore.download({app:"property-form-draft",id:editingId||null,fields},"物件總覽_舊草稿.json")};
  const discard=document.createElement("button");discard.type="button";discard.className="nseg-hbtn";discard.textContent="捨棄舊草稿";discard.style.marginLeft="8px";
- discard.onclick=()=>askConfirm("捨棄這份舊草稿？","目前已儲存的物件資料不受影響。",()=>{try{localStorage.removeItem(key);notice.hidden=true}catch(e){toast("尚未移除，請稍後重試")}});
+ discard.onclick=()=>askConfirm("捨棄這份舊草稿？","目前已儲存的物件資料不受影響。",()=>{try{draftStorage.removeItem(key);notice.hidden=true}catch(e){toast("尚未移除，請稍後重試")}});
  notice.append(download,discard);notice.hidden=false;
 }
 
@@ -4361,6 +4493,11 @@ function saveForm(){
   if(!name){ toast("請輸入案名");F.name.focus();return; }
   let rec;
   try{rec=buildFormRec()}catch(e){toast(e.message);F.price.focus();return;}
+  try{
+    const latest=PropertyCore.local().readLatest();
+    if(latest.resetAt!==formBaseResetAt){showFormConflict("資料已從備份還原，這份草稿先保留，請核對新資料後再修改。");return;}
+    if(editingId && !latest.items.some(x=>x.id===editingId)){showFormConflict("此物件已被刪除，這份草稿先保留，請核對資料。");return;}
+  }catch(e){saveFormDraft();toast("尚未儲存："+e.message);return;}
   const isEdit=!!editingId;
   if(editingId){
     const i=items.findIndex(x=>x.id===editingId);
@@ -6373,8 +6510,13 @@ function backupFileName(){
   return "物件總覽備份_" + d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate())
     + "-" + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()) + ".json";
 }
+function latestBackupData(){
+  if(!persistLocal())throw new Error("本機修改尚未安全保存，請先匯出未儲存資料");
+  const state=PropertyCore.local().readLatest();
+  return {...backupData(),items:state.items,cats:state.cats,deleted:state.deleted,settings:state.settings,resetAt:state.resetAt,catsTs:state.catsTs,settingsTs:state.settingsTs};
+}
 function downloadBackup(){
-  const blob = new Blob([JSON.stringify(backupData(), null, 2)], {type:"application/json"});
+  const blob = new Blob([JSON.stringify(latestBackupData(), null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = backupFileName(); a.click();
@@ -6386,16 +6528,16 @@ const importFile = document.getElementById("importFile");
 function applyBackup(parsed){
   let next;
   try{
-    next=PropertyCore.restore(PropertyCore.local().current,parsed,Date.now());
-    localStorage.setItem("property_app_before_restore_v1",JSON.stringify(backupData()));
+    next=PropertyCore.restore(PropertyCore.local().readLatest(),parsed,Date.now());
+    localStorage.setItem("property_app_before_restore_v1",JSON.stringify(latestBackupData()));
     next=PropertyCore.local().commit(next,{track:false});
   }catch(e){toast("匯入未完成："+e.message);return false;}
   window._pendingMerge=null;openNeedId=null;
-  try{for(const key of Object.keys(localStorage)){if(key.startsWith(FORM_DRAFT_KEY+":")||key.startsWith(LEGACY_FORM_DRAFT_KEY+":"))localStorage.removeItem(key);}}catch(e){}
+  try{for(const key of Object.keys(sessionStorage)){if(key.startsWith(FORM_DRAFT_KEY+":")&&!key.endsWith(":retained"))sessionStorage.removeItem(key);}}catch(e){}
   if(typeof hideNeedHover==="function") hideNeedHover();
   items=next.items;cats=next.cats;deleted=next.deleted;window._resetAt=next.resetAt;
   window.__catsTs=next.catsTs;window.__settingsTs=next.settingsTs;
-  applySettings(next.settings);resetListFilters();
+  applySettings(next.settings);resetListFilters();visiblePreferences=PropertyCore.clone(collectSettings());
   renderCover();renderTabs();renderCatOptions();applyFilter();
   onLocalChange("data");toast("已匯入 "+items.length+" 筆物件");
   return true;
@@ -6514,6 +6656,7 @@ function applySettings(s){
   applyFilter();
 }
 applySettings(PropertyCore.local().current.settings);
+visiblePreferences=PropertyCore.clone(collectSettings());
 // ===== 外觀主題設定結束 =====
 
 // ===== 安裝橫幅 (自訂安裝提示) =====
@@ -6959,7 +7102,7 @@ let syncConnected = false, syncEmail = null;
   window.onLocalChange = function(kind){ if(window._saveBlocked)return; if(kind==="cats")window.touchCats();if(kind==="settings")window.touchSettings(); if(!persistLocal())return; window.scheduleSync(); };
   let pushTimer = null;
   let dirty = false;
-  window.scheduleSync = function(){ if(window._saveBlocked || !PropertyCore.ownsLock)return; dirty = true; if (!syncConnected) return; clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 1500); };
+  window.scheduleSync = function(){ if(window._saveBlocked || !PropertyCore.ready)return; dirty = true; if (!syncConnected) return; clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 1500); };
 
   // ---- GIS token flow ----
   function gisReady(){ return !!(window.google && google.accounts && google.accounts.oauth2); }
@@ -7130,7 +7273,7 @@ let syncConnected = false, syncEmail = null;
       "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" +
       JSON.stringify(metadata) +
       "\r\n--" + boundary + "\r\nContent-Type: application/json\r\n\r\n" +
-      JSON.stringify(backupData(), null, 2) +
+      JSON.stringify(latestBackupData(), null, 2) +
       "\r\n--" + boundary + "--";
     const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name", {
       method: "POST",
@@ -7188,11 +7331,12 @@ let syncConnected = false, syncEmail = null;
 
   // ---- main-file model + merge ----
   function buildLocal(){
+    if(!persistLocal())throw new Error("本機資料尚未安全保存");
     return {
       rev: 0, lastWriteBy: deviceId, updatedAt: Date.now(), resetAt: window._resetAt || 0,
       data: { properties: items.map(function(x){ return Object.assign({}, x); }) },
       cats: { list: cats.map(function(c){ return Object.assign({}, c); }), _updatedAt: window.__catsTs },
-      settings: { density: density, sort: currentSort, theme: theme, colw: colW, fltorder: ensureFltOrder(), expfocus: expFocus, _updatedAt: window.__settingsTs },
+      settings: { ...PropertyCore.local().current.settings, _updatedAt: window.__settingsTs },
       deleted: Object.assign({}, deleted)
     };
   }
@@ -7209,17 +7353,16 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     const s = m.settings || {};
     return JSON.stringify({ resetAt:m.resetAt||0, p: props, d: dk.map(function(k){ return [k, del[k]]; }), c: [catList, (m.cats||{})._updatedAt||0], s: sortKeys(s) });
   }
-  function applyMerged(merged){
+  function applyMerged(merged,retry=false){
+    if(propertyViewBusy(retry)){
+      window._pendingMerge=window._pendingMerge?PropertyCore.merge(window._pendingMerge,merged):merged;
+      window.queuePropertyRefresh?.();return;
+    }
     const next=PropertyCore.stateFromMain(merged);
     let saved;
     try{saved=PropertyCore.local().commit(next,{track:false})}
-    catch(e){PropertyCore.showSaveError(e,()=>{try{applyMerged(merged);return !window._saveBlocked}catch(err){return false}},()=>PropertyCore.download(backupData(),"物件總覽_未儲存資料.json"));throw e}
-    items=saved.items;cats=saved.cats;deleted=saved.deleted;window._resetAt=saved.resetAt;
-    window.__catsTs=saved.catsTs;window.__settingsTs=saved.settingsTs;window._saveBlocked=false;
-    applySettings(saved.settings);
-    renderCover();renderTabs();renderCatOptions();renderSortOptions();
-    sortTxt.textContent=(SORTS.find(x=>x.key===currentSort)||SORTS[0]).label;
-    setDensity(density);applyFilter();
+    catch(e){PropertyCore.showSaveError(e,()=>{try{applyMerged(merged,true);return !window._saveBlocked}catch(err){return false}},()=>PropertyCore.download(backupData(),"物件總覽_未儲存資料.json"));throw e}
+    paintPropertyState(saved);window._saveBlocked=false;
   }
   window.__applyMerged=applyMerged;
   
@@ -7337,7 +7480,19 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
   }
   // ---- core two-way sync ----
   async function syncNow(force){
-    if (!syncConnected || window._saveBlocked || !PropertyCore.ownsLock) return { ok: false, reason: "not_ready" };
+    const locks=navigator.locks;
+    if(!locks || typeof locks.request!=="function")return syncNowUnlocked(force);
+    // Coordinate only the network operation. Every window remains usable.
+    let entered=false;
+    try{return await locks.request("property-app-cloud-sync-v1",{ifAvailable:true},lock=>{
+      entered=true;
+      if(lock)return syncNowUnlocked(force);
+      clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(force),2000);
+      return {ok:false,reason:"busy"};
+    });}catch(e){if(!entered)return syncNowUnlocked(force);throw e;}
+  }
+  async function syncNowUnlocked(force){
+    if (!syncConnected || window._saveBlocked || !PropertyCore.ready) return { ok: false, reason: "not_ready" };
     if (!navigator.onLine && !force){
       if (window.refreshLed) window.refreshLed();
       return { ok: false, reason: "offline" };
@@ -7544,6 +7699,60 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     refreshLed();
   });
 })();
+// Background convergence follows the customer app: receive now, repaint after editing.
+function propertyViewBusy(ignoreSaveError=false){
+ return !!(window.isTableBusy?.() || detailBg.classList.contains("open") || (!ignoreSaveError && document.getElementById("dataSafetyPanel")));
+}
+function showFormConflict(message){
+ formConflict=true;saveFormDraft();
+ showLegacyDraftNotice();
+ const notice=document.getElementById("legacyDraftNotice");notice.replaceChildren();notice.hidden=false;
+ const p=document.createElement("div");p.textContent=message;
+ const b=document.createElement("button");b.type="button";b.className="nseg-hbtn";b.textContent="匯出這份草稿";
+ b.onclick=()=>PropertyCore.download({app:"property-form-draft",id:editingId,base:formBaseRec,values:readDraftRec()},"物件總覽_保留草稿.json");
+ notice.append(p,b);notice.scrollIntoView({block:"nearest"});
+}
+function paintPropertyState(state){
+ PropertyCore.local().acknowledge(state);
+ items=state.items;cats=state.cats;deleted=state.deleted;window._resetAt=state.resetAt;
+ window.__catsTs=state.catsTs;window.__settingsTs=state.settingsTs;
+ applySettings(state.settings);visiblePreferences=PropertyCore.clone(collectSettings());
+ renderCover();renderTabs();renderCatOptions();renderSortOptions();applyFilter();
+}
+(function(){
+ let timer=null,pending=false,refreshing=false,lastPaint="";
+ const signature=s=>JSON.stringify(PropertyCore.mainFrom(s));
+ lastPaint=signature(PropertyCore.local().current);
+ function queue(){pending=true;clearTimeout(timer);timer=setTimeout(run,2000);}
+ function run(force=false){
+  if(force)pending=true;
+  clearTimeout(timer);timer=null;
+  if(!pending || refreshing || window._saveBlocked)return;
+  if(propertyViewBusy()){queue();return;}
+  refreshing=true;
+  try{
+   const latest=PropertyCore.local().readLatest();
+   if(signature(latest)!==lastPaint){paintPropertyState(latest);lastPaint=signature(latest);}
+   pending=false;
+   if(window._pendingMerge)applyPendingMergeIfAny();
+  }catch(e){
+   PropertyCore.showSaveError(e,()=>{try{const s=PropertyCore.local().readLatest();paintPropertyState(s);window._saveBlocked=false;pending=false;return true}catch(err){return false}},()=>PropertyCore.download(backupData(),"物件總覽_視窗資料備份.json"));
+  }finally{refreshing=false;}
+ }
+ window.queuePropertyRefresh=queue;window.applyPropertyRefresh=run;
+ window.onPropertyStorageError=e=>{
+  if(window._saveBlocked)return;
+  PropertyCore.showSaveError(e,async()=>{if(!await PropertyCore.local().compact())return false;window._saveBlocked=false;return persistLocal({retry:true})},()=>PropertyCore.download(backupData(),"物件總覽_視窗資料備份.json"));
+ };
+ window.addEventListener("storage",e=>{
+  if(e.newValue && (e.key===PropertyCore.KEY || e.key?.startsWith(PropertyCore.KEY+":pending:")))queue();
+ });
+ window.addEventListener("focus",queue);
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)queue();});
+ document.addEventListener("focusout",()=>{if(pending)queue();});
+ if(persistLocal())queue();
+})();
+
 </script>
 <script>PropertyCore.start("property-app-source");</script>
 <!-- 手機橫躺時才顯示(見上方 #rotateGate 樣式);其餘裝置與方向永遠 display:none -->
