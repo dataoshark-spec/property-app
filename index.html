@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20260907A">
-<link rel="apple-touch-icon" href="icon-180.png?v=20260907A">
+<link rel="icon" type="image/png" href="icon-192.png?v=20260907F">
+<link rel="apple-touch-icon" href="icon-180.png?v=20260907F">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20260907A"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20260907A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20260907F"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20260907F"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -372,6 +372,11 @@
   .sync-led.offline .led{background:var(--text-faint);box-shadow:0 0 0 3px color-mix(in srgb,var(--text-faint) 24%,transparent);}   /* 離線:灰燈(有連結但沒網路,畫面是上次同步資料) */
   .sync-led.pending .led{animation:ledYGled 1.1s steps(1,end) infinite;}
   @keyframes ledYGled{0%,49%{background:#D8961F;box-shadow:0 0 0 3px color-mix(in srgb,#D8961F 26%,transparent);}50%,100%{background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 26%,transparent);}}
+  /* completion-check-only:start — original lamp sizes and animations unchanged */
+  .sync-led .led,.sync-dot{position:relative;}
+  .sync-led.sync-complete .led::after,.sync-dot.sync-complete::after{content:"";position:absolute;left:50%;top:46%;width:5px;height:3px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:translate(-50%,-50%) rotate(-45deg);}
+  .sync-dot.sync-complete::after{width:4px;height:2px;border-width:1.3px;}
+  /* completion-check-only:end */
   .ver-line{text-align:center;font-size:.76rem;color:var(--ink-soft);opacity:.72;letter-spacing:.02em;margin-top:26px;padding-bottom:6px;}
 
   /* ---------- LIST (View 2) ---------- */
@@ -1627,7 +1632,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.09.07A：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.09.07F：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2063,7 +2068,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.09.07A";
+const APP_VERSION = "2026.09.07F";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -7102,7 +7107,7 @@ let syncConnected = false, syncEmail = null;
   window.onLocalChange = function(kind){ if(window._saveBlocked)return; if(kind==="cats")window.touchCats();if(kind==="settings")window.touchSettings(); if(!persistLocal())return; window.scheduleSync(); };
   let pushTimer = null;
   let dirty = false;
-  window.scheduleSync = function(){ if(window._saveBlocked || !PropertyCore.ready)return; dirty = true; if (!syncConnected) return; clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 1500); };
+  window.scheduleSync = function(){ if(window._saveBlocked || !PropertyCore.ready)return; dirty = true; clearSyncCheck(); if (!syncConnected) return; clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 1500); };
 
   // ---- GIS token flow ----
   function gisReady(){ return !!(window.google && google.accounts && google.accounts.oauth2); }
@@ -7398,11 +7403,42 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
   }
 
   // ---- status UI ----
+  // completion-check-only:start
+  // Display observer only: no writes, requests, timers or changes to sync state.
+  let completedCheckContent=null,completedCheckEmail=null;
+  function clearSyncCheck(){
+    for(const id of ["listLed","coverLed","gDot"]){try{document.getElementById(id)?.classList.remove("sync-complete");}catch(_){}}
+  }
+  function confirmSyncCheck(main){
+    try{completedCheckContent=canonical(main);completedCheckEmail=syncEmail;}
+    catch(_){completedCheckContent=null;completedCheckEmail=null;clearSyncCheck();}
+  }
+  function updateSyncCheck(cls){
+    if(cls==="warn"||cls==="offline"){completedCheckContent=null;completedCheckEmail=null;}
+    let complete=false;
+    try{
+      if(completedCheckContent!==null&&completedCheckEmail===syncEmail&&syncConnected&&navigator.onLine&&!inFlight&&!dirty&&!needReauth&&syncFailCount===0&&!window._saveBlocked&&!window._pendingMerge&&lastVersion&&!(window.isTableBusy&&window.isTableBusy())&&!document.querySelector?.('.tcell[aria-invalid="true"]')){
+        // An isolated reader cannot change the active store's error or edit state.
+        const saved=PropertyCore.createStore(localStorage).readLatest();
+        complete=canonical(PropertyCore.mainFrom(saved))===completedCheckContent;
+      }
+    }catch(_){complete=false;}
+    for(const id of ["listLed","coverLed","gDot"]){try{const el=document.getElementById(id);el?.classList.toggle("sync-complete",complete&&el.classList.contains("ok"));}catch(_){}}
+  }
+  function queueSyncCheck(){if(typeof requestAnimationFrame==="function")requestAnimationFrame(()=>updateSyncCheck());else Promise.resolve().then(updateSyncCheck);}
+  for(const type of ["input","compositionstart","compositionend"]){document.addEventListener(type,e=>{
+    if(e.target?.closest?.("#tableWrap, #modalBg"))clearSyncCheck();
+  },true);}
+  for(const type of ["click","pointerup","keydown","focusin","focusout","change"]){document.addEventListener(type,queueSyncCheck,true);}
+  window.addEventListener("storage",e=>{if(e.key===null||e.key===PropertyCore.KEY||e.key?.startsWith(PropertyCore.KEY+":")||e.key==="property_app_gauth_v1")queueSyncCheck();});
+  // completion-check-only:end
+
   function setLed(cls){   // 同時更新列表 + 封面兩顆同步燈(封面那顆保留 cover-led 容器樣式)
     ["listLed","coverLed"].forEach(function(id){
       const el = document.getElementById(id); if (!el) return;
       el.className = (id === "coverLed" ? "sync-led cover-led" : "sync-led") + (cls ? " " + cls : "");
     });
+    updateSyncCheck(cls);
   }
   function setStatus(text, kind){
     const st = document.getElementById("gStatus"), dot = document.getElementById("gDot");
@@ -7540,7 +7576,7 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
           else applyMerged(merged);
         }
         const needPush = !remote || mergedCanon !== canonical(remote);
-        if (!needPush){ lastVersion = versionBefore; syncComplete = true; break; }
+        if (!needPush){ lastVersion = versionBefore; syncComplete = true; confirmSyncCheck(merged); break; }
         merged.rev = ((remote && remote.rev) || 0) + 1; merged.lastWriteBy = deviceId; merged.updatedAt = Date.now();
         if(window.isTableBusy && window.isTableBusy()) throw new Error("editing_busy");
         if(versionBefore!==await getVersion()) continue;
@@ -7548,7 +7584,7 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
         const newVer = await upload(fileId, merged);
         const afterVer = await getVersion();
         pushed = merged;
-        if (afterVer && newVer && afterVer === newVer){ lastVersion = afterVer; syncComplete = true; break; }
+        if (afterVer && newVer && afterVer === newVer){ lastVersion = afterVer; syncComplete = true; confirmSyncCheck(merged); break; }
       }
       if (!syncComplete){
         dirty = true;
