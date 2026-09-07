@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20260907E">
-<link rel="apple-touch-icon" href="icon-180.png?v=20260907E">
+<link rel="icon" type="image/png" href="icon-192.png?v=20260907A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20260907A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20260907E"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20260907E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20260907A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20260907A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -372,13 +372,6 @@
   .sync-led.offline .led{background:var(--text-faint);box-shadow:0 0 0 3px color-mix(in srgb,var(--text-faint) 24%,transparent);}   /* 離線:灰燈(有連結但沒網路,畫面是上次同步資料) */
   .sync-led.pending .led{animation:ledYGled 1.1s steps(1,end) infinite;}
   @keyframes ledYGled{0%,49%{background:#D8961F;box-shadow:0 0 0 3px color-mix(in srgb,#D8961F 26%,transparent);}50%,100%{background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 26%,transparent);}}
-
-  /* E: only a verified, fully saved state receives the completion check. */
-  .sync-dot,.sync-led .led{width:14px;height:14px;position:relative;box-sizing:border-box;}
-  .sync-dot.ok::after,.sync-led.ok .led::after{content:"";position:absolute;left:3px;top:4px;width:6px;height:3px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg);}
-  .sync-dot.pending,.sync-dot.draft{background:#D8961F;animation:none;}
-  .sync-led.pending .led,.sync-led.draft .led{background:#D8961F;box-shadow:0 0 0 3px color-mix(in srgb,#D8961F 26%,transparent);animation:none;}
-  .sync-dot.offline{background:var(--text-faint);animation:none;}
   .ver-line{text-align:center;font-size:.76rem;color:var(--ink-soft);opacity:.72;letter-spacing:.02em;margin-top:26px;padding-bottom:6px;}
 
   /* ---------- LIST (View 2) ---------- */
@@ -1634,7 +1627,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.09.07E：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.09.07A：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2070,7 +2063,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.09.07E";
+const APP_VERSION = "2026.09.07A";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2274,27 +2267,6 @@ function loadItems(){
 }
 let items = loadItems();
 let visiblePreferences=null;
-// Remote changes can wait for repaint while saved local edits keep syncing.
-// Keep the existing visible baseline, but reject edits to a known deleted/reset record.
-function assertPendingEditSafe(next){
-  if(!window._pendingMerge)return;
-  const store=PropertyCore.local(),base=store.current;if(!base)return;
-  const candidate=PropertyCore.validateState(next);
-  const logical=PropertyCore.stateFromMain(PropertyCore.merge(PropertyCore.mainFrom(store.readLatest()),window._pendingMerge));
-  const stable=value=>JSON.stringify((function order(x){if(Array.isArray(x))return x.map(order);if(x&&typeof x==="object"){const out={};for(const key of Object.keys(x).sort())out[key]=order(x[key]);return out;}return x;})(value));
-  const fields=row=>Object.fromEntries(PropertyCore.FIELDS.map(key=>[key,row[key]]));
-  const intent=state=>{const settings={...state.settings};delete settings._updatedAt;return stable({items:state.items.map(row=>({id:row.id,...fields(row)})).sort((a,b)=>String(a.id).localeCompare(String(b.id))),cats:state.cats,settings,deleted:state.deleted,resetAt:state.resetAt});};
-  if(candidate.resetAt<logical.resetAt&&intent(candidate)!==intent(base)){
-    const error=new Error("雲端資料已完整還原，目前輸入仍保留，請核對新資料後再修改");error.code="PROPERTY_RESET";throw error;
-  }
-  const previous=new Map(base.items.map(row=>[row.id,row])),alive=new Set(logical.items.map(row=>row.id));
-  for(const row of candidate.items){
-    const before=previous.get(row.id);
-    if(before&&!alive.has(row.id)&&(logical.deleted[row.id]||0)>=before.updatedAt&&stable(fields(row))!==stable(fields(before))){
-      const error=new Error("此物件已在雲端刪除，目前輸入仍保留，請先匯出再確認");error.code="PROPERTY_DELETED";throw error;
-    }
-  }
-}
 function persistLocal(opts){
   opts=opts||{};
   if(!PropertyCore.ready || (window._saveBlocked && !opts.retry)) return false;
@@ -2305,12 +2277,10 @@ function persistLocal(opts){
     for(const [key,value] of Object.entries(shown)){
       if(!visiblePreferences || JSON.stringify(value)!==JSON.stringify(visiblePreferences[key]))effective[key]=value;
     }
-    const candidate={
+    const state=PropertyCore.local().commit({
       items,cats,deleted,settings:effective,resetAt:window._resetAt||0,
       catsTs:window.__catsTs||previous.catsTs,settingsTs:window.__settingsTs||previous.settingsTs
-    };
-    assertPendingEditSafe(candidate);
-    const state=PropertyCore.local().commit(candidate,{track:opts.track!==false});
+    },{track:opts.track!==false});
     items=state.items;cats=state.cats;deleted=state.deleted;window._resetAt=state.resetAt;
     window.__catsTs=state.catsTs;window.__settingsTs=state.settingsTs;
     visiblePreferences=PropertyCore.clone(shown);window._saveBlocked=false;
@@ -3043,7 +3013,6 @@ function openTableDueCal(trigger){
   });
 }
 function tCommitCell(cell){                       // 回傳 true=值有變更(呼叫端據此決定要不要閃「已儲存」)
-  if(window.isSyncComposing?.(cell))return false;
   const it = tFindItem(cell); if (!it) return false;
   const field = cell.dataset.field;
   let val = cell.textContent.trim();
@@ -3053,9 +3022,8 @@ function tCommitCell(cell){                       // 回傳 true=值有變更(�
     catch(e){ cell.setAttribute("aria-invalid","true"); toast(e.message); return false; }
   }
   if (field === "name" && cell.textContent.trim() !== val && !tCellIsEditing(cell)) cell.textContent = val;   // 編輯中不重寫 DOM,避免 normalizeName 大寫化時游標跳回開頭
-  if(window.syncEditorChanged&&!window.syncEditorChanged(cell)){window.syncInputCommitted?.(cell);return false;}
   if (it[field] !== val){ it[field] = val; it.updatedAt = Date.now(); if (!saveItems()) return false; if (field==="price" && !tCellIsEditing(cell)) cell.textContent=String(val); onLocalChange("data"); return true; }
-  window.syncInputCommitted?.(cell);return false;
+  return false;
 }
 function caretEnd(el){ try{ const r=document.createRange(); r.selectNodeContents(el); r.collapse(false); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
 function caretStart(el){ try{ const r=document.createRange(); r.selectNodeContents(el); r.collapse(true); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
@@ -3100,9 +3068,7 @@ function tCellBeginType(cell){
   if (!cell || !cell.classList.contains("tcell") || !cell.dataset.field || !editMode) return;
   const active = document.activeElement;
   if (active && active !== cell && tCellIsEditing(active)) tCellExitEdit(active, {flash: false, defer: true});
-  window.syncBeginEdit?.(cell);
   cell.textContent = "";
-  window.syncMarkInput?.(cell);
   cell.setAttribute("contenteditable", "true");
   cell.focus({ preventScroll: true });
   caretEnd(cell);
@@ -3112,7 +3078,6 @@ function tCellEdit(cell, x, y, opts){
   if (!cell || !cell.classList.contains("tcell") || !cell.dataset.field || !editMode) return;
   const active = document.activeElement;
   if (active && active !== cell && tCellIsEditing(active)) tCellExitEdit(active, {flash: false, defer: true});
-  window.syncBeginEdit?.(cell);
   cell.setAttribute("contenteditable", "true");
   cell.focus({ preventScroll: true });
   if (x != null && y != null){
@@ -3145,8 +3110,7 @@ function tCellInsertPlainText(cell, text){
 function tCellPastePlain(cell, text){
   if (!cell || !text || !editMode) return;
   if (!tCellIsEditing(cell)) tCellBeginType(cell);
-  window.syncBeginEdit?.(cell);
-  tCellInsertPlainText(cell, text);window.syncMarkInput?.(cell);
+  tCellInsertPlainText(cell, text);
   clearTimeout(cell._saveT);
   cell._saveT = setTimeout(function(){ if (cell.isConnected) tCommitCell(cell); }, 200);
 }
@@ -3231,13 +3195,13 @@ function flushEditing(){
   try {
     if (modalBg.classList.contains("open")){ commitFormIfOpen(); return; }
     const el = document.activeElement;
-    if (!el || !el.classList || window.isSyncComposing?.(el)) return;
+    if (!el || !el.classList) return;
     if (el.classList.contains("tcell") && tCellIsEditing(el)){
       tCellExitEdit(el);                                   // 一般欄位格(案名/地址/售價…)
     } else if (el.classList.contains("nseg-ed") && !el.classList.contains("needexp-view")){
-      const w = el.closest(".needexp"); if (w && (!window.syncEditorChanged || window.syncEditorChanged(el))) commitNeedSeg(w.dataset.for, +el.dataset.seg, editToNeed(el));   // 備註三段內容
+      const w = el.closest(".needexp"); if (w) commitNeedSeg(w.dataset.for, +el.dataset.seg, editToNeed(el));   // 備註三段內容
     } else if (el.dataset && el.dataset.titleedit){
-      const w = el.closest(".needexp"); if (w && (!window.syncEditorChanged || window.syncEditorChanged(el))) commitNeedTitle(w.dataset.for, +el.dataset.seg, el.textContent); // 備註三段標題
+      const w = el.closest(".needexp"); if (w) commitNeedTitle(w.dataset.for, +el.dataset.seg, el.textContent); // 備註三段標題
     } else {
       return;   // 沒在編輯格,不需 blur
     }
@@ -3305,7 +3269,7 @@ tableWrap.addEventListener("keydown", e => {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (["Tab","Enter","Escape","F2","ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Home","End","PageUp","PageDown"].includes(e.key)) return;
   if (e.key === "Delete" || e.key === "Backspace"){
-    e.preventDefault(); window.syncBeginEdit?.(c);c.textContent = "";window.syncMarkInput?.(c);tCommitCell(c);return;
+    e.preventDefault(); c.textContent = ""; tCommitCell(c); return;
   }
   if (e.isComposing || e.key === "Process" || e.keyCode === 229){
     tCellBeginType(c);
@@ -3316,7 +3280,6 @@ tableWrap.addEventListener("keydown", e => {
     tCellBeginType(c);
     try { document.execCommand("insertText", false, e.key); } catch(err){ c.textContent = e.key; caretEnd(c); }
     clearTimeout(c._saveT);
-    window.syncMarkInput?.(c);
     c._saveT = setTimeout(function(){ if (c.isConnected) tCommitCell(c); }, 200);
   }
 }, true);
@@ -3376,7 +3339,6 @@ tableWrap.addEventListener("copy", e => {
 // ---- 「備註」展開區的編輯監聽(只認 nseg-*,與既有 tcell 監聽並存;tcell 監聽碰到 nseg 會因類名不符而略過) ----
 tableWrap.addEventListener("blur", e => {
   const c = e.target;
-  if(window.isSyncComposing?.(c)||window.syncEditorChanged&&!window.syncEditorChanged(c))return;
   if (c.classList && c.classList.contains("nseg-ed") && !c.classList.contains("needexp-view")){
     const w = c.closest(".needexp"); if (!w) return;
     const raw = editToNeed(c);
@@ -3396,7 +3358,7 @@ tableWrap.addEventListener("compositionend", e => {
   if (!ed) return;
   liveNeedSymbolsFix(ed);
   const w = ed.closest(".needexp");
-  if (w && ed.classList.contains("nseg-ed") && (!window.syncEditorChanged||window.syncEditorChanged(ed))) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
+  if (w && ed.classList.contains("nseg-ed")) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
 }, true);
 tableWrap.addEventListener("paste", e => {
   const nedBody = e.target.closest && e.target.closest('.needexp-ed[contenteditable="true"]');
@@ -3443,7 +3405,6 @@ tableWrap.addEventListener("keydown", e => {
 }, true);
 tableWrap.addEventListener("input", e => {
   const c = e.target;
-  if(e.isComposing||window.isSyncComposing?.(c))return;
   if (c.classList && c.classList.contains("nseg-ed") && !c.classList.contains("needexp-view")){
     const w = c.closest(".needexp");
     if (!e.isComposing && !c.isComposing) liveNeedSymbolsFix(c);
@@ -4316,7 +4277,6 @@ function openForm(id){
   const draft=loadFormDraft();
   if(draft){applyFormDraft(PropertyCore.mergeDraft(draft.base,draft.values,formBaseRec));toast("已還原上次修改的欄位，按儲存才會套用");}
   showLegacyDraftNotice();
-  window.refreshLed?.();
   if (!id) setTimeout(() => F.name.focus(), 50);
 }
 function applyPendingMergeIfAny(){
@@ -4332,7 +4292,7 @@ function closeForm(){
   closeNeedOrderUI();
   if(formConflict)saveFormDraft();else clearFormDraft();
   modalBg.classList.remove("open"); editingId=null;
-  unlockOverlay(); applyPendingMergeIfAny();Promise.resolve().then(()=>window.refreshLed?.());
+  unlockOverlay(); applyPendingMergeIfAny();
 }
 
 // ===== 物件明細(唯讀,卡片檢視正常模式點卡片開啟) =====
@@ -4449,8 +4409,7 @@ function saveFormDraft(){
   const payload={version:3,id:editingId||null,resetAt:formBaseResetAt,base:PropertyCore.draftValues(formBaseRec),values:PropertyCore.draftValues(readDraftRec())};
   sessionStorage.setItem(draftKey(),JSON.stringify(payload));
   if(formConflict)sessionStorage.setItem(draftKey()+":retained",JSON.stringify(payload));
-  }catch(e){toast("草稿尚未保存，請先保持此視窗開啟")}
-  window.refreshLed?.();
+ }catch(e){toast("草稿尚未保存，請先保持此視窗開啟")}
 }
 function loadFormDraft(){
  try{
@@ -4535,8 +4494,7 @@ function saveForm(){
   let rec;
   try{rec=buildFormRec()}catch(e){toast(e.message);F.price.focus();return;}
   try{
-    const saved=PropertyCore.local().readLatest();
-    const latest=window._pendingMerge?PropertyCore.stateFromMain(PropertyCore.merge(PropertyCore.mainFrom(saved),window._pendingMerge)):saved;
+    const latest=PropertyCore.local().readLatest();
     if(latest.resetAt!==formBaseResetAt){showFormConflict("資料已從備份還原，這份草稿先保留，請核對新資料後再修改。");return;}
     if(editingId && !latest.items.some(x=>x.id===editingId)){showFormConflict("此物件已被刪除，這份草稿先保留，請核對資料。");return;}
   }catch(e){saveFormDraft();toast("尚未儲存："+e.message);return;}
@@ -5151,8 +5109,8 @@ function commitNeedTitle(id, sg, val){
 }
 function commitAllSegs(ex){
   // 只提交可編輯段落;唯讀顯示段落(.needexp-view)不該被序列化寫回 —— 它含顯示用「連結」,序列化會把網址洗成字面「連結」
-  ex.querySelectorAll(".nseg-ed:not(.needexp-view)").forEach(ed => {if(!window.isSyncComposing?.(ed)&&(!window.syncEditorChanged||window.syncEditorChanged(ed)))commitNeedSeg(ex.dataset.for, +ed.dataset.seg, editToNeed(ed));});
-  ex.querySelectorAll(".nseg-t[data-titleedit]").forEach(t => {if(!window.isSyncComposing?.(t)&&(!window.syncEditorChanged||window.syncEditorChanged(t)))commitNeedTitle(ex.dataset.for, +t.dataset.seg, t.textContent);});
+  ex.querySelectorAll(".nseg-ed:not(.needexp-view)").forEach(ed => commitNeedSeg(ex.dataset.for, +ed.dataset.seg, editToNeed(ed)));
+  ex.querySelectorAll(".nseg-t[data-titleedit]").forEach(t => commitNeedTitle(ex.dataset.for, +t.dataset.seg, t.textContent));
 }
 
 function openNeedExp(tr, doFocus){
@@ -5197,7 +5155,6 @@ function openNeedExp(tr, doFocus){
     // 正常模式展開僅顯示，不改寫資料或更新時間戳。
     ed.innerHTML = v ? (editMode ? needToEditHTML(v) : needToViewHTML(v)) : (editMode ? "<div><br></div>" : '<div class="tneed-ph">（無內容）</div>');
   });
-  window.syncTrackEditors?.(exp);
   if (editMode){
     exp.querySelectorAll("button.nseg-tbtn").forEach(hb => {
       hb.addEventListener("pointerdown", ev => {
@@ -7107,236 +7064,45 @@ document.addEventListener("pointercancel", endCatDrag);
   }, { passive: false });
 })();
 
-// ---- precise sync input state ----
-(function(){
-  const editors=new Map(),composing=new Set();
-  function descriptor(el){
-    if(!el||!el.closest)return null;
-    if(el.closest('#modalBg'))return {kind:'form'};
-    if(!el.closest('#tableWrap'))return null;
-    if(el.classList?.contains('tcell')&&el.dataset.field){const row=el.closest('tr[data-id]');return row?{kind:'cell',id:row.dataset.id,field:el.dataset.field}:null;}
-    const wrap=el.closest('.needexp');
-    if(wrap&&el.classList?.contains('nseg-ed')&&!el.classList.contains('needexp-view'))return {kind:'note',id:wrap.dataset.for,seg:+el.dataset.seg};
-    if(wrap&&el.dataset.titleedit)return {kind:'title',id:wrap.dataset.for,seg:+el.dataset.seg};
-    return null;
-  }
-  function value(el,info){
-    if(info.kind==='cell'){
-      const raw=(el.textContent||'').trim();
-      return info.field==='price'?PropertyCore.price(raw):info.field==='name'?normalizeName(raw):raw;
-    }
-    if(info.kind==='note')return normalizeNeedStorage(editToNeed(el).replace(/\s+$/,''));
-    if(info.kind==='title')return (el.textContent||'').replace(/\n/g,' ').trim()||needDefTitle(info.seg);
-    return null;
-  }
-  function stored(info){
-    const row=items.find(x=>x.id===info.id);if(!row)return undefined;
-    if(info.kind==='cell')return row[info.field];
-    return info.kind==='note'?needSeg(row,info.seg):needTitle(row,info.seg);
-  }
-  function track(el,before=false){
-    const info=descriptor(el);if(!info||info.kind==='form')return info;
-    if(!editors.has(el)){
-      let base;try{base=before?value(el,info):stored(info);}catch{base=stored(info);}
-      editors.set(el,{...info,base});
-    }
-    return editors.get(el);
-  }
-  function changed(el){
-    if(composing.has(el))return true;
-    const info=track(el);if(!info||info.kind==='form')return false;
-    try{return value(el,info)!==info.base;}catch{return true;}
-  }
-  function refresh(){window.refreshLed?.();}
-  function settled(el){
-    if(window._saveBlocked||composing.has(el))return;
-    const info=track(el);if(!info||info.kind==='form')return;
-    try{const next=value(el,info);if(next===stored(info))info.base=next;}catch{}
-  }
-  function refreshInputs(){
-    for(const [el] of editors){if(el.isConnected===false){editors.delete(el);composing.delete(el);}else settled(el);}
-  }
-  function inputStatus(){
-    for(const el of composing){if(el.isConnected===false||(descriptor(el)?.kind==='form'&&!modalBg.classList.contains('open')))composing.delete(el);else return '輸入中，尚未儲存';}
-    if(modalBg.classList.contains('open')&&formBaseRec){
-      try{if(formConflict||JSON.stringify(readDraftRec())!==JSON.stringify(formBaseRec))return '尚未儲存，請按「儲存」';}
-      catch{return '表單內容尚未儲存';}
-    }
-    for(const [el] of editors){
-      if(el.isConnected===false){editors.delete(el);continue;}
-      if(changed(el))return el.getAttribute?.('aria-invalid')==='true'?'內容尚未儲存，請修正輸入':'內容尚未儲存';
-    }
-    return '';
-  }
-  function commitEditor(el){
-    const info=descriptor(el);if(!info||composing.has(el))return;
-    if(info.kind==='cell')tCommitCell(el);
-    else if(info.kind==='note'&&changed(el))commitNeedSeg(info.id,info.seg,editToNeed(el));
-    else if(info.kind==='title'&&changed(el))commitNeedTitle(info.id,info.seg,el.textContent);
-    else if(info.kind==='form')saveFormDraft();
-    settled(el);refresh();
-  }
-  window.syncTrackEditors=root=>root?.querySelectorAll?.('.nseg-ed:not(.needexp-view),.nseg-t[data-titleedit]').forEach(el=>track(el,true));
-  window.syncTrackEditors(tableWrap);
-  window.syncBeginEdit=el=>track(el,true);
-  window.syncMarkInput=el=>{if(track(el)){refresh();}};
-  window.syncEditorChanged=changed;
-  window.isSyncComposing=el=>composing.has(el);
-  window.refreshSyncInputs=refreshInputs;
-  window.syncInputCommitted=el=>{settled(el);refresh();};
-  window.syncInputStatus=inputStatus;
-  window.hasUncommittedInput=()=>!!inputStatus();
-  document.addEventListener('focusin',e=>track(e.target,true),true);
-  document.addEventListener('input',e=>{
-    if(!descriptor(e.target))return;
-    track(e.target);refresh();
-    Promise.resolve().then(()=>{settled(e.target);refresh();});
-  },true);
-  document.addEventListener('compositionstart',e=>{
-    if(!descriptor(e.target))return;
-    track(e.target,true);composing.add(e.target);refresh();
-  },true);
-  document.addEventListener('compositionend',e=>{
-    if(!descriptor(e.target))return;
-    composing.delete(e.target);
-    Promise.resolve().then(()=>commitEditor(e.target));
-  },true);
-  document.addEventListener('change',e=>{if(descriptor(e.target)){settled(e.target);refresh();}},true);
-  document.addEventListener('click',e=>{if(e.target.closest?.('#modalBg'))Promise.resolve().then(refresh);},true);
-  document.addEventListener('focusout',e=>{if(descriptor(e.target))Promise.resolve().then(refresh);},true);
-})();
-// ---- end precise sync input state ----
-
 let syncConnected = false, syncEmail = null;
 /* =========================================================================
-   Google 雲端同步：各裝置修改以不可變紀錄保留，合併後更新 sync-main.json。
-   本機同步收據供各視窗接手；欄位合併、刪除記錄與每日快照繼續保留。
+   Google 雲端同步 (依規格:appDataFolder 主檔 sync-main.json,union+LWW+墓碑
+   冪等合併，樂觀併發，啟動/變更/輪詢/焦點觸發，外加每日快照當保險)
    ========================================================================= */
 (function(){
   const CLIENT_ID = "50147242388-jqhblfo5uh482gv69qn6ee28foevrkbi.apps.googleusercontent.com";
   const SCOPES = "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email";
   const MAIN_NAME = "sync-main.json";
   const POLL_MS = 10000;
-  const PUSH_DELAY_MS = 500;
   const FETCH_MS = 15000;
   const TOKEN_MS = 30000;
   const SYNC_WATCHDOG_MS = 40000;
-  // Temporary transport failures keep retrying; only authorization errors require login.
+  const SYNC_FAIL_MAX = 3;
 
   let tokenClient = null, accessToken = null, tokenExpiry = 0;
   let fileId = null, lastVersion = null;
-  let inFlight = false, syncActivity = false, needReauth = false, pollTimer = null, retryMs = 5000;
+  let inFlight = false, needReauth = false, pollTimer = null, retryMs = 5000;
   let syncAbort = null, syncFailCount = 0, bootSyncPending = false;
-  let authEpoch = 0, authRevision = "", pendingTokenCancel = null, tokenRequest = null;
-  let pendingCheck = 0, memoryAck = null, preparingSync = false, connecting = false;
-  let maintenanceRun = null, maintenancePending = null;
-  const AUTH_KEY = "property_app_gauth_v1", TOKEN_KEY = "property_app_gtoken_v1";
-  const ACK_KEY = "property_app_cloud_ack_v2";
-  function assertAuthEpoch(epoch){
-    if(epoch===authEpoch&&syncConnected&&storageOK){
-      const saved=loadAuth();
-      if(!saved.connected||(saved.email||null)!==syncEmail||(saved.revision||"")!==authRevision)receiveSharedAuth();
-    }
-    if(epoch!==authEpoch){const e=new Error("同步連結已變更");e.code="sync_cancelled";throw e;}
-  }
-  function cancelCloudSession(){
-    authEpoch++;syncGen++;pendingCheck++;connecting=false;preparingSync=false;
-    maintenancePending=null;maintenanceRun?.controller.abort();maintenanceRun=null;
-    if(pendingTokenCancel)pendingTokenCancel();
-    if(syncAbort)syncAbort.abort();syncAbort=null;
-    clearTimeout(pushTimer);pushTimer=null;stopPolling();
-    inFlight=false;syncActivity=false;tokenRequest=null;accessToken=null;tokenExpiry=0;
-    fileId=null;lastVersion=null;freshMainFile=false;memoryAck=null;
-    resetCloudJournalCache();window._pendingMerge=null;dirty=true;
-  }
-  function loadCloudAck(){
-    try {return JSON.parse(localStorage.getItem(ACK_KEY)||"null") || memoryAck;}catch(e){return memoryAck;}
-  }
-  async function digestMain(main){
-    const text=canonical(main);
-    if(globalThis.crypto?.subtle){
-      const bytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text));
-      return Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,"0")).join("");
-    }
-    // Non-secure local previews can still compare exactly without a weak hash.
-    return "json:"+text;
-  }
-  async function checkPendingChanges(schedule=true){
-    if(!PropertyCore.ready||window._saveBlocked)return true;
-    const epoch=authEpoch,check=++pendingCheck;
-    const local=PropertyCore.mainFrom(PropertyCore.local().readLatest());
-    const digest=await digestMain(local);
-    if(epoch!==authEpoch||check!==pendingCheck)return true;
-    const unchanged=canonical(local)===canonical(PropertyCore.mainFrom(PropertyCore.local().readLatest()));
-    const ack=loadCloudAck();
-    dirty=!unchanged||!ack||ack.email!==syncEmail||ack.authRevision!==authRevision||ack.digest!==digest;
-    if(!dirty)lastVersion=ack.signature;
-    if(dirty&&schedule&&syncConnected&&!needReauth&&!inFlight){clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(),PUSH_DELAY_MS);}
-    refreshLed();return dirty;
-  }
-  async function acknowledgeCloud(main,signature,epoch,needsPull=false){
-    const digest=await digestMain(main);assertAuthEpoch(epoch);
-    // The receipt acknowledges this exact saved local snapshot. A nonmatching,
-    // nonempty signature also makes older versions fetch unapplied remote data.
-    memoryAck={email:syncEmail,authRevision,digest,signature:needsPull?"pending-pull:"+signature:signature,cloudSignature:signature,needsPull:!!needsPull,at:Date.now()};
-    if(storageOK)localStorage.setItem(ACK_KEY,JSON.stringify(memoryAck));
-    await checkPendingChanges(false);assertAuthEpoch(epoch);
-  }
-  async function acknowledgeCoveredLocal(verified,signature,epoch){
-    assertAuthEpoch(epoch);
-    const local=PropertyCore.mainFrom(PropertyCore.local().readLatest());
-    if(canonical(mergeMain(verified,local))!==canonical(verified)){
-      // A newer saved edit arrived during the network run. Do not acknowledge it.
-      dirty=true;refreshLed();return false;
-    }
-    await acknowledgeCloud(local,signature,epoch,canonical(local)!==canonical(verified));
-    assertAuthEpoch(epoch);return !dirty;
-  }
-  function receiveSharedAuth(){
-    const next=loadAuth(),revision=next.revision||"";
-    if(!!next.connected!==syncConnected||(next.email||null)!==syncEmail||revision!==authRevision){
-      cancelCloudSession();syncConnected=!!next.connected;syncEmail=next.email||null;authRevision=revision;
-      needReauth=false;resetSyncSuccess();
-      const token=loadGToken();
-      if(syncConnected&&token&&token.email===syncEmail&&(token.revision||"")===authRevision&&Date.now()<token.exp){accessToken=token.t;tokenExpiry=token.exp;}
-      window.renderSyncCard();setStatus(syncConnected?"等待同步":"尚未連結",syncConnected?"pending":"warn");refreshLed();
-      if(syncConnected){startPolling();maybeBootSync();}
-    }
-  }
-
 
   // ---- persistence for auth flag + change timestamps ----
   function saveTs(kind, v){ if (storageOK){ try { localStorage.setItem("property_app_"+kind+"_ts_v1", String(v)); } catch(e){} } }
   function loadTs(kind){ if (storageOK){ try { const v = parseInt(localStorage.getItem("property_app_"+kind+"_ts_v1"),10); if (!isNaN(v)) return v; } catch(e){} } return 0; }
   window.__catsTs = PropertyCore.local().current.catsTs || loadTs("cats");
   window.__settingsTs = PropertyCore.local().current.settingsTs || loadTs("settings");
-  function saveAuth(){ if(storageOK)localStorage.setItem(AUTH_KEY,JSON.stringify({connected:syncConnected,email:syncEmail,revision:authRevision})); }
+  function saveAuth(){ if (storageOK){ try { localStorage.setItem("property_app_gauth_v1", JSON.stringify({connected: syncConnected, email: syncEmail})); } catch(e){} } }
   function loadAuth(){ if (storageOK){ try { return JSON.parse(localStorage.getItem("property_app_gauth_v1")||"{}") || {}; } catch(e){} } return {}; }
   // access token 持久化:重開 App 時若仍在有效期內就直接沿用,避免每次開啟都閃 Google 視窗
-  function saveGToken(){ if(storageOK){try{localStorage.setItem(TOKEN_KEY,JSON.stringify({t:accessToken,exp:tokenExpiry,email:syncEmail||"",revision:authRevision}));}catch(e){}} }
+  function saveGToken(){ if (storageOK){ try { localStorage.setItem("property_app_gtoken_v1", JSON.stringify({ t: accessToken, exp: tokenExpiry, email: syncEmail || "" })); } catch(e){} } }
   function loadGToken(){ if (storageOK){ try { return JSON.parse(localStorage.getItem("property_app_gtoken_v1") || "null"); } catch(e){} } return null; }
   function clearGToken(){ if (storageOK){ try { localStorage.removeItem("property_app_gtoken_v1"); } catch(e){} } }
 
   // expose touch/schedule hooks (called from mutation sites)
   window.touchCats = function(){ window.__catsTs = Date.now(); saveTs("cats", window.__catsTs); };
   window.touchSettings = function(){ window.__settingsTs = Date.now(); saveTs("settings", window.__settingsTs); };
-  window.onLocalChange = function(kind){ if(window._saveBlocked)return; if(kind==="cats")window.touchCats();if(kind==="settings")window.touchSettings(); if(!persistLocal())return; window.refreshSyncInputs?.();window.scheduleSync(); };
+  window.onLocalChange = function(kind){ if(window._saveBlocked)return; if(kind==="cats")window.touchCats();if(kind==="settings")window.touchSettings(); if(!persistLocal())return; window.scheduleSync(); };
   let pushTimer = null;
   let dirty = false;
-  window.scheduleSync = function(){ if(window._saveBlocked || !PropertyCore.ready)return; dirty=true;refreshLed();if(!syncConnected||needReauth)return;clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(),PUSH_DELAY_MS); };
-  window.addEventListener("storage",function(e){
-    if(e.key===AUTH_KEY||e.key===null){receiveSharedAuth();}
-    if(e.key===TOKEN_KEY){
-      const token=loadGToken();
-      if(syncConnected&&token&&token.email===syncEmail&&(token.revision||"")===authRevision&&Date.now()<token.exp){accessToken=token.t;tokenExpiry=token.exp;}
-      else if(!token){accessToken=null;tokenExpiry=0;}
-    }
-    if(e.key===ACK_KEY||e.key===PropertyCore.KEY||e.key?.startsWith(PropertyCore.KEY+":pending:")||e.key===null){
-      // Receipt and journal compaction events can contain no new user data.
-      // Compare the saved content before changing the visible lamp.
-      checkPendingChanges().catch(()=>{dirty=true;refreshLed();});
-    }
-  });
+  window.scheduleSync = function(){ if(window._saveBlocked || !PropertyCore.ready)return; dirty = true; if (!syncConnected) return; clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 1500); };
 
   // ---- GIS token flow ----
   function gisReady(){ return !!(window.google && google.accounts && google.accounts.oauth2); }
@@ -7349,40 +7115,26 @@ let syncConnected = false, syncEmail = null;
     tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: function(){} });
   }
   function requestToken(interactive){
-    if(tokenRequest)return tokenRequest;
-    const epoch=authEpoch;
-    tokenRequest=new Promise(function(resolve,reject){
-      if(!gisReady()){reject(new Error("gis"));return;}
-      let done=false;
-      const finish=(fn,value)=>{if(done)return;done=true;clearTimeout(timer);if(pendingTokenCancel===cancel)pendingTokenCancel=null;fn(value);};
-      const cancel=()=>{const e=new Error("同步連結已變更");e.code="sync_cancelled";finish(reject,e);};
-      const timer=setTimeout(()=>finish(reject,new Error("token_timeout")),TOKEN_MS);
-      pendingTokenCancel=cancel;
-      const client=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPES,
-        callback:async function(resp){
-          if(done||epoch!==authEpoch)return;
-          try{assertAuthEpoch(epoch)}catch(e){finish(reject,e);return;}
-          if(resp?.error){finish(reject,resp);return;}
-          if(!resp?.access_token){finish(reject,new Error("授權回應不完整"));return;}
-          try{
-            if(!interactive)await verifySyncToken(resp.access_token,epoch);
-            if(done||epoch!==authEpoch)return;
-            accessToken=resp.access_token;tokenExpiry=Date.now()+((resp.expires_in||3600)-90)*1000;
-            needReauth=false;if(!interactive)saveGToken();finish(resolve,accessToken);
-          }catch(e){finish(reject,e);}
-        },error_callback:e=>finish(reject,e)});
-      try {const cfg={prompt:interactive?"consent":""};if(syncEmail?.includes("@"))cfg.login_hint=syncEmail;client.requestAccessToken(cfg);}
-      catch(e){finish(reject,e);}
+    return new Promise(function(resolve, reject){
+      if (!tokenClient){ reject(new Error("gis")); return; }
+      let done = false;
+      const finish = function(fn, v){ if (done) return; done = true; clearTimeout(tmr); fn(v); };
+      const tmr = setTimeout(function(){ finish(reject, new Error("token_timeout")); }, TOKEN_MS);
+      tokenClient.callback = function(resp){
+        if (resp && resp.error){ finish(reject, resp); return; }
+        accessToken = resp.access_token;
+        tokenExpiry = Date.now() + ((resp.expires_in || 3600) - 90) * 1000;
+        needReauth = false;
+        saveGToken();
+        finish(resolve, accessToken);
+      };
+      try {
+        const cfg = { prompt: interactive ? "consent" : "" };
+        if (syncEmail && syncEmail.indexOf("@") >= 0) cfg.hint = syncEmail;   // 指定已連結的帳號,避免每次重開都跳「選擇帳戶」
+        tokenClient.requestAccessToken(cfg);
+      }
+      catch (e){ finish(reject, e); }
     });
-    const active=tokenRequest;active.finally(()=>{if(tokenRequest===active)tokenRequest=null;}).catch(()=>{});
-    return active;
-  }
-  async function verifySyncToken(token,epoch){
-    const response=await tfetch("https://www.googleapis.com/oauth2/v2/userinfo",{headers:{Authorization:"Bearer "+token}});
-    assertAuthEpoch(epoch);
-    if(!response.ok){const e=new Error("無法確認 Google 帳號（"+response.status+"）");e.status=response.status;throw e;}
-    const info=await response.json();assertAuthEpoch(epoch);
-    if(!syncEmail||info.email!==syncEmail){const e=new Error("Google 帳號已變更，請重新連結");e.error="login_required";throw e;}
   }
   async function ensureToken(){
     if (accessToken && Date.now() < tokenExpiry) return accessToken;
@@ -7390,29 +7142,31 @@ let syncConnected = false, syncEmail = null;
   }
 
   // ---- Drive REST helpers ----
-  function tfetch(url,opts,ms,parent=syncAbort){
-    const ac=new AbortController(),abort=()=>ac.abort();
-    if(parent){if(parent.signal.aborted)ac.abort();else parent.signal.addEventListener("abort",abort,{once:true});}
-    const timer=setTimeout(abort,ms||FETCH_MS);
-    return fetch(url,Object.assign({},opts,{signal:ac.signal})).finally(()=>{clearTimeout(timer);parent?.signal.removeEventListener("abort",abort);});
-  }
-  async function dfetch(url,opts,parent){
-    const epoch=authEpoch;assertAuthEpoch(epoch);
-    // Optional housekeeping must not refresh or alter the shared login session.
-    if(parent&&(parent.signal.aborted||!accessToken||Date.now()>=tokenExpiry)){
-      const error=new Error("雲端整理稍後再試");error.code="maintenance_deferred";throw error;
+  function tfetch(url, opts, ms){
+    ms = ms || FETCH_MS;
+    const ac = new AbortController();
+    const parent = syncAbort;
+    if (parent){
+      if (parent.signal.aborted) ac.abort();
+      else parent.signal.addEventListener("abort", function(){ ac.abort(); }, { once: true });
     }
-    const token=parent?accessToken:await ensureToken();assertAuthEpoch(epoch);
-    opts=Object.assign({},opts,{headers:Object.assign({},opts?.headers,{Authorization:"Bearer "+token})});
-    let res=await tfetch(url,opts,undefined,parent);assertAuthEpoch(epoch);
-    if(res.status===401&&!parent){accessToken=null;clearGToken();const fresh=await requestToken(false);assertAuthEpoch(epoch);opts.headers.Authorization="Bearer "+fresh;res=await tfetch(url,opts,undefined,parent);assertAuthEpoch(epoch);}
-    if(!res.ok){const error=new Error("Google 雲端回應失敗（"+res.status+"）");error.status=res.status;if(res.status===401)error.error="login_required";throw error;}
+    const timer = setTimeout(function(){ ac.abort(); }, ms);
+    const o = Object.assign({}, opts, { signal: ac.signal });
+    return fetch(url, o).finally(function(){ clearTimeout(timer); });
+  }
+  async function dfetch(url, opts){
+    const token = await ensureToken();
+    opts = opts || {}; opts.headers = Object.assign({}, opts.headers, { Authorization: "Bearer " + token });
+    let res = await tfetch(url, opts);
+    if (res.status === 401){ accessToken = null; clearGToken(); const t2 = await requestToken(false); opts.headers.Authorization = "Bearer " + t2; res = await tfetch(url, opts); }
+    if(!res.ok) throw new Error("Google 雲端回應失敗（"+res.status+"）");
     return res;
   }
-  async function findFile(name,parent){
-    const epoch=authEpoch,q=encodeURIComponent("name='"+name+"' and trashed=false");
-    const res=await dfetch("https://www.googleapis.com/drive/v3/files?q="+q+"&spaces=appDataFolder&fields=files(id,version)",undefined,parent);
-    const data=await res.json();assertAuthEpoch(epoch);return data.files?.[0]||null;
+  async function findFile(name){
+    const q = encodeURIComponent("name='" + name + "' and trashed=false");
+    const res = await dfetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&spaces=appDataFolder&fields=files(id,version)");
+    const data = await res.json();
+    return (data.files && data.files.length) ? data.files[0] : null;
   }
   async function createFile(name){
     const res = await dfetch("https://www.googleapis.com/drive/v3/files", {
@@ -7448,132 +7202,13 @@ let syncConnected = false, syncEmail = null;
     return data;
   }
   async function upload(id,obj){
-    const epoch=authEpoch,res=await dfetch("https://www.googleapis.com/upload/drive/v3/files/"+id+"?uploadType=media&fields=version",{
+    const res=await dfetch("https://www.googleapis.com/upload/drive/v3/files/"+id+"?uploadType=media&fields=version",{
       method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(obj)});
-    const data=await res.json();assertAuthEpoch(epoch);if(!data.version)throw new Error("無法確認上傳結果");
-    if(id===fileId)freshMainFile=false;return data.version;
+    const data=await res.json();if(!data.version)throw new Error("無法確認上傳結果");
+    if(id===fileId) freshMainFile=false;
+    return data.version;
   }
-  // Immutable documents preserve each writer's changes even when the legacy
-  // sync-main.json projection is concurrently replaced by another device.
-  const CLOUD_JOURNAL_PREFIX = "property-sync-journal-v1-";
-  const CLOUD_JOURNAL_WRITER = String(deviceId);
-  let cloudJournalCache = new Map();
-  function resetCloudJournalCache(){ cloudJournalCache.clear(); }
-  function cloudCatalogSignature(files){
-    return JSON.stringify(files.map(f=>[f.id,f.version]).sort((a,b)=>a[0].localeCompare(b[0])));
-  }
-  function isCloudFileMissing(error){ return !!error && (error.status===404 || error.code===404); }
-  async function readCloudCatalog(){
-    const epoch=authEpoch, files=[], seenIds=new Set(), seenPages=new Set();
-    const q="trashed=false and (name='"+MAIN_NAME+"' or name contains '"+CLOUD_JOURNAL_PREFIX+"')";
-    let pageToken="";
-    do{
-      assertAuthEpoch(epoch);
-      const url="https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=1000&fields="+
-        encodeURIComponent("nextPageToken,incompleteSearch,files(id,name,version,appProperties)")+"&q="+encodeURIComponent(q)+
-        (pageToken?"&pageToken="+encodeURIComponent(pageToken):"");
-      const response=await dfetch(url), body=await response.json();
-      assertAuthEpoch(epoch);
-      if(body.incompleteSearch || !Array.isArray(body.files)) throw new Error("雲端資料清單尚未完整，稍後重試");
-      for(const f of body.files){
-        if(f.name!==MAIN_NAME && !(typeof f.name==="string" && f.name.startsWith(CLOUD_JOURNAL_PREFIX)))continue;
-        if(typeof f.id!=="string" || !f.id || !f.version)throw new Error("無法確認雲端資料版本");
-        if(!seenIds.has(f.id)){seenIds.add(f.id);files.push({id:f.id,name:f.name,version:String(f.version),appProperties:f.appProperties||{}});}
-      }
-      pageToken=body.nextPageToken||"";
-      if(pageToken && seenPages.has(pageToken))throw new Error("雲端資料清單尚未完整，稍後重試");
-      if(pageToken)seenPages.add(pageToken);
-    }while(pageToken);
-    assertAuthEpoch(epoch);
-    files.sort((a,b)=>a.id.localeCompare(b.id));
-    for(const id of cloudJournalCache.keys())if(!seenIds.has(id))cloudJournalCache.delete(id);
-    return {files,signature:cloudCatalogSignature(files),legacyMain:files.filter(f=>f.name===MAIN_NAME)};
-  }
-  async function readCloudDocument(file){
-    const epoch=authEpoch, cached=cloudJournalCache.get(file.id);
-    assertAuthEpoch(epoch);
-    if(cached && cached.version===file.version)return PropertyCore.clone(cached.data);
-    const response=await dfetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id)+"?alt=media");
-    const text=await response.text();assertAuthEpoch(epoch);
-    if(!text)throw new Error("雲端資料為空，已停止覆寫");
-    let parsed;
-    try{parsed=JSON.parse(text);PropertyCore.stateFromMain(parsed);}
-    catch(e){throw new Error("雲端資料格式不正確，已停止覆寫："+e.message);}
-    const data=PropertyCore.mainFrom(PropertyCore.stateFromMain(parsed));
-    assertAuthEpoch(epoch);
-    cloudJournalCache.set(file.id,{version:file.version,data:PropertyCore.clone(data)});
-    return data;
-  }
-  async function readCloudBundle(catalog){
-    const epoch=authEpoch;
-    for(let attempt=0;attempt<3;attempt++){
-      assertAuthEpoch(epoch);
-      const current=catalog||await readCloudCatalog();catalog=null;
-      let merged=null, durableMerged=null, disappeared=false;
-      for(const file of current.files){
-        try{
-          const data=await readCloudDocument(file);assertAuthEpoch(epoch);
-          merged=merged?PropertyCore.merge(merged,data):data;
-          if(file.name.startsWith(CLOUD_JOURNAL_PREFIX))durableMerged=durableMerged?PropertyCore.merge(durableMerged,data):data;
-        }catch(error){
-          if(isCloudFileMissing(error)){cloudJournalCache.delete(file.id);disappeared=true;break;}
-          throw error;
-        }
-      }
-      assertAuthEpoch(epoch);
-      if(!disappeared)return {...current,merged,durableMerged};
-      // Another writer may retire an old immutable document only after its
-      // replacement exists. Refresh the complete catalog to pick that up.
-    }
-    throw new Error("雲端資料正在更新，稍後重試");
-  }
-  async function publishCloudJournal(merged,bundle){
-    const epoch=authEpoch;
-    const data=PropertyCore.mainFrom(PropertyCore.stateFromMain(merged));
-    const suffix=typeof crypto!=="undefined" && typeof crypto.randomUUID==="function"
-      ? crypto.randomUUID() : Date.now().toString(36)+"-"+Math.random().toString(36).slice(2)+"-"+Math.random().toString(36).slice(2);
-    const name=CLOUD_JOURNAL_PREFIX+encodeURIComponent(CLOUD_JOURNAL_WRITER)+"-"+suffix+".json";
-    const metadata={name,mimeType:"application/json",parents:["appDataFolder"],appProperties:{propertySyncKind:"journal-v1",propertySyncWriter:CLOUD_JOURNAL_WRITER}};
-    const boundary="property_journal_"+suffix.replace(/[^A-Za-z0-9]/g,"");
-    const body="--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(metadata)+
-      "\r\n--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(data)+"\r\n--"+boundary+"--\r\n";
-    assertAuthEpoch(epoch);
-    const response=await dfetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,version",{
-      method:"POST",headers:{"Content-Type":"multipart/related; boundary="+boundary},body});
-    const file=await response.json();assertAuthEpoch(epoch);
-    if(typeof file.id!=="string" || !file.id || !file.version)throw new Error("無法確認雲端資料已儲存");
-    const published={id:file.id,name,version:String(file.version),appProperties:metadata.appProperties};
-    // Verify the entire uploaded document before allowing callers to retire
-    // any captured input or show this local state as synchronized.
-    cloudJournalCache.delete(file.id);
-    const verified=await readCloudDocument(published);assertAuthEpoch(epoch);
-    if(canonical(verified)!==canonical(data)){
-      cloudJournalCache.delete(file.id);throw new Error("雲端資料核對不一致，稍後重試");
-    }
-    return {...published,data:verified};
-  }
-  async function pruneOwnCloudJournals(published,bundle,parent){
-    const epoch=authEpoch;let removed=0,failed=0;
-    if(!published || !published.data || !bundle || !Array.isArray(bundle.files))return {removed,failed};
-    const confirmed=cloudJournalCache.get(published.id);
-    if(!confirmed || confirmed.version!==published.version || canonical(confirmed.data)!==canonical(published.data))return {removed,failed};
-    for(const file of bundle.files){
-      if(file.id===published.id || !file.name.startsWith(CLOUD_JOURNAL_PREFIX) ||
-        file.appProperties?.propertySyncKind!=="journal-v1" || file.appProperties?.propertySyncWriter!==CLOUD_JOURNAL_WRITER)continue;
-      const cached=cloudJournalCache.get(file.id);
-      if(!cached || cached.version!==file.version || canonical(PropertyCore.merge(published.data,cached.data))!==canonical(published.data))continue;
-      assertAuthEpoch(epoch);
-      try{
-        await dfetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id),{method:"DELETE"},parent);
-        assertAuthEpoch(epoch);cloudJournalCache.delete(file.id);removed++;
-      }catch(error){
-        assertAuthEpoch(epoch);
-        if(isCloudFileMissing(error)){cloudJournalCache.delete(file.id);removed++;}else failed++;
-      }
-    }
-    return {removed,failed};
-  }
-
+  
 // ---- 備份到「看得到」的 Google Drive(獨立 drive.file 授權,不影響上面的 appDataFolder 同步)----
   const FILE_SCOPE = "https://www.googleapis.com/auth/drive.file";
   let fileTokenClient = null, fileToken = null, fileTokenExpiry = 0;
@@ -7734,107 +7369,56 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
 // ---- daily snapshot (insurance; keeps one per day, 自動只保留最近 30 天) ----
   const SNAP_KEEP_DAYS = 30;
   const localDay = d => { const t = d || new Date(); return t.getFullYear() + "-" + String(t.getMonth()+1).padStart(2,"0") + "-" + String(t.getDate()).padStart(2,"0"); };   // 以本地(台灣)日期切「一天」,不用 UTC(避免早上 8 點才換日)
-  async function pruneSnapshots(parent){
-    const epoch=authEpoch;
+  async function pruneSnapshots(){
     try {
-      const cutoff=new Date();cutoff.setDate(cutoff.getDate()-SNAP_KEEP_DAYS);
-      const cutoffStr=localDay(cutoff),q=encodeURIComponent("trashed=false and name contains 'sync-backup-'");
-      const res=await dfetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q="+q+"&fields=files(id,name)&pageSize=1000",undefined,parent);
-      const data=await res.json();assertAuthEpoch(epoch);
-      for(const file of data.files||[]){
-        assertAuthEpoch(epoch);const match=/^sync-backup-(\d{4}-\d{2}-\d{2})\.json$/.exec(file.name||"");
-        if(match&&match[1]<cutoffStr){try{await dfetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id),{method:"DELETE"},parent);assertAuthEpoch(epoch);}catch(e){assertAuthEpoch(epoch);}}
-      }
-    }catch(e){assertAuthEpoch(epoch);}
-  }
-  async function maybeSnapshot(obj,parent){
-    const epoch=authEpoch;
-    try {
-      const name="sync-backup-"+localDay()+".json",existing=await findFile(name,parent);assertAuthEpoch(epoch);
-      if(existing)return;
-      await createCompleteCloudFile(name,obj,parent);assertAuthEpoch(epoch);await pruneSnapshots(parent);
-    }catch(e){assertAuthEpoch(epoch);}
-  }
-
-  // Housekeeping only touches captured, covered journals and daily snapshots.
-  // It owns its request cancellation and never holds up the data-sync lock.
-  function queueCloudMaintenance(published,bundle,epoch){
-    assertAuthEpoch(epoch);
-    maintenancePending={published,bundle,epoch};
-    if(maintenanceRun)return;
-    const run={epoch,controller:new AbortController()};maintenanceRun=run;
-    (async()=>{
-      try{
-        while(maintenancePending&&maintenanceRun===run){
-          const job=maintenancePending;maintenancePending=null;
-          assertAuthEpoch(job.epoch);
-          try{
-            await pruneOwnCloudJournals(job.published,job.bundle,run.controller);assertAuthEpoch(job.epoch);
-            await maybeSnapshot(job.published.data,run.controller);assertAuthEpoch(job.epoch);
-          }catch(error){
-            if(job.epoch!==authEpoch||run.controller.signal.aborted)break;
-            // Optional housekeeping can be tried after a later verified upload.
-          }
+      const q = encodeURIComponent("name contains 'sync-backup-' and trashed=false");
+      const res = await dfetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&spaces=appDataFolder&fields=files(id,name)&pageSize=1000");
+      const data = await res.json();
+      const files = (data.files || []);
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - SNAP_KEEP_DAYS);
+      const cutoffStr = localDay(cutoff);   // YYYY-MM-DD 同格式,字串比較即可
+      for (const f of files){
+        const m = /^sync-backup-(\d{4}-\d{2}-\d{2})\.json$/.exec(f.name || "");   // 只認快照檔名,絕不動 sync-main.json
+        if (m && m[1] < cutoffStr){
+          try { await dfetch("https://www.googleapis.com/drive/v3/files/" + f.id, { method: "DELETE" }); } catch(e){}
         }
-      }finally{if(maintenanceRun===run)maintenanceRun=null;}
-    })().catch(()=>{});
+      }
+    } catch(e){}
+  }
+  async function maybeSnapshot(obj){
+    try {
+      const day = localDay();
+      const name = "sync-backup-" + day + ".json";
+      const existing = await findFile(name);
+      if (existing) return;
+      const id = await createFile(name);
+      await upload(id, obj);
+      pruneSnapshots();   // 建立當天新快照後,順手清掉 30 天前的舊快照(一天最多跑一次)
+    } catch(e){}
   }
 
-  async function createCompleteCloudFile(name,data,parent){
-    const epoch=authEpoch,boundary="property_complete_"+crypto.randomUUID().replaceAll("-","");
-    const metadata={name,mimeType:"application/json",parents:["appDataFolder"]};
-    const body="--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(metadata)+
-      "\r\n--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(data)+"\r\n--"+boundary+"--\r\n";
-    const response=await dfetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,version",{
-      method:"POST",headers:{"Content-Type":"multipart/related; boundary="+boundary},body},parent);
-    const file=await response.json();assertAuthEpoch(epoch);if(!file.id||!file.version)throw new Error("無法確認雲端檔案已儲存");return file;
-  }
-  async function updateLegacyProjection(main,bundle){
-    const epoch=authEpoch,legacy=bundle.legacyMain[0];
-    // Keep the exact submitted snapshot; edits made while the request is pending
-    // must never be cached under the version returned for this upload.
-    const uploadData=PropertyCore.clone(PropertyCore.mainFrom(PropertyCore.stateFromMain(main)));
-    if(legacy){
-      fileId=legacy.id;
-      const previous=await readCloudDocument(legacy);assertAuthEpoch(epoch);
-      if(canonical(previous)!==canonical(uploadData)){
-        const version=await upload(legacy.id,uploadData);assertAuthEpoch(epoch);
-        cloudJournalCache.set(legacy.id,{version:String(version),data:PropertyCore.clone(uploadData)});
-      }
-    }else{
-      const created=await createCompleteCloudFile(MAIN_NAME,uploadData);assertAuthEpoch(epoch);fileId=created.id;
-      cloudJournalCache.set(created.id,{version:String(created.version),data:PropertyCore.clone(uploadData)});
-    }
-  }
   // ---- status UI ----
-  let lastSyncWarning="";
-  function setLed(cls){
-    const draft=window.syncInputStatus?.()||'';
-    if(cls==='ok'&&draft)cls='draft';
-    let label=cls==='ok'?'最新資料已上傳 Google':cls==='draft'?draft||'內容尚未儲存':cls==='pending'?'已存本機，等待同步':cls==='busy'?'正在傳送並核對…':cls==='offline'?'目前離線，尚未確認同步':window._saveBlocked?'本機儲存失敗，請處理提示':!syncConnected?'尚未連結 Google':needReauth?'請重新連結 Google':lastSyncWarning||'同步失敗，稍後重試';
-    if(cls==='busy'&&draft)label='正在同步；另有未儲存修改';
-    if(cls==='ok')lastSyncWarning='';
-    for(const id of ['listLed','coverLed','gDot']){
-      const el=document.getElementById(id);if(!el)continue;
-      const base=id==='gDot'?'sync-dot':id==='coverLed'?'sync-led cover-led':'sync-led';
-      const next=base+(cls?' '+cls:'');if(el.className!==next)el.className=next;
-      el.setAttribute('aria-label','同步狀態：'+label);
-      el.setAttribute('title',label+(id==='gDot'?'':'・點一下立即同步・長按進入設定'));
-    }
-    const status=document.getElementById('gStatus');if(status&&status.textContent!==label)status.textContent=label;
+  function setLed(cls){   // 同時更新列表 + 封面兩顆同步燈(封面那顆保留 cover-led 容器樣式)
+    ["listLed","coverLed"].forEach(function(id){
+      const el = document.getElementById(id); if (!el) return;
+      el.className = (id === "coverLed" ? "sync-led cover-led" : "sync-led") + (cls ? " " + cls : "");
+    });
   }
-  function setStatus(text,kind){
-    if(kind==='warn')lastSyncWarning=text;
-    setLed(kind||'');
+  function setStatus(text, kind){
+    const st = document.getElementById("gStatus"), dot = document.getElementById("gDot");
+    if (st) st.textContent = text;
+    if (dot) dot.className = "sync-dot" + (kind ? " " + kind : "");
+    setLed(kind || "");
   }
   function refreshLed(){
     let cls;
-    if(syncConnected&&!navigator.onLine)cls='offline';
-    else if(!syncConnected||window._saveBlocked||needReauth||syncFailCount>0)cls='warn';
-    else if(inFlight&&syncActivity)cls='busy';
-    else if(window.hasUncommittedInput?.())cls='draft';
-    else if(dirty||(syncConnected&&!lastVersion))cls='pending';
-    else cls='ok';
+    if (inFlight) cls = "busy";
+    else if (window.isTableBusy && window.isTableBusy()) cls = "pending";   // 編輯中、變更尚未落地
+    else if (syncConnected && !navigator.onLine) cls = "offline";           // 已連結但目前沒網路:離線(灰),畫面是上次同步的資料
+    else if (!syncConnected || window._saveBlocked || needReauth || syncFailCount > 0) cls = "warn";
+    else if (dirty || window._pendingMerge || (syncConnected && !lastVersion)) cls = "pending";
+    else if (syncConnected) cls = "ok";
+    else cls = "warn";
     setLed(cls);
   }
   window.refreshLed = refreshLed;
@@ -7853,7 +7437,7 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
   };
 
   let syncGen = 0;
-  function isSyncAuthError(e){ return e&&(e.status===401||["access_denied","interaction_required","login_required","invalid_grant"].includes(e.error)); }
+  function isSyncAuthError(e){ return e && (e.error === "access_denied" || e.error === "interaction_required" || e.error === "login_required"); }
   function isAbortError(e){ return e && (e.name === "AbortError" || e.message === "AbortError" || e.message === "token_timeout"); }
   function markNeedReauth(){
     needReauth = true; syncFailCount = 0;
@@ -7863,14 +7447,15 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
   function resetSyncSuccess(){
     syncFailCount = 0; retryMs = 5000;
   }
-  function bumpSyncFail(){syncFailCount++;return false;}
-  function deferEditingSync(){
-    clearTimeout(pushTimer);if(!syncConnected||needReauth)return;
-    pushTimer=setTimeout(()=>syncNow(),2000);
+  function bumpSyncFail(){
+    syncFailCount++;
+    if (syncFailCount >= SYNC_FAIL_MAX){ markNeedReauth(); return true; }
+    return false;
   }
   function scheduleSyncRetry(){
-    clearTimeout(pushTimer);if(!syncConnected||needReauth)return;
-    pushTimer=setTimeout(()=>syncNow(),retryMs);retryMs=Math.min(retryMs*2,60000);
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(function(){ syncNow(); }, retryMs);
+    retryMs = Math.min(retryMs * 2, 60000);
   }
   function maybeBootSync(){
     if (!syncConnected || needReauth) return;
@@ -7894,123 +7479,146 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     });
   }
   // ---- core two-way sync ----
-  async function syncNow(force,background=false){
+  async function syncNow(force){
     const locks=navigator.locks;
-    if(!locks||typeof locks.request!=="function")return syncNowUnlocked(force,background);
+    if(!locks || typeof locks.request!=="function")return syncNowUnlocked(force);
+    // Coordinate only the network operation. Every window remains usable.
     let entered=false;
     try{return await locks.request("property-app-cloud-sync-v1",{ifAvailable:true},lock=>{
       entered=true;
-      if(lock)return syncNowUnlocked(force,background);
-      clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(force,background),2000);
+      if(lock)return syncNowUnlocked(force);
+      clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(force),2000);
       return {ok:false,reason:"busy"};
-    });}catch(e){if(!entered)return syncNowUnlocked(force,background);throw e;}
+    });}catch(e){if(!entered)return syncNowUnlocked(force);throw e;}
   }
-  async function syncNowUnlocked(force,background=false){
-    const requestedEpoch=authEpoch;
-    if(connecting||!syncConnected||window._saveBlocked||!PropertyCore.ready)return {ok:false,reason:"not_ready"};
-    if(!navigator.onLine&&!force){refreshLed();return {ok:false,reason:"offline"};}
-    if(inFlight){
-      if(force){await waitSyncIdle(45000);if(inFlight)return {ok:false,reason:"busy"};}
-      else{clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(false,background),2000);return {ok:false,reason:"busy"};}
+  async function syncNowUnlocked(force){
+    if (!syncConnected || window._saveBlocked || !PropertyCore.ready) return { ok: false, reason: "not_ready" };
+    if (!navigator.onLine && !force){
+      if (window.refreshLed) window.refreshLed();
+      return { ok: false, reason: "offline" };
     }
-    if(requestedEpoch!==authEpoch||connecting||!syncConnected)return {ok:false,reason:"cancelled"};
-    if(preparingSync){clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(force,background),2000);return {ok:false,reason:"busy"};}
-    const preparation={};preparingSync=preparation;const epoch=authEpoch;
-    try{assertAuthEpoch(epoch);await checkPendingChanges(false);assertAuthEpoch(epoch);}
-    catch(e){return {ok:false,reason:"cancelled"};}
-    finally{if(preparingSync===preparation)preparingSync=false;}
-    const ack=loadCloudAck();
-    if(background&&!dirty&&ack&&!ack.needsPull&&Date.now()-ack.at<POLL_MS-1000&&syncFailCount===0){refreshLed();return {ok:true,skipped:true};}
-    const thisRun=++syncGen,runAbort=new AbortController();syncAbort=runAbort;inFlight=true;
-    clearTimeout(pushTimer);pushTimer=null;syncActivity=dirty;
-    if(syncActivity)setStatus("同步中…","busy");else refreshLed();
-    const guard=()=>{assertAuthEpoch(epoch);if(runAbort.signal.aborted){const e=new Error("AbortError");e.name="AbortError";throw e;}};
-    const watchdog=setTimeout(()=>{if(thisRun===syncGen){runAbort.abort();setStatus("同步逾時，稍後重試","warn");}},SYNC_WATCHDOG_MS);
-    let complete=false,lastPublished=null,cleanupBundle=null;
+    if (inFlight){
+      if (force){
+        const idle = await waitSyncIdle(45000);
+        if (!dirty && idle) return { ok: true };
+        if (inFlight) return { ok: false, reason: "busy" };
+      } else {
+        clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000);
+        return { ok: false, reason: "busy" };
+      }
+    }
+    const wasDirty = dirty;
+    if (window.isTableBusy && window.isTableBusy()){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return { ok: false, reason: "busy" }; }
+    const thisRun = ++syncGen;
+    syncAbort = new AbortController();
+    const runAbort = syncAbort;
+    inFlight = true; setStatus("同步中…", "busy");
+    let __wd = setTimeout(function(){ if (inFlight && thisRun === syncGen){ runAbort.abort(); inFlight = false; setStatus("同步逾時，稍後重試", "warn"); if (window.refreshLed) window.refreshLed(); } }, SYNC_WATCHDOG_MS);
+    let syncComplete = false;
     try {
-      await ensureToken();guard();
-      let catalog=await readCloudCatalog();guard();
-      if(!dirty&&!ack?.needsPull&&catalog.signature===lastVersion){
-        const current=PropertyCore.mainFrom(PropertyCore.local().readLatest());
-        // A receipt is refreshed only for the exact content already acknowledged.
-        if(await digestMain(current)===loadCloudAck()?.digest&&!loadCloudAck()?.needsPull){guard();await acknowledgeCloud(current,catalog.signature,epoch);complete=true;}
-      }
-      for(let attempt=0;!complete&&attempt<3;attempt++){
-        const bundle=await readCloudBundle(catalog);catalog=null;guard();
-        const local=buildLocal(),merged=mergeMain(local,bundle.merged);
-        const localChanged=canonical(local)!==canonical(merged);
-        const awaitingSameRemote=!!window._pendingMerge&&canonical(window._pendingMerge)===canonical(merged);
-        const durable=bundle.durableMerged;
-        const protectedInCloud=durable&&canonical(mergeMain(durable,merged))===canonical(durable);
-        const legacy=bundle.legacyMain[0];
-        const projectionChanged=!legacy||canonical(await readCloudDocument(legacy))!==canonical(merged);guard();
-        // Metadata-only changes (for example journal retirement) are quiet.
-        // Show activity only once actual content work has been established.
-        if((localChanged&&!awaitingSameRemote)||!protectedInCloud||projectionChanged){syncActivity=true;setStatus("同步中…","busy");}
-        if(localChanged)applyMerged(merged);
-        if(!protectedInCloud){
-          lastPublished=await publishCloudJournal(merged,bundle);guard();cleanupBundle=bundle;
+      await ensureToken();
+      await ensureFileId();
+      let tries = 0, pushed = null;
+      while (tries < 3){
+        tries++;
+        const versionBefore=await getVersion();
+        const remote = await download();
+        if(versionBefore!==await getVersion()) continue;
+        if(window.isTableBusy && window.isTableBusy()) throw new Error("editing_busy");
+        if (remote && remote.__syncCorrupt){
+          dirty = wasDirty || dirty;
+          setStatus("雲端資料損壞，請從快照還原", "warn");
+          break;
         }
-        await updateLegacyProjection(merged,bundle);guard();
-        const after=await readCloudBundle();guard();
-        const converged=mergeMain(merged,after.merged);
-        const durableAfter=after.durableMerged;
-        if(!durableAfter||canonical(mergeMain(durableAfter,merged))!==canonical(durableAfter))continue;
-        if(canonical(converged)!==canonical(merged)){applyMerged(converged);continue;}
-        // Remote repaint can wait for an editor; durable coverage cannot.
-        // The upload round completed even if a newer local edit still needs a push.
-        await acknowledgeCoveredLocal(durableAfter,after.signature,epoch);guard();complete=true;
+        const local = buildLocal();
+        dirty = false;
+        const merged = mergeMain(local, remote);
+        const localCanon = canonical(local);
+        const mergedCanon = canonical(merged);
+        if (mergedCanon !== localCanon){
+          if (modalBg.classList.contains("open") || detailBg.classList.contains("open") || catBg.classList.contains("open") || fltBg.classList.contains("open") || confirmBg.classList.contains("open")) window._pendingMerge = merged;
+          else applyMerged(merged);
+        }
+        const needPush = !remote || mergedCanon !== canonical(remote);
+        if (!needPush){ lastVersion = versionBefore; syncComplete = true; break; }
+        merged.rev = ((remote && remote.rev) || 0) + 1; merged.lastWriteBy = deviceId; merged.updatedAt = Date.now();
+        if(window.isTableBusy && window.isTableBusy()) throw new Error("editing_busy");
+        if(versionBefore!==await getVersion()) continue;
+        if(window.isTableBusy && window.isTableBusy()) throw new Error("editing_busy");
+        const newVer = await upload(fileId, merged);
+        const afterVer = await getVersion();
+        pushed = merged;
+        if (afterVer && newVer && afterVer === newVer){ lastVersion = afterVer; syncComplete = true; break; }
       }
-      if(complete){
-        syncActivity=false;resetSyncSuccess();needReauth=false;
-        setStatus(dirty?"仍有變更等待同步":"已同步",dirty?"pending":"ok");
-        if(lastPublished)queueCloudMaintenance(lastPublished,cleanupBundle,epoch);
-        setStatus(dirty?"仍有變更等待同步":"已同步",dirty?"pending":"ok");
-        localStorage.setItem("property_app_lastsync_v1",String(Date.now()));window.renderLastSync();
-        if(dirty)window.scheduleSync();
-      }else{dirty=true;bumpSyncFail();setStatus("資料正在合併，稍後繼續同步","warn");scheduleSyncRetry();}
-    }catch(e){
-      if(epoch!==authEpoch||thisRun!==syncGen||e?.code==="sync_cancelled")return {ok:false,reason:"cancelled"};
-      dirty=true;
-      if(e?.message==="editing_busy"){setStatus("編輯中，完成後同步","pending");deferEditingSync();}
-      else if(isSyncAuthError(e)){markNeedReauth();}
-      else{bumpSyncFail();setStatus(isAbortError(e)?"同步逾時，稍後重試":(e.message||"同步失敗")+"，稍後重試","warn");scheduleSyncRetry();}
-      complete=false;
-    }finally{
-      clearTimeout(watchdog);
-      if(thisRun===syncGen){if(syncAbort===runAbort)syncAbort=null;inFlight=false;syncActivity=false;refreshLed();}
+      if (!syncComplete){
+        dirty = true;
+        if (!bumpSyncFail()){ setStatus("同步未完成，稍後重試", "warn"); scheduleSyncRetry(); }
+      } else {
+        if (pushed) maybeSnapshot(pushed);
+        resetSyncSuccess();
+        needReauth = false;
+        setStatus(dirty?"仍有變更等待同步":"已同步", dirty?"busy":"ok");
+        try { localStorage.setItem("property_app_lastsync_v1", String(Date.now())); } catch(e){}
+        window.renderLastSync();
+      }
+    } catch (e){
+      dirty = dirty || wasDirty;
+      if(e && e.message==="editing_busy"){
+        dirty=true;setStatus("編輯中，完成後同步","busy");scheduleSyncRetry();
+      } else if (isSyncAuthError(e)){
+        markNeedReauth();
+      } else if (isAbortError(e)){
+        if (!bumpSyncFail()){ setStatus("同步逾時，稍後重試", "warn"); scheduleSyncRetry(); }
+      } else {
+        if (!bumpSyncFail()){ setStatus((e.message||"同步失敗")+"，稍後重試", "warn"); scheduleSyncRetry(); }
+      }
+    } finally {
+      if (thisRun === syncGen){
+        clearTimeout(__wd);
+        if (syncAbort === runAbort) syncAbort = null;
+        inFlight = false;
+        if (window.refreshLed) window.refreshLed();
+      }
     }
-    return {ok:complete&&!dirty&&!needReauth,reason:complete?undefined:(needReauth?"reauth":"failed")};
+    return { ok: syncComplete && !dirty && !needReauth, reason: syncComplete ? undefined : (needReauth ? "reauth" : "failed") };
   }
   window.__syncNow = syncNow;
 
   function startPolling(){
-    stopPolling();pollTimer=setInterval(()=>{
-      if(!syncConnected||document.hidden||inFlight||needReauth||!navigator.onLine)return;
-      syncNow(false,true);
-    },POLL_MS);
+    stopPolling();
+    pollTimer = setInterval(async function(){
+      if (!syncConnected || document.hidden || inFlight || needReauth) return;
+      if (dirty){ syncNow(); return; }
+      try { await ensureFileId(); const v = await getVersion(); if (v && v !== lastVersion) syncNow(); } catch(e){syncFailCount++;setStatus("雲端連線失敗，稍後重試","warn");refreshLed();}
+    }, POLL_MS);
   }
   function stopPolling(){ if (pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
 
   // ---- connect / disconnect ----
   async function connect(){
-    cancelCloudSession();connecting=true;const epoch=authEpoch;
     try {
-      initClient();setStatus("連結中…","busy");await requestToken(true);assertAuthEpoch(epoch);
-      const res=await dfetch("https://www.googleapis.com/oauth2/v2/userinfo"),info=await res.json();assertAuthEpoch(epoch);
-      if(!info.email)throw new Error("無法確認 Google 帳號");
-      syncEmail=info.email;syncConnected=true;needReauth=false;
-      authRevision=crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2);
-      resetSyncSuccess();bootSyncPending=false;saveAuth();saveGToken();window.renderSyncCard();connecting=false;
-      await syncNow();assertAuthEpoch(epoch);startPolling();toast("已連結 Google 雲端");
-    }catch(e){if(epoch!==authEpoch)return;cancelCloudSession();receiveSharedAuth();if(syncConnected)startPolling();setStatus("連結失敗，請重試","warn");}
+      initClient();
+      setStatus("連結中…", "busy");
+      await requestToken(true);
+      const res = await dfetch("https://www.googleapis.com/oauth2/v2/userinfo");
+      const info = await res.json();
+      syncEmail = info.email || "已連結"; syncConnected = true; needReauth = false;
+      resetSyncSuccess(); bootSyncPending = false;
+      saveAuth(); saveGToken(); window.renderSyncCard();
+      await syncNow();
+      startPolling();
+      toast("已連結 Google 雲端");
+    } catch (e){
+      setStatus("連結失敗", "warn");
+    }
   }
   function disconnect(){
-    askConfirm("解除 Google 連結？","會停止此瀏覽器各視窗的同步，雲端資料不會被刪除。",function(){
-      const token=accessToken;cancelCloudSession();
-      syncConnected=false;syncEmail=null;authRevision=crypto.randomUUID?crypto.randomUUID():String(Date.now());
-      needReauth=false;resetSyncSuccess();saveAuth();clearGToken();window.renderSyncCard();setStatus("尚未連結","warn");refreshLed();
-      if(token&&gisReady()){try{google.accounts.oauth2.revoke(token,()=>{});}catch(e){}}
+    askConfirm("解除 Google 連結？", "只會停止這台裝置的同步，雲端資料不會被刪除。", function(){
+      if (accessToken && window.google && google.accounts && google.accounts.oauth2){ try { google.accounts.oauth2.revoke(accessToken, function(){}); } catch(e){} }
+      if(syncAbort)syncAbort.abort();clearTimeout(pushTimer);pushTimer=null;
+      syncConnected = false; syncEmail = null; accessToken = null; tokenExpiry = 0; fileId = null; lastVersion = null; needReauth = false;
+      clearGToken();
+      stopPolling(); saveAuth(); window.renderSyncCard(); refreshLed();
       toast("已解除連結");
     });
   }
@@ -8069,7 +7677,7 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
   // 開檔先依「上次的連結狀態」渲染同步卡片(純讀本機 localStorage,不等 GIS client 從網路載入完成),
   // 避免視窗長時間背景後恢復/開啟時,「連結 Google 帳號」登入介面因枯等 GIS 載入而先露出、隨後才被隱藏(閃一下)。
   (function(){
-    try { const a=loadAuth();authRevision=a.revision||"";if(a&&a.connected){syncConnected=true;syncEmail=a.email||null;} } catch(e){}
+    try { const a = loadAuth(); if (a && a.connected){ syncConnected = true; syncEmail = a.email || null; } } catch(e){}
     window.renderSyncCard();
     refreshLed();   // 開檔即顯示兩顆燈的初始狀態(含離線判斷)
   })();
@@ -8078,9 +7686,9 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     initClient();
     const auth = loadAuth();
     if (auth && auth.connected){
-      syncConnected=true;syncEmail=auth.email||null;authRevision=auth.revision||"";
+      syncConnected = true; syncEmail = auth.email || null;
       const gt = loadGToken();   // 重開 App:token 未過期且帳號相符 → 直接沿用,不會閃 Google 視窗
-      if (gt && gt.t && gt.exp && Date.now() < gt.exp - 60000 && (gt.email || "") === (syncEmail || "") && (gt.revision||"")===authRevision){
+      if (gt && gt.t && gt.exp && Date.now() < gt.exp - 60000 && (gt.email || "") === (syncEmail || "")){
         accessToken = gt.t; tokenExpiry = gt.exp;
       }
       window.renderSyncCard();
@@ -8093,7 +7701,7 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
 })();
 // Background convergence follows the customer app: receive now, repaint after editing.
 function propertyViewBusy(ignoreSaveError=false){
- return !!(window.hasUncommittedInput?.() || window.isTableBusy?.() || detailBg.classList.contains("open") || (!ignoreSaveError && document.getElementById("dataSafetyPanel")));
+ return !!(window.isTableBusy?.() || detailBg.classList.contains("open") || (!ignoreSaveError && document.getElementById("dataSafetyPanel")));
 }
 function showFormConflict(message){
  formConflict=true;saveFormDraft();
