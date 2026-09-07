@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20260907B">
-<link rel="apple-touch-icon" href="icon-180.png?v=20260907B">
+<link rel="icon" type="image/png" href="icon-192.png?v=20260907C">
+<link rel="apple-touch-icon" href="icon-180.png?v=20260907C">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20260907B"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20260907B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20260907C"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20260907C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1627,7 +1627,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.09.07B：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.09.07C：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2063,7 +2063,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.09.07B";
+const APP_VERSION = "2026.09.07C";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -7081,7 +7081,7 @@ let syncConnected = false, syncEmail = null;
 
   let tokenClient = null, accessToken = null, tokenExpiry = 0;
   let fileId = null, lastVersion = null;
-  let inFlight = false, needReauth = false, pollTimer = null, retryMs = 5000;
+  let inFlight = false, syncActivity = false, needReauth = false, pollTimer = null, retryMs = 5000;
   let syncAbort = null, syncFailCount = 0, bootSyncPending = false;
   let authEpoch = 0, authRevision = "", pendingTokenCancel = null, tokenRequest = null;
   let pendingCheck = 0, memoryAck = null, preparingSync = false, connecting = false;
@@ -7099,7 +7099,7 @@ let syncConnected = false, syncEmail = null;
     if(pendingTokenCancel)pendingTokenCancel();
     if(syncAbort)syncAbort.abort();syncAbort=null;
     clearTimeout(pushTimer);pushTimer=null;stopPolling();
-    inFlight=false;tokenRequest=null;accessToken=null;tokenExpiry=0;
+    inFlight=false;syncActivity=false;tokenRequest=null;accessToken=null;tokenExpiry=0;
     fileId=null;lastVersion=null;freshMainFile=false;memoryAck=null;
     resetCloudJournalCache();window._pendingMerge=null;dirty=true;
   }
@@ -7174,7 +7174,9 @@ let syncConnected = false, syncEmail = null;
       else if(!token){accessToken=null;tokenExpiry=0;}
     }
     if(e.key===ACK_KEY||e.key===PropertyCore.KEY||e.key?.startsWith(PropertyCore.KEY+":pending:")||e.key===null){
-      dirty=true;refreshLed();checkPendingChanges().catch(()=>{dirty=true;refreshLed();});
+      // Receipt and journal compaction events can contain no new user data.
+      // Compare the saved content before changing the visible lamp.
+      checkPendingChanges().catch(()=>{dirty=true;refreshLed();});
     }
   });
 
@@ -7611,27 +7613,24 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     }
   }
   // ---- status UI ----
-  function setLed(cls){   // 同時更新列表 + 封面兩顆同步燈(封面那顆保留 cover-led 容器樣式)
-    ["listLed","coverLed"].forEach(function(id){
-      const el = document.getElementById(id); if (!el) return;
-      el.className = (id === "coverLed" ? "sync-led cover-led" : "sync-led") + (cls ? " " + cls : "");
-    });
+  function setLed(cls){
+    for(const id of ["listLed","coverLed","gDot"]){
+      const el=document.getElementById(id);if(!el)continue;
+      const base=id==="gDot"?"sync-dot":id==="coverLed"?"sync-led cover-led":"sync-led";
+      const next=base+(cls?" "+cls:"");if(el.className!==next)el.className=next;
+    }
   }
-  function setStatus(text, kind){
-    const st = document.getElementById("gStatus"), dot = document.getElementById("gDot");
-    if (st) st.textContent = text;
-    if (dot) dot.className = "sync-dot" + (kind ? " " + kind : "");
-    setLed(kind || "");
+  function setStatus(text,kind){
+    const st=document.getElementById("gStatus");if(st&&st.textContent!==text)st.textContent=text;
+    setLed(kind||"");
   }
   function refreshLed(){
     let cls;
-    if (inFlight) cls = "busy";
-    else if (window.isTableBusy && window.isTableBusy()) cls = "pending";   // 編輯中、變更尚未落地
-    else if (syncConnected && !navigator.onLine) cls = "offline";           // 已連結但目前沒網路:離線(灰),畫面是上次同步的資料
-    else if (!syncConnected || window._saveBlocked || needReauth || syncFailCount > 0) cls = "warn";
-    else if (dirty || window._pendingMerge || (syncConnected && !lastVersion)) cls = "pending";
-    else if (syncConnected) cls = "ok";
-    else cls = "warn";
+    if(syncConnected&&!navigator.onLine)cls="offline";
+    else if(!syncConnected||window._saveBlocked||needReauth||syncFailCount>0)cls="warn";
+    else if(inFlight&&syncActivity)cls="busy";
+    else if(dirty||window._pendingMerge||(syncConnected&&!lastVersion))cls="pending";
+    else cls="ok";
     setLed(cls);
   }
   window.refreshLed = refreshLed;
@@ -7716,7 +7715,8 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     if(background&&!dirty&&ack&&Date.now()-ack.at<POLL_MS-1000&&syncFailCount===0){refreshLed();return {ok:true,skipped:true};}
     if(window.isTableBusy?.()){scheduleSyncRetry();return {ok:false,reason:"busy"};}
     const thisRun=++syncGen,runAbort=new AbortController();syncAbort=runAbort;inFlight=true;
-    clearTimeout(pushTimer);pushTimer=null;setStatus("同步中…","busy");
+    clearTimeout(pushTimer);pushTimer=null;syncActivity=dirty;
+    if(syncActivity)setStatus("同步中…","busy");else refreshLed();
     const guard=()=>{assertAuthEpoch(epoch);if(runAbort.signal.aborted){const e=new Error("AbortError");e.name="AbortError";throw e;}};
     const watchdog=setTimeout(()=>{if(thisRun===syncGen){runAbort.abort();setStatus("同步逾時，稍後重試","warn");}},SYNC_WATCHDOG_MS);
     let complete=false,lastPublished=null,cleanupBundle=null;
@@ -7724,7 +7724,6 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
       await ensureToken();guard();
       let catalog=await readCloudCatalog();guard();
       if(!dirty&&catalog.signature===lastVersion){
-        resetSyncSuccess();needReauth=false;setStatus("已同步","ok");
         const current=PropertyCore.mainFrom(PropertyCore.local().readLatest());
         // A receipt is refreshed only for the exact content already acknowledged.
         if(await digestMain(current)===loadCloudAck()?.digest){guard();await acknowledgeCloud(current,catalog.signature,epoch);complete=true;}
@@ -7733,9 +7732,15 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
         const bundle=await readCloudBundle(catalog);catalog=null;guard();
         if(window.isTableBusy?.())throw new Error("editing_busy");
         const local=buildLocal(),merged=mergeMain(local,bundle.merged);
-        if(canonical(local)!==canonical(merged))applyMerged(merged);
+        const localChanged=canonical(local)!==canonical(merged);
         const durable=bundle.durableMerged;
         const protectedInCloud=durable&&canonical(mergeMain(durable,merged))===canonical(durable);
+        const legacy=bundle.legacyMain[0];
+        const projectionChanged=!legacy||canonical(await readCloudDocument(legacy))!==canonical(merged);guard();
+        // Metadata-only changes (for example journal retirement) are quiet.
+        // Show activity only once actual content work has been established.
+        if(localChanged||!protectedInCloud||projectionChanged){syncActivity=true;setStatus("同步中…","busy");}
+        if(localChanged)applyMerged(merged);
         if(!protectedInCloud){
           lastPublished=await publishCloudJournal(merged,bundle);guard();cleanupBundle=bundle;
         }
@@ -7748,7 +7753,8 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
         await acknowledgeCloud(merged,after.signature,epoch);guard();complete=true;
       }
       if(complete){
-        resetSyncSuccess();needReauth=false;
+        syncActivity=false;resetSyncSuccess();needReauth=false;
+        setStatus(dirty?"仍有變更等待同步":"已同步",dirty?"pending":"ok");
         // Only captured, covered records owned by this writer can be retired.
         if(lastPublished){
           await pruneOwnCloudJournals(lastPublished,cleanupBundle);guard();
@@ -7767,7 +7773,7 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
       complete=false;
     }finally{
       clearTimeout(watchdog);
-      if(thisRun===syncGen){if(syncAbort===runAbort)syncAbort=null;inFlight=false;refreshLed();}
+      if(thisRun===syncGen){if(syncAbort===runAbort)syncAbort=null;inFlight=false;syncActivity=false;refreshLed();}
     }
     return {ok:complete&&!dirty&&!needReauth,reason:complete?undefined:(needReauth?"reauth":"failed")};
   }
