@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20260907A">
-<link rel="apple-touch-icon" href="icon-180.png?v=20260907A">
+<link rel="icon" type="image/png" href="icon-192.png?v=20260907B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20260907B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20260907A"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20260907A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20260907B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20260907B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1627,7 +1627,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.09.07A：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.09.07B：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2063,7 +2063,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.09.07A";
+const APP_VERSION = "2026.09.07B";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -7066,8 +7066,8 @@ document.addEventListener("pointercancel", endCatDrag);
 
 let syncConnected = false, syncEmail = null;
 /* =========================================================================
-   Google 雲端同步 (依規格:appDataFolder 主檔 sync-main.json,union+LWW+墓碑
-   冪等合併，樂觀併發，啟動/變更/輪詢/焦點觸發，外加每日快照當保險)
+   Google 雲端同步：各裝置修改以不可變紀錄保留，合併後更新 sync-main.json。
+   本機同步收據供各視窗接手；欄位合併、刪除記錄與每日快照繼續保留。
    ========================================================================= */
 (function(){
   const CLIENT_ID = "50147242388-jqhblfo5uh482gv69qn6ee28foevrkbi.apps.googleusercontent.com";
@@ -7077,22 +7077,85 @@ let syncConnected = false, syncEmail = null;
   const FETCH_MS = 15000;
   const TOKEN_MS = 30000;
   const SYNC_WATCHDOG_MS = 40000;
-  const SYNC_FAIL_MAX = 3;
+  // Temporary transport failures keep retrying; only authorization errors require login.
 
   let tokenClient = null, accessToken = null, tokenExpiry = 0;
   let fileId = null, lastVersion = null;
   let inFlight = false, needReauth = false, pollTimer = null, retryMs = 5000;
   let syncAbort = null, syncFailCount = 0, bootSyncPending = false;
+  let authEpoch = 0, authRevision = "", pendingTokenCancel = null, tokenRequest = null;
+  let pendingCheck = 0, memoryAck = null, preparingSync = false, connecting = false;
+  const AUTH_KEY = "property_app_gauth_v1", TOKEN_KEY = "property_app_gtoken_v1";
+  const ACK_KEY = "property_app_cloud_ack_v2";
+  function assertAuthEpoch(epoch){
+    if(epoch===authEpoch&&syncConnected&&storageOK){
+      const saved=loadAuth();
+      if(!saved.connected||(saved.email||null)!==syncEmail||(saved.revision||"")!==authRevision)receiveSharedAuth();
+    }
+    if(epoch!==authEpoch){const e=new Error("同步連結已變更");e.code="sync_cancelled";throw e;}
+  }
+  function cancelCloudSession(){
+    authEpoch++;syncGen++;pendingCheck++;connecting=false;preparingSync=false;
+    if(pendingTokenCancel)pendingTokenCancel();
+    if(syncAbort)syncAbort.abort();syncAbort=null;
+    clearTimeout(pushTimer);pushTimer=null;stopPolling();
+    inFlight=false;tokenRequest=null;accessToken=null;tokenExpiry=0;
+    fileId=null;lastVersion=null;freshMainFile=false;memoryAck=null;
+    resetCloudJournalCache();window._pendingMerge=null;dirty=true;
+  }
+  function loadCloudAck(){
+    try {return JSON.parse(localStorage.getItem(ACK_KEY)||"null") || memoryAck;}catch(e){return memoryAck;}
+  }
+  async function digestMain(main){
+    const text=canonical(main);
+    if(globalThis.crypto?.subtle){
+      const bytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,"0")).join("");
+    }
+    // Non-secure local previews can still compare exactly without a weak hash.
+    return "json:"+text;
+  }
+  async function checkPendingChanges(schedule=true){
+    if(!PropertyCore.ready||window._saveBlocked)return true;
+    const epoch=authEpoch,check=++pendingCheck;
+    const local=PropertyCore.mainFrom(PropertyCore.local().readLatest());
+    const digest=await digestMain(local);
+    if(epoch!==authEpoch||check!==pendingCheck)return true;
+    const unchanged=canonical(local)===canonical(PropertyCore.mainFrom(PropertyCore.local().readLatest()));
+    const ack=loadCloudAck();
+    dirty=!unchanged||!ack||ack.email!==syncEmail||ack.authRevision!==authRevision||ack.digest!==digest;
+    if(!dirty)lastVersion=ack.signature;
+    if(dirty&&schedule&&syncConnected&&!needReauth&&!inFlight){clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(),1500);}
+    refreshLed();return dirty;
+  }
+  async function acknowledgeCloud(main,signature,epoch){
+    const digest=await digestMain(main);assertAuthEpoch(epoch);
+    memoryAck={email:syncEmail,authRevision,digest,signature,at:Date.now()};
+    if(storageOK)localStorage.setItem(ACK_KEY,JSON.stringify(memoryAck));
+    await checkPendingChanges(false);assertAuthEpoch(epoch);
+  }
+  function receiveSharedAuth(){
+    const next=loadAuth(),revision=next.revision||"";
+    if(!!next.connected!==syncConnected||(next.email||null)!==syncEmail||revision!==authRevision){
+      cancelCloudSession();syncConnected=!!next.connected;syncEmail=next.email||null;authRevision=revision;
+      needReauth=false;resetSyncSuccess();
+      const token=loadGToken();
+      if(syncConnected&&token&&token.email===syncEmail&&(token.revision||"")===authRevision&&Date.now()<token.exp){accessToken=token.t;tokenExpiry=token.exp;}
+      window.renderSyncCard();setStatus(syncConnected?"等待同步":"尚未連結",syncConnected?"pending":"warn");refreshLed();
+      if(syncConnected){startPolling();maybeBootSync();}
+    }
+  }
+
 
   // ---- persistence for auth flag + change timestamps ----
   function saveTs(kind, v){ if (storageOK){ try { localStorage.setItem("property_app_"+kind+"_ts_v1", String(v)); } catch(e){} } }
   function loadTs(kind){ if (storageOK){ try { const v = parseInt(localStorage.getItem("property_app_"+kind+"_ts_v1"),10); if (!isNaN(v)) return v; } catch(e){} } return 0; }
   window.__catsTs = PropertyCore.local().current.catsTs || loadTs("cats");
   window.__settingsTs = PropertyCore.local().current.settingsTs || loadTs("settings");
-  function saveAuth(){ if (storageOK){ try { localStorage.setItem("property_app_gauth_v1", JSON.stringify({connected: syncConnected, email: syncEmail})); } catch(e){} } }
+  function saveAuth(){ if(storageOK)localStorage.setItem(AUTH_KEY,JSON.stringify({connected:syncConnected,email:syncEmail,revision:authRevision})); }
   function loadAuth(){ if (storageOK){ try { return JSON.parse(localStorage.getItem("property_app_gauth_v1")||"{}") || {}; } catch(e){} } return {}; }
   // access token 持久化:重開 App 時若仍在有效期內就直接沿用,避免每次開啟都閃 Google 視窗
-  function saveGToken(){ if (storageOK){ try { localStorage.setItem("property_app_gtoken_v1", JSON.stringify({ t: accessToken, exp: tokenExpiry, email: syncEmail || "" })); } catch(e){} } }
+  function saveGToken(){ if(storageOK){try{localStorage.setItem(TOKEN_KEY,JSON.stringify({t:accessToken,exp:tokenExpiry,email:syncEmail||"",revision:authRevision}));}catch(e){}} }
   function loadGToken(){ if (storageOK){ try { return JSON.parse(localStorage.getItem("property_app_gtoken_v1") || "null"); } catch(e){} } return null; }
   function clearGToken(){ if (storageOK){ try { localStorage.removeItem("property_app_gtoken_v1"); } catch(e){} } }
 
@@ -7102,7 +7165,18 @@ let syncConnected = false, syncEmail = null;
   window.onLocalChange = function(kind){ if(window._saveBlocked)return; if(kind==="cats")window.touchCats();if(kind==="settings")window.touchSettings(); if(!persistLocal())return; window.scheduleSync(); };
   let pushTimer = null;
   let dirty = false;
-  window.scheduleSync = function(){ if(window._saveBlocked || !PropertyCore.ready)return; dirty = true; if (!syncConnected) return; clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 1500); };
+  window.scheduleSync = function(){ if(window._saveBlocked || !PropertyCore.ready)return; dirty=true;refreshLed();if(!syncConnected||needReauth)return;clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(),1500); };
+  window.addEventListener("storage",function(e){
+    if(e.key===AUTH_KEY||e.key===null){receiveSharedAuth();}
+    if(e.key===TOKEN_KEY){
+      const token=loadGToken();
+      if(syncConnected&&token&&token.email===syncEmail&&(token.revision||"")===authRevision&&Date.now()<token.exp){accessToken=token.t;tokenExpiry=token.exp;}
+      else if(!token){accessToken=null;tokenExpiry=0;}
+    }
+    if(e.key===ACK_KEY||e.key===PropertyCore.KEY||e.key?.startsWith(PropertyCore.KEY+":pending:")||e.key===null){
+      dirty=true;refreshLed();checkPendingChanges().catch(()=>{dirty=true;refreshLed();});
+    }
+  });
 
   // ---- GIS token flow ----
   function gisReady(){ return !!(window.google && google.accounts && google.accounts.oauth2); }
@@ -7115,26 +7189,40 @@ let syncConnected = false, syncEmail = null;
     tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: function(){} });
   }
   function requestToken(interactive){
-    return new Promise(function(resolve, reject){
-      if (!tokenClient){ reject(new Error("gis")); return; }
-      let done = false;
-      const finish = function(fn, v){ if (done) return; done = true; clearTimeout(tmr); fn(v); };
-      const tmr = setTimeout(function(){ finish(reject, new Error("token_timeout")); }, TOKEN_MS);
-      tokenClient.callback = function(resp){
-        if (resp && resp.error){ finish(reject, resp); return; }
-        accessToken = resp.access_token;
-        tokenExpiry = Date.now() + ((resp.expires_in || 3600) - 90) * 1000;
-        needReauth = false;
-        saveGToken();
-        finish(resolve, accessToken);
-      };
-      try {
-        const cfg = { prompt: interactive ? "consent" : "" };
-        if (syncEmail && syncEmail.indexOf("@") >= 0) cfg.hint = syncEmail;   // 指定已連結的帳號,避免每次重開都跳「選擇帳戶」
-        tokenClient.requestAccessToken(cfg);
-      }
-      catch (e){ finish(reject, e); }
+    if(tokenRequest)return tokenRequest;
+    const epoch=authEpoch;
+    tokenRequest=new Promise(function(resolve,reject){
+      if(!gisReady()){reject(new Error("gis"));return;}
+      let done=false;
+      const finish=(fn,value)=>{if(done)return;done=true;clearTimeout(timer);if(pendingTokenCancel===cancel)pendingTokenCancel=null;fn(value);};
+      const cancel=()=>{const e=new Error("同步連結已變更");e.code="sync_cancelled";finish(reject,e);};
+      const timer=setTimeout(()=>finish(reject,new Error("token_timeout")),TOKEN_MS);
+      pendingTokenCancel=cancel;
+      const client=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPES,
+        callback:async function(resp){
+          if(done||epoch!==authEpoch)return;
+          try{assertAuthEpoch(epoch)}catch(e){finish(reject,e);return;}
+          if(resp?.error){finish(reject,resp);return;}
+          if(!resp?.access_token){finish(reject,new Error("授權回應不完整"));return;}
+          try{
+            if(!interactive)await verifySyncToken(resp.access_token,epoch);
+            if(done||epoch!==authEpoch)return;
+            accessToken=resp.access_token;tokenExpiry=Date.now()+((resp.expires_in||3600)-90)*1000;
+            needReauth=false;if(!interactive)saveGToken();finish(resolve,accessToken);
+          }catch(e){finish(reject,e);}
+        },error_callback:e=>finish(reject,e)});
+      try {const cfg={prompt:interactive?"consent":""};if(syncEmail?.includes("@"))cfg.login_hint=syncEmail;client.requestAccessToken(cfg);}
+      catch(e){finish(reject,e);}
     });
+    const active=tokenRequest;active.finally(()=>{if(tokenRequest===active)tokenRequest=null;}).catch(()=>{});
+    return active;
+  }
+  async function verifySyncToken(token,epoch){
+    const response=await tfetch("https://www.googleapis.com/oauth2/v2/userinfo",{headers:{Authorization:"Bearer "+token}});
+    assertAuthEpoch(epoch);
+    if(!response.ok){const e=new Error("無法確認 Google 帳號（"+response.status+"）");e.status=response.status;throw e;}
+    const info=await response.json();assertAuthEpoch(epoch);
+    if(!syncEmail||info.email!==syncEmail){const e=new Error("Google 帳號已變更，請重新連結");e.error="login_required";throw e;}
   }
   async function ensureToken(){
     if (accessToken && Date.now() < tokenExpiry) return accessToken;
@@ -7142,31 +7230,24 @@ let syncConnected = false, syncEmail = null;
   }
 
   // ---- Drive REST helpers ----
-  function tfetch(url, opts, ms){
-    ms = ms || FETCH_MS;
-    const ac = new AbortController();
-    const parent = syncAbort;
-    if (parent){
-      if (parent.signal.aborted) ac.abort();
-      else parent.signal.addEventListener("abort", function(){ ac.abort(); }, { once: true });
-    }
-    const timer = setTimeout(function(){ ac.abort(); }, ms);
-    const o = Object.assign({}, opts, { signal: ac.signal });
-    return fetch(url, o).finally(function(){ clearTimeout(timer); });
+  function tfetch(url,opts,ms){
+    const ac=new AbortController(),parent=syncAbort,abort=()=>ac.abort();
+    if(parent){if(parent.signal.aborted)ac.abort();else parent.signal.addEventListener("abort",abort,{once:true});}
+    const timer=setTimeout(abort,ms||FETCH_MS);
+    return fetch(url,Object.assign({},opts,{signal:ac.signal})).finally(()=>{clearTimeout(timer);parent?.signal.removeEventListener("abort",abort);});
   }
-  async function dfetch(url, opts){
-    const token = await ensureToken();
-    opts = opts || {}; opts.headers = Object.assign({}, opts.headers, { Authorization: "Bearer " + token });
-    let res = await tfetch(url, opts);
-    if (res.status === 401){ accessToken = null; clearGToken(); const t2 = await requestToken(false); opts.headers.Authorization = "Bearer " + t2; res = await tfetch(url, opts); }
-    if(!res.ok) throw new Error("Google 雲端回應失敗（"+res.status+"）");
+  async function dfetch(url,opts){
+    const epoch=authEpoch,token=await ensureToken();assertAuthEpoch(epoch);
+    opts=Object.assign({},opts,{headers:Object.assign({},opts?.headers,{Authorization:"Bearer "+token})});
+    let res=await tfetch(url,opts);assertAuthEpoch(epoch);
+    if(res.status===401){accessToken=null;clearGToken();const fresh=await requestToken(false);assertAuthEpoch(epoch);opts.headers.Authorization="Bearer "+fresh;res=await tfetch(url,opts);assertAuthEpoch(epoch);}
+    if(!res.ok){const error=new Error("Google 雲端回應失敗（"+res.status+"）");error.status=res.status;if(res.status===401)error.error="login_required";throw error;}
     return res;
   }
   async function findFile(name){
-    const q = encodeURIComponent("name='" + name + "' and trashed=false");
-    const res = await dfetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&spaces=appDataFolder&fields=files(id,version)");
-    const data = await res.json();
-    return (data.files && data.files.length) ? data.files[0] : null;
+    const epoch=authEpoch,q=encodeURIComponent("name='"+name+"' and trashed=false");
+    const res=await dfetch("https://www.googleapis.com/drive/v3/files?q="+q+"&spaces=appDataFolder&fields=files(id,version)");
+    const data=await res.json();assertAuthEpoch(epoch);return data.files?.[0]||null;
   }
   async function createFile(name){
     const res = await dfetch("https://www.googleapis.com/drive/v3/files", {
@@ -7202,13 +7283,132 @@ let syncConnected = false, syncEmail = null;
     return data;
   }
   async function upload(id,obj){
-    const res=await dfetch("https://www.googleapis.com/upload/drive/v3/files/"+id+"?uploadType=media&fields=version",{
+    const epoch=authEpoch,res=await dfetch("https://www.googleapis.com/upload/drive/v3/files/"+id+"?uploadType=media&fields=version",{
       method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(obj)});
-    const data=await res.json();if(!data.version)throw new Error("無法確認上傳結果");
-    if(id===fileId) freshMainFile=false;
-    return data.version;
+    const data=await res.json();assertAuthEpoch(epoch);if(!data.version)throw new Error("無法確認上傳結果");
+    if(id===fileId)freshMainFile=false;return data.version;
   }
-  
+  // Immutable documents preserve each writer's changes even when the legacy
+  // sync-main.json projection is concurrently replaced by another device.
+  const CLOUD_JOURNAL_PREFIX = "property-sync-journal-v1-";
+  const CLOUD_JOURNAL_WRITER = String(deviceId);
+  let cloudJournalCache = new Map();
+  function resetCloudJournalCache(){ cloudJournalCache.clear(); }
+  function cloudCatalogSignature(files){
+    return JSON.stringify(files.map(f=>[f.id,f.version]).sort((a,b)=>a[0].localeCompare(b[0])));
+  }
+  function isCloudFileMissing(error){ return !!error && (error.status===404 || error.code===404); }
+  async function readCloudCatalog(){
+    const epoch=authEpoch, files=[], seenIds=new Set(), seenPages=new Set();
+    const q="trashed=false and (name='"+MAIN_NAME+"' or name contains '"+CLOUD_JOURNAL_PREFIX+"')";
+    let pageToken="";
+    do{
+      assertAuthEpoch(epoch);
+      const url="https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=1000&fields="+
+        encodeURIComponent("nextPageToken,incompleteSearch,files(id,name,version,appProperties)")+"&q="+encodeURIComponent(q)+
+        (pageToken?"&pageToken="+encodeURIComponent(pageToken):"");
+      const response=await dfetch(url), body=await response.json();
+      assertAuthEpoch(epoch);
+      if(body.incompleteSearch || !Array.isArray(body.files)) throw new Error("雲端資料清單尚未完整，稍後重試");
+      for(const f of body.files){
+        if(f.name!==MAIN_NAME && !(typeof f.name==="string" && f.name.startsWith(CLOUD_JOURNAL_PREFIX)))continue;
+        if(typeof f.id!=="string" || !f.id || !f.version)throw new Error("無法確認雲端資料版本");
+        if(!seenIds.has(f.id)){seenIds.add(f.id);files.push({id:f.id,name:f.name,version:String(f.version),appProperties:f.appProperties||{}});}
+      }
+      pageToken=body.nextPageToken||"";
+      if(pageToken && seenPages.has(pageToken))throw new Error("雲端資料清單尚未完整，稍後重試");
+      if(pageToken)seenPages.add(pageToken);
+    }while(pageToken);
+    assertAuthEpoch(epoch);
+    files.sort((a,b)=>a.id.localeCompare(b.id));
+    for(const id of cloudJournalCache.keys())if(!seenIds.has(id))cloudJournalCache.delete(id);
+    return {files,signature:cloudCatalogSignature(files),legacyMain:files.filter(f=>f.name===MAIN_NAME)};
+  }
+  async function readCloudDocument(file){
+    const epoch=authEpoch, cached=cloudJournalCache.get(file.id);
+    assertAuthEpoch(epoch);
+    if(cached && cached.version===file.version)return PropertyCore.clone(cached.data);
+    const response=await dfetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id)+"?alt=media");
+    const text=await response.text();assertAuthEpoch(epoch);
+    if(!text)throw new Error("雲端資料為空，已停止覆寫");
+    let parsed;
+    try{parsed=JSON.parse(text);PropertyCore.stateFromMain(parsed);}
+    catch(e){throw new Error("雲端資料格式不正確，已停止覆寫："+e.message);}
+    const data=PropertyCore.mainFrom(PropertyCore.stateFromMain(parsed));
+    assertAuthEpoch(epoch);
+    cloudJournalCache.set(file.id,{version:file.version,data:PropertyCore.clone(data)});
+    return data;
+  }
+  async function readCloudBundle(catalog){
+    const epoch=authEpoch;
+    for(let attempt=0;attempt<3;attempt++){
+      assertAuthEpoch(epoch);
+      const current=catalog||await readCloudCatalog();catalog=null;
+      let merged=null, durableMerged=null, disappeared=false;
+      for(const file of current.files){
+        try{
+          const data=await readCloudDocument(file);assertAuthEpoch(epoch);
+          merged=merged?PropertyCore.merge(merged,data):data;
+          if(file.name.startsWith(CLOUD_JOURNAL_PREFIX))durableMerged=durableMerged?PropertyCore.merge(durableMerged,data):data;
+        }catch(error){
+          if(isCloudFileMissing(error)){cloudJournalCache.delete(file.id);disappeared=true;break;}
+          throw error;
+        }
+      }
+      assertAuthEpoch(epoch);
+      if(!disappeared)return {...current,merged,durableMerged};
+      // Another writer may retire an old immutable document only after its
+      // replacement exists. Refresh the complete catalog to pick that up.
+    }
+    throw new Error("雲端資料正在更新，稍後重試");
+  }
+  async function publishCloudJournal(merged,bundle){
+    const epoch=authEpoch;
+    const data=PropertyCore.mainFrom(PropertyCore.stateFromMain(merged));
+    const suffix=typeof crypto!=="undefined" && typeof crypto.randomUUID==="function"
+      ? crypto.randomUUID() : Date.now().toString(36)+"-"+Math.random().toString(36).slice(2)+"-"+Math.random().toString(36).slice(2);
+    const name=CLOUD_JOURNAL_PREFIX+encodeURIComponent(CLOUD_JOURNAL_WRITER)+"-"+suffix+".json";
+    const metadata={name,mimeType:"application/json",parents:["appDataFolder"],appProperties:{propertySyncKind:"journal-v1",propertySyncWriter:CLOUD_JOURNAL_WRITER}};
+    const boundary="property_journal_"+suffix.replace(/[^A-Za-z0-9]/g,"");
+    const body="--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(metadata)+
+      "\r\n--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(data)+"\r\n--"+boundary+"--\r\n";
+    assertAuthEpoch(epoch);
+    const response=await dfetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,version",{
+      method:"POST",headers:{"Content-Type":"multipart/related; boundary="+boundary},body});
+    const file=await response.json();assertAuthEpoch(epoch);
+    if(typeof file.id!=="string" || !file.id || !file.version)throw new Error("無法確認雲端資料已儲存");
+    const published={id:file.id,name,version:String(file.version),appProperties:metadata.appProperties};
+    // Verify the entire uploaded document before allowing callers to retire
+    // any captured input or show this local state as synchronized.
+    cloudJournalCache.delete(file.id);
+    const verified=await readCloudDocument(published);assertAuthEpoch(epoch);
+    if(canonical(verified)!==canonical(data)){
+      cloudJournalCache.delete(file.id);throw new Error("雲端資料核對不一致，稍後重試");
+    }
+    return {...published,data:verified};
+  }
+  async function pruneOwnCloudJournals(published,bundle){
+    const epoch=authEpoch;let removed=0,failed=0;
+    if(!published || !published.data || !bundle || !Array.isArray(bundle.files))return {removed,failed};
+    const confirmed=cloudJournalCache.get(published.id);
+    if(!confirmed || confirmed.version!==published.version || canonical(confirmed.data)!==canonical(published.data))return {removed,failed};
+    for(const file of bundle.files){
+      if(file.id===published.id || !file.name.startsWith(CLOUD_JOURNAL_PREFIX) ||
+        file.appProperties?.propertySyncKind!=="journal-v1" || file.appProperties?.propertySyncWriter!==CLOUD_JOURNAL_WRITER)continue;
+      const cached=cloudJournalCache.get(file.id);
+      if(!cached || cached.version!==file.version || canonical(PropertyCore.merge(published.data,cached.data))!==canonical(published.data))continue;
+      assertAuthEpoch(epoch);
+      try{
+        await dfetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id),{method:"DELETE"});
+        assertAuthEpoch(epoch);cloudJournalCache.delete(file.id);removed++;
+      }catch(error){
+        assertAuthEpoch(epoch);
+        if(isCloudFileMissing(error)){cloudJournalCache.delete(file.id);removed++;}else failed++;
+      }
+    }
+    return {removed,failed};
+  }
+
 // ---- 備份到「看得到」的 Google Drive(獨立 drive.file 授權,不影響上面的 appDataFolder 同步)----
   const FILE_SCOPE = "https://www.googleapis.com/auth/drive.file";
   let fileTokenClient = null, fileToken = null, fileTokenExpiry = 0;
@@ -7370,33 +7570,46 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
   const SNAP_KEEP_DAYS = 30;
   const localDay = d => { const t = d || new Date(); return t.getFullYear() + "-" + String(t.getMonth()+1).padStart(2,"0") + "-" + String(t.getDate()).padStart(2,"0"); };   // 以本地(台灣)日期切「一天」,不用 UTC(避免早上 8 點才換日)
   async function pruneSnapshots(){
+    const epoch=authEpoch;
     try {
-      const q = encodeURIComponent("name contains 'sync-backup-' and trashed=false");
-      const res = await dfetch("https://www.googleapis.com/drive/v3/files?q=" + q + "&spaces=appDataFolder&fields=files(id,name)&pageSize=1000");
-      const data = await res.json();
-      const files = (data.files || []);
-      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - SNAP_KEEP_DAYS);
-      const cutoffStr = localDay(cutoff);   // YYYY-MM-DD 同格式,字串比較即可
-      for (const f of files){
-        const m = /^sync-backup-(\d{4}-\d{2}-\d{2})\.json$/.exec(f.name || "");   // 只認快照檔名,絕不動 sync-main.json
-        if (m && m[1] < cutoffStr){
-          try { await dfetch("https://www.googleapis.com/drive/v3/files/" + f.id, { method: "DELETE" }); } catch(e){}
-        }
+      const cutoff=new Date();cutoff.setDate(cutoff.getDate()-SNAP_KEEP_DAYS);
+      const cutoffStr=localDay(cutoff),q=encodeURIComponent("trashed=false and name contains 'sync-backup-'");
+      const res=await dfetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q="+q+"&fields=files(id,name)&pageSize=1000");
+      const data=await res.json();assertAuthEpoch(epoch);
+      for(const file of data.files||[]){
+        assertAuthEpoch(epoch);const match=/^sync-backup-(\d{4}-\d{2}-\d{2})\.json$/.exec(file.name||"");
+        if(match&&match[1]<cutoffStr){try{await dfetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id),{method:"DELETE"});assertAuthEpoch(epoch);}catch(e){assertAuthEpoch(epoch);}}
       }
-    } catch(e){}
+    }catch(e){assertAuthEpoch(epoch);}
   }
   async function maybeSnapshot(obj){
+    const epoch=authEpoch;
     try {
-      const day = localDay();
-      const name = "sync-backup-" + day + ".json";
-      const existing = await findFile(name);
-      if (existing) return;
-      const id = await createFile(name);
-      await upload(id, obj);
-      pruneSnapshots();   // 建立當天新快照後,順手清掉 30 天前的舊快照(一天最多跑一次)
-    } catch(e){}
+      const name="sync-backup-"+localDay()+".json",existing=await findFile(name);assertAuthEpoch(epoch);
+      if(existing)return;
+      await createCompleteCloudFile(name,obj);assertAuthEpoch(epoch);await pruneSnapshots();
+    }catch(e){assertAuthEpoch(epoch);}
   }
 
+  async function createCompleteCloudFile(name,data){
+    const epoch=authEpoch,boundary="property_complete_"+crypto.randomUUID().replaceAll("-","");
+    const metadata={name,mimeType:"application/json",parents:["appDataFolder"]};
+    const body="--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(metadata)+
+      "\r\n--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(data)+"\r\n--"+boundary+"--\r\n";
+    const response=await dfetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,version",{
+      method:"POST",headers:{"Content-Type":"multipart/related; boundary="+boundary},body});
+    const file=await response.json();assertAuthEpoch(epoch);if(!file.id||!file.version)throw new Error("無法確認雲端檔案已儲存");return file;
+  }
+  async function updateLegacyProjection(main,bundle){
+    const epoch=authEpoch,legacy=bundle.legacyMain[0];
+    if(legacy){
+      fileId=legacy.id;
+      const previous=await readCloudDocument(legacy);assertAuthEpoch(epoch);
+      if(canonical(previous)!==canonical(main)){await upload(legacy.id,main);assertAuthEpoch(epoch);cloudJournalCache.delete(legacy.id);}
+    }else{
+      const created=await createCompleteCloudFile(MAIN_NAME,main);assertAuthEpoch(epoch);fileId=created.id;
+    }
+  }
   // ---- status UI ----
   function setLed(cls){   // 同時更新列表 + 封面兩顆同步燈(封面那顆保留 cover-led 容器樣式)
     ["listLed","coverLed"].forEach(function(id){
@@ -7437,7 +7650,7 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
   };
 
   let syncGen = 0;
-  function isSyncAuthError(e){ return e && (e.error === "access_denied" || e.error === "interaction_required" || e.error === "login_required"); }
+  function isSyncAuthError(e){ return e&&(e.status===401||["access_denied","interaction_required","login_required","invalid_grant"].includes(e.error)); }
   function isAbortError(e){ return e && (e.name === "AbortError" || e.message === "AbortError" || e.message === "token_timeout"); }
   function markNeedReauth(){
     needReauth = true; syncFailCount = 0;
@@ -7447,15 +7660,10 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
   function resetSyncSuccess(){
     syncFailCount = 0; retryMs = 5000;
   }
-  function bumpSyncFail(){
-    syncFailCount++;
-    if (syncFailCount >= SYNC_FAIL_MAX){ markNeedReauth(); return true; }
-    return false;
-  }
+  function bumpSyncFail(){syncFailCount++;return false;}
   function scheduleSyncRetry(){
-    clearTimeout(pushTimer);
-    pushTimer = setTimeout(function(){ syncNow(); }, retryMs);
-    retryMs = Math.min(retryMs * 2, 60000);
+    clearTimeout(pushTimer);if(!syncConnected||needReauth)return;
+    pushTimer=setTimeout(()=>syncNow(),retryMs);retryMs=Math.min(retryMs*2,60000);
   }
   function maybeBootSync(){
     if (!syncConnected || needReauth) return;
@@ -7479,146 +7687,119 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     });
   }
   // ---- core two-way sync ----
-  async function syncNow(force){
+  async function syncNow(force,background=false){
     const locks=navigator.locks;
-    if(!locks || typeof locks.request!=="function")return syncNowUnlocked(force);
-    // Coordinate only the network operation. Every window remains usable.
+    if(!locks||typeof locks.request!=="function")return syncNowUnlocked(force,background);
     let entered=false;
     try{return await locks.request("property-app-cloud-sync-v1",{ifAvailable:true},lock=>{
       entered=true;
-      if(lock)return syncNowUnlocked(force);
-      clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(force),2000);
+      if(lock)return syncNowUnlocked(force,background);
+      clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(force,background),2000);
       return {ok:false,reason:"busy"};
-    });}catch(e){if(!entered)return syncNowUnlocked(force);throw e;}
+    });}catch(e){if(!entered)return syncNowUnlocked(force,background);throw e;}
   }
-  async function syncNowUnlocked(force){
-    if (!syncConnected || window._saveBlocked || !PropertyCore.ready) return { ok: false, reason: "not_ready" };
-    if (!navigator.onLine && !force){
-      if (window.refreshLed) window.refreshLed();
-      return { ok: false, reason: "offline" };
+  async function syncNowUnlocked(force,background=false){
+    const requestedEpoch=authEpoch;
+    if(connecting||!syncConnected||window._saveBlocked||!PropertyCore.ready)return {ok:false,reason:"not_ready"};
+    if(!navigator.onLine&&!force){refreshLed();return {ok:false,reason:"offline"};}
+    if(inFlight){
+      if(force){await waitSyncIdle(45000);if(inFlight)return {ok:false,reason:"busy"};}
+      else{clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(false,background),2000);return {ok:false,reason:"busy"};}
     }
-    if (inFlight){
-      if (force){
-        const idle = await waitSyncIdle(45000);
-        if (!dirty && idle) return { ok: true };
-        if (inFlight) return { ok: false, reason: "busy" };
-      } else {
-        clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000);
-        return { ok: false, reason: "busy" };
-      }
-    }
-    const wasDirty = dirty;
-    if (window.isTableBusy && window.isTableBusy()){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return { ok: false, reason: "busy" }; }
-    const thisRun = ++syncGen;
-    syncAbort = new AbortController();
-    const runAbort = syncAbort;
-    inFlight = true; setStatus("同步中…", "busy");
-    let __wd = setTimeout(function(){ if (inFlight && thisRun === syncGen){ runAbort.abort(); inFlight = false; setStatus("同步逾時，稍後重試", "warn"); if (window.refreshLed) window.refreshLed(); } }, SYNC_WATCHDOG_MS);
-    let syncComplete = false;
+    if(requestedEpoch!==authEpoch||connecting||!syncConnected)return {ok:false,reason:"cancelled"};
+    if(preparingSync){clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(force,background),2000);return {ok:false,reason:"busy"};}
+    const preparation={};preparingSync=preparation;const epoch=authEpoch;
+    try{assertAuthEpoch(epoch);await checkPendingChanges(false);assertAuthEpoch(epoch);}
+    catch(e){return {ok:false,reason:"cancelled"};}
+    finally{if(preparingSync===preparation)preparingSync=false;}
+    const ack=loadCloudAck();
+    if(background&&!dirty&&ack&&Date.now()-ack.at<POLL_MS-1000&&syncFailCount===0){refreshLed();return {ok:true,skipped:true};}
+    if(window.isTableBusy?.()){scheduleSyncRetry();return {ok:false,reason:"busy"};}
+    const thisRun=++syncGen,runAbort=new AbortController();syncAbort=runAbort;inFlight=true;
+    clearTimeout(pushTimer);pushTimer=null;setStatus("同步中…","busy");
+    const guard=()=>{assertAuthEpoch(epoch);if(runAbort.signal.aborted){const e=new Error("AbortError");e.name="AbortError";throw e;}};
+    const watchdog=setTimeout(()=>{if(thisRun===syncGen){runAbort.abort();setStatus("同步逾時，稍後重試","warn");}},SYNC_WATCHDOG_MS);
+    let complete=false,lastPublished=null,cleanupBundle=null;
     try {
-      await ensureToken();
-      await ensureFileId();
-      let tries = 0, pushed = null;
-      while (tries < 3){
-        tries++;
-        const versionBefore=await getVersion();
-        const remote = await download();
-        if(versionBefore!==await getVersion()) continue;
-        if(window.isTableBusy && window.isTableBusy()) throw new Error("editing_busy");
-        if (remote && remote.__syncCorrupt){
-          dirty = wasDirty || dirty;
-          setStatus("雲端資料損壞，請從快照還原", "warn");
-          break;
+      await ensureToken();guard();
+      let catalog=await readCloudCatalog();guard();
+      if(!dirty&&catalog.signature===lastVersion){
+        resetSyncSuccess();needReauth=false;setStatus("已同步","ok");
+        const current=PropertyCore.mainFrom(PropertyCore.local().readLatest());
+        // A receipt is refreshed only for the exact content already acknowledged.
+        if(await digestMain(current)===loadCloudAck()?.digest){guard();await acknowledgeCloud(current,catalog.signature,epoch);complete=true;}
+      }
+      for(let attempt=0;!complete&&attempt<3;attempt++){
+        const bundle=await readCloudBundle(catalog);catalog=null;guard();
+        if(window.isTableBusy?.())throw new Error("editing_busy");
+        const local=buildLocal(),merged=mergeMain(local,bundle.merged);
+        if(canonical(local)!==canonical(merged))applyMerged(merged);
+        const durable=bundle.durableMerged;
+        const protectedInCloud=durable&&canonical(mergeMain(durable,merged))===canonical(durable);
+        if(!protectedInCloud){
+          lastPublished=await publishCloudJournal(merged,bundle);guard();cleanupBundle=bundle;
         }
-        const local = buildLocal();
-        dirty = false;
-        const merged = mergeMain(local, remote);
-        const localCanon = canonical(local);
-        const mergedCanon = canonical(merged);
-        if (mergedCanon !== localCanon){
-          if (modalBg.classList.contains("open") || detailBg.classList.contains("open") || catBg.classList.contains("open") || fltBg.classList.contains("open") || confirmBg.classList.contains("open")) window._pendingMerge = merged;
-          else applyMerged(merged);
+        await updateLegacyProjection(merged,bundle);guard();
+        const after=await readCloudBundle();guard();
+        const converged=mergeMain(merged,after.merged);
+        const durableAfter=after.durableMerged;
+        if(!durableAfter||canonical(mergeMain(durableAfter,merged))!==canonical(durableAfter))continue;
+        if(canonical(converged)!==canonical(merged)){applyMerged(converged);continue;}
+        await acknowledgeCloud(merged,after.signature,epoch);guard();complete=true;
+      }
+      if(complete){
+        resetSyncSuccess();needReauth=false;
+        // Only captured, covered records owned by this writer can be retired.
+        if(lastPublished){
+          await pruneOwnCloudJournals(lastPublished,cleanupBundle);guard();
+          await maybeSnapshot(lastPublished.data);guard();
         }
-        const needPush = !remote || mergedCanon !== canonical(remote);
-        if (!needPush){ lastVersion = versionBefore; syncComplete = true; break; }
-        merged.rev = ((remote && remote.rev) || 0) + 1; merged.lastWriteBy = deviceId; merged.updatedAt = Date.now();
-        if(window.isTableBusy && window.isTableBusy()) throw new Error("editing_busy");
-        if(versionBefore!==await getVersion()) continue;
-        if(window.isTableBusy && window.isTableBusy()) throw new Error("editing_busy");
-        const newVer = await upload(fileId, merged);
-        const afterVer = await getVersion();
-        pushed = merged;
-        if (afterVer && newVer && afterVer === newVer){ lastVersion = afterVer; syncComplete = true; break; }
-      }
-      if (!syncComplete){
-        dirty = true;
-        if (!bumpSyncFail()){ setStatus("同步未完成，稍後重試", "warn"); scheduleSyncRetry(); }
-      } else {
-        if (pushed) maybeSnapshot(pushed);
-        resetSyncSuccess();
-        needReauth = false;
-        setStatus(dirty?"仍有變更等待同步":"已同步", dirty?"busy":"ok");
-        try { localStorage.setItem("property_app_lastsync_v1", String(Date.now())); } catch(e){}
-        window.renderLastSync();
-      }
-    } catch (e){
-      dirty = dirty || wasDirty;
-      if(e && e.message==="editing_busy"){
-        dirty=true;setStatus("編輯中，完成後同步","busy");scheduleSyncRetry();
-      } else if (isSyncAuthError(e)){
-        markNeedReauth();
-      } else if (isAbortError(e)){
-        if (!bumpSyncFail()){ setStatus("同步逾時，稍後重試", "warn"); scheduleSyncRetry(); }
-      } else {
-        if (!bumpSyncFail()){ setStatus((e.message||"同步失敗")+"，稍後重試", "warn"); scheduleSyncRetry(); }
-      }
-    } finally {
-      if (thisRun === syncGen){
-        clearTimeout(__wd);
-        if (syncAbort === runAbort) syncAbort = null;
-        inFlight = false;
-        if (window.refreshLed) window.refreshLed();
-      }
+        setStatus(dirty?"仍有變更等待同步":"已同步",dirty?"pending":"ok");
+        localStorage.setItem("property_app_lastsync_v1",String(Date.now()));window.renderLastSync();
+        if(dirty)scheduleSyncRetry();
+      }else{dirty=true;bumpSyncFail();setStatus("資料正在合併，稍後繼續同步","warn");scheduleSyncRetry();}
+    }catch(e){
+      if(epoch!==authEpoch||thisRun!==syncGen||e?.code==="sync_cancelled")return {ok:false,reason:"cancelled"};
+      dirty=true;
+      if(e?.message==="editing_busy"){setStatus("編輯中，完成後同步","pending");scheduleSyncRetry();}
+      else if(isSyncAuthError(e)){markNeedReauth();}
+      else{bumpSyncFail();setStatus(isAbortError(e)?"同步逾時，稍後重試":(e.message||"同步失敗")+"，稍後重試","warn");scheduleSyncRetry();}
+      complete=false;
+    }finally{
+      clearTimeout(watchdog);
+      if(thisRun===syncGen){if(syncAbort===runAbort)syncAbort=null;inFlight=false;refreshLed();}
     }
-    return { ok: syncComplete && !dirty && !needReauth, reason: syncComplete ? undefined : (needReauth ? "reauth" : "failed") };
+    return {ok:complete&&!dirty&&!needReauth,reason:complete?undefined:(needReauth?"reauth":"failed")};
   }
   window.__syncNow = syncNow;
 
   function startPolling(){
-    stopPolling();
-    pollTimer = setInterval(async function(){
-      if (!syncConnected || document.hidden || inFlight || needReauth) return;
-      if (dirty){ syncNow(); return; }
-      try { await ensureFileId(); const v = await getVersion(); if (v && v !== lastVersion) syncNow(); } catch(e){syncFailCount++;setStatus("雲端連線失敗，稍後重試","warn");refreshLed();}
-    }, POLL_MS);
+    stopPolling();pollTimer=setInterval(()=>{
+      if(!syncConnected||document.hidden||inFlight||needReauth||!navigator.onLine)return;
+      syncNow(false,true);
+    },POLL_MS);
   }
   function stopPolling(){ if (pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
 
   // ---- connect / disconnect ----
   async function connect(){
+    cancelCloudSession();connecting=true;const epoch=authEpoch;
     try {
-      initClient();
-      setStatus("連結中…", "busy");
-      await requestToken(true);
-      const res = await dfetch("https://www.googleapis.com/oauth2/v2/userinfo");
-      const info = await res.json();
-      syncEmail = info.email || "已連結"; syncConnected = true; needReauth = false;
-      resetSyncSuccess(); bootSyncPending = false;
-      saveAuth(); saveGToken(); window.renderSyncCard();
-      await syncNow();
-      startPolling();
-      toast("已連結 Google 雲端");
-    } catch (e){
-      setStatus("連結失敗", "warn");
-    }
+      initClient();setStatus("連結中…","busy");await requestToken(true);assertAuthEpoch(epoch);
+      const res=await dfetch("https://www.googleapis.com/oauth2/v2/userinfo"),info=await res.json();assertAuthEpoch(epoch);
+      if(!info.email)throw new Error("無法確認 Google 帳號");
+      syncEmail=info.email;syncConnected=true;needReauth=false;
+      authRevision=crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2);
+      resetSyncSuccess();bootSyncPending=false;saveAuth();saveGToken();window.renderSyncCard();connecting=false;
+      await syncNow();assertAuthEpoch(epoch);startPolling();toast("已連結 Google 雲端");
+    }catch(e){if(epoch!==authEpoch)return;cancelCloudSession();receiveSharedAuth();if(syncConnected)startPolling();setStatus("連結失敗，請重試","warn");}
   }
   function disconnect(){
-    askConfirm("解除 Google 連結？", "只會停止這台裝置的同步，雲端資料不會被刪除。", function(){
-      if (accessToken && window.google && google.accounts && google.accounts.oauth2){ try { google.accounts.oauth2.revoke(accessToken, function(){}); } catch(e){} }
-      if(syncAbort)syncAbort.abort();clearTimeout(pushTimer);pushTimer=null;
-      syncConnected = false; syncEmail = null; accessToken = null; tokenExpiry = 0; fileId = null; lastVersion = null; needReauth = false;
-      clearGToken();
-      stopPolling(); saveAuth(); window.renderSyncCard(); refreshLed();
+    askConfirm("解除 Google 連結？","會停止此瀏覽器各視窗的同步，雲端資料不會被刪除。",function(){
+      const token=accessToken;cancelCloudSession();
+      syncConnected=false;syncEmail=null;authRevision=crypto.randomUUID?crypto.randomUUID():String(Date.now());
+      needReauth=false;resetSyncSuccess();saveAuth();clearGToken();window.renderSyncCard();setStatus("尚未連結","warn");refreshLed();
+      if(token&&gisReady()){try{google.accounts.oauth2.revoke(token,()=>{});}catch(e){}}
       toast("已解除連結");
     });
   }
@@ -7677,7 +7858,7 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
   // 開檔先依「上次的連結狀態」渲染同步卡片(純讀本機 localStorage,不等 GIS client 從網路載入完成),
   // 避免視窗長時間背景後恢復/開啟時,「連結 Google 帳號」登入介面因枯等 GIS 載入而先露出、隨後才被隱藏(閃一下)。
   (function(){
-    try { const a = loadAuth(); if (a && a.connected){ syncConnected = true; syncEmail = a.email || null; } } catch(e){}
+    try { const a=loadAuth();authRevision=a.revision||"";if(a&&a.connected){syncConnected=true;syncEmail=a.email||null;} } catch(e){}
     window.renderSyncCard();
     refreshLed();   // 開檔即顯示兩顆燈的初始狀態(含離線判斷)
   })();
@@ -7686,9 +7867,9 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     initClient();
     const auth = loadAuth();
     if (auth && auth.connected){
-      syncConnected = true; syncEmail = auth.email || null;
+      syncConnected=true;syncEmail=auth.email||null;authRevision=auth.revision||"";
       const gt = loadGToken();   // 重開 App:token 未過期且帳號相符 → 直接沿用,不會閃 Google 視窗
-      if (gt && gt.t && gt.exp && Date.now() < gt.exp - 60000 && (gt.email || "") === (syncEmail || "")){
+      if (gt && gt.t && gt.exp && Date.now() < gt.exp - 60000 && (gt.email || "") === (syncEmail || "") && (gt.revision||"")===authRevision){
         accessToken = gt.t; tokenExpiry = gt.exp;
       }
       window.renderSyncCard();
