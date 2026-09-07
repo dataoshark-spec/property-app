@@ -1,5 +1,5 @@
-/* 物件總覽 2026.09.07D：成功載入完整新版後才啟用，離線保留正常頁面。 */
-const VERSION="20260907D";
+/* 物件總覽 2026.09.07E：成功載入完整新版後才啟用，離線保留正常頁面。 */
+const VERSION="20260907E";
 const SCOPE=new URL(self.registration.scope);
 const PREFIX="property-app-shell:"+encodeURIComponent(SCOPE.pathname)+":";
 const CACHE=PREFIX+VERSION;
