@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20260907C">
-<link rel="apple-touch-icon" href="icon-180.png?v=20260907C">
+<link rel="icon" type="image/png" href="icon-192.png?v=20260907D">
+<link rel="apple-touch-icon" href="icon-180.png?v=20260907D">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20260907C"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20260907C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20260907D"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20260907D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1627,7 +1627,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.09.07C：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.09.07D：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2063,7 +2063,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.09.07C";
+const APP_VERSION = "2026.09.07D";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -7085,6 +7085,7 @@ let syncConnected = false, syncEmail = null;
   let syncAbort = null, syncFailCount = 0, bootSyncPending = false;
   let authEpoch = 0, authRevision = "", pendingTokenCancel = null, tokenRequest = null;
   let pendingCheck = 0, memoryAck = null, preparingSync = false, connecting = false;
+  let maintenanceRun = null, maintenancePending = null;
   const AUTH_KEY = "property_app_gauth_v1", TOKEN_KEY = "property_app_gtoken_v1";
   const ACK_KEY = "property_app_cloud_ack_v2";
   function assertAuthEpoch(epoch){
@@ -7096,6 +7097,7 @@ let syncConnected = false, syncEmail = null;
   }
   function cancelCloudSession(){
     authEpoch++;syncGen++;pendingCheck++;connecting=false;preparingSync=false;
+    maintenancePending=null;maintenanceRun?.controller.abort();maintenanceRun=null;
     if(pendingTokenCancel)pendingTokenCancel();
     if(syncAbort)syncAbort.abort();syncAbort=null;
     clearTimeout(pushTimer);pushTimer=null;stopPolling();
@@ -7232,23 +7234,28 @@ let syncConnected = false, syncEmail = null;
   }
 
   // ---- Drive REST helpers ----
-  function tfetch(url,opts,ms){
-    const ac=new AbortController(),parent=syncAbort,abort=()=>ac.abort();
+  function tfetch(url,opts,ms,parent=syncAbort){
+    const ac=new AbortController(),abort=()=>ac.abort();
     if(parent){if(parent.signal.aborted)ac.abort();else parent.signal.addEventListener("abort",abort,{once:true});}
     const timer=setTimeout(abort,ms||FETCH_MS);
     return fetch(url,Object.assign({},opts,{signal:ac.signal})).finally(()=>{clearTimeout(timer);parent?.signal.removeEventListener("abort",abort);});
   }
-  async function dfetch(url,opts){
-    const epoch=authEpoch,token=await ensureToken();assertAuthEpoch(epoch);
+  async function dfetch(url,opts,parent){
+    const epoch=authEpoch;assertAuthEpoch(epoch);
+    // Optional housekeeping must not refresh or alter the shared login session.
+    if(parent&&(parent.signal.aborted||!accessToken||Date.now()>=tokenExpiry)){
+      const error=new Error("雲端整理稍後再試");error.code="maintenance_deferred";throw error;
+    }
+    const token=parent?accessToken:await ensureToken();assertAuthEpoch(epoch);
     opts=Object.assign({},opts,{headers:Object.assign({},opts?.headers,{Authorization:"Bearer "+token})});
-    let res=await tfetch(url,opts);assertAuthEpoch(epoch);
-    if(res.status===401){accessToken=null;clearGToken();const fresh=await requestToken(false);assertAuthEpoch(epoch);opts.headers.Authorization="Bearer "+fresh;res=await tfetch(url,opts);assertAuthEpoch(epoch);}
+    let res=await tfetch(url,opts,undefined,parent);assertAuthEpoch(epoch);
+    if(res.status===401&&!parent){accessToken=null;clearGToken();const fresh=await requestToken(false);assertAuthEpoch(epoch);opts.headers.Authorization="Bearer "+fresh;res=await tfetch(url,opts,undefined,parent);assertAuthEpoch(epoch);}
     if(!res.ok){const error=new Error("Google 雲端回應失敗（"+res.status+"）");error.status=res.status;if(res.status===401)error.error="login_required";throw error;}
     return res;
   }
-  async function findFile(name){
+  async function findFile(name,parent){
     const epoch=authEpoch,q=encodeURIComponent("name='"+name+"' and trashed=false");
-    const res=await dfetch("https://www.googleapis.com/drive/v3/files?q="+q+"&spaces=appDataFolder&fields=files(id,version)");
+    const res=await dfetch("https://www.googleapis.com/drive/v3/files?q="+q+"&spaces=appDataFolder&fields=files(id,version)",undefined,parent);
     const data=await res.json();assertAuthEpoch(epoch);return data.files?.[0]||null;
   }
   async function createFile(name){
@@ -7389,7 +7396,7 @@ let syncConnected = false, syncEmail = null;
     }
     return {...published,data:verified};
   }
-  async function pruneOwnCloudJournals(published,bundle){
+  async function pruneOwnCloudJournals(published,bundle,parent){
     const epoch=authEpoch;let removed=0,failed=0;
     if(!published || !published.data || !bundle || !Array.isArray(bundle.files))return {removed,failed};
     const confirmed=cloudJournalCache.get(published.id);
@@ -7401,7 +7408,7 @@ let syncConnected = false, syncEmail = null;
       if(!cached || cached.version!==file.version || canonical(PropertyCore.merge(published.data,cached.data))!==canonical(published.data))continue;
       assertAuthEpoch(epoch);
       try{
-        await dfetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id),{method:"DELETE"});
+        await dfetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id),{method:"DELETE"},parent);
         assertAuthEpoch(epoch);cloudJournalCache.delete(file.id);removed++;
       }catch(error){
         assertAuthEpoch(epoch);
@@ -7571,35 +7578,59 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
 // ---- daily snapshot (insurance; keeps one per day, 自動只保留最近 30 天) ----
   const SNAP_KEEP_DAYS = 30;
   const localDay = d => { const t = d || new Date(); return t.getFullYear() + "-" + String(t.getMonth()+1).padStart(2,"0") + "-" + String(t.getDate()).padStart(2,"0"); };   // 以本地(台灣)日期切「一天」,不用 UTC(避免早上 8 點才換日)
-  async function pruneSnapshots(){
+  async function pruneSnapshots(parent){
     const epoch=authEpoch;
     try {
       const cutoff=new Date();cutoff.setDate(cutoff.getDate()-SNAP_KEEP_DAYS);
       const cutoffStr=localDay(cutoff),q=encodeURIComponent("trashed=false and name contains 'sync-backup-'");
-      const res=await dfetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q="+q+"&fields=files(id,name)&pageSize=1000");
+      const res=await dfetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q="+q+"&fields=files(id,name)&pageSize=1000",undefined,parent);
       const data=await res.json();assertAuthEpoch(epoch);
       for(const file of data.files||[]){
         assertAuthEpoch(epoch);const match=/^sync-backup-(\d{4}-\d{2}-\d{2})\.json$/.exec(file.name||"");
-        if(match&&match[1]<cutoffStr){try{await dfetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id),{method:"DELETE"});assertAuthEpoch(epoch);}catch(e){assertAuthEpoch(epoch);}}
+        if(match&&match[1]<cutoffStr){try{await dfetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(file.id),{method:"DELETE"},parent);assertAuthEpoch(epoch);}catch(e){assertAuthEpoch(epoch);}}
       }
     }catch(e){assertAuthEpoch(epoch);}
   }
-  async function maybeSnapshot(obj){
+  async function maybeSnapshot(obj,parent){
     const epoch=authEpoch;
     try {
-      const name="sync-backup-"+localDay()+".json",existing=await findFile(name);assertAuthEpoch(epoch);
+      const name="sync-backup-"+localDay()+".json",existing=await findFile(name,parent);assertAuthEpoch(epoch);
       if(existing)return;
-      await createCompleteCloudFile(name,obj);assertAuthEpoch(epoch);await pruneSnapshots();
+      await createCompleteCloudFile(name,obj,parent);assertAuthEpoch(epoch);await pruneSnapshots(parent);
     }catch(e){assertAuthEpoch(epoch);}
   }
 
-  async function createCompleteCloudFile(name,data){
+  // Housekeeping only touches captured, covered journals and daily snapshots.
+  // It owns its request cancellation and never holds up the data-sync lock.
+  function queueCloudMaintenance(published,bundle,epoch){
+    assertAuthEpoch(epoch);
+    maintenancePending={published,bundle,epoch};
+    if(maintenanceRun)return;
+    const run={epoch,controller:new AbortController()};maintenanceRun=run;
+    (async()=>{
+      try{
+        while(maintenancePending&&maintenanceRun===run){
+          const job=maintenancePending;maintenancePending=null;
+          assertAuthEpoch(job.epoch);
+          try{
+            await pruneOwnCloudJournals(job.published,job.bundle,run.controller);assertAuthEpoch(job.epoch);
+            await maybeSnapshot(job.published.data,run.controller);assertAuthEpoch(job.epoch);
+          }catch(error){
+            if(job.epoch!==authEpoch||run.controller.signal.aborted)break;
+            // Optional housekeeping can be tried after a later verified upload.
+          }
+        }
+      }finally{if(maintenanceRun===run)maintenanceRun=null;}
+    })().catch(()=>{});
+  }
+
+  async function createCompleteCloudFile(name,data,parent){
     const epoch=authEpoch,boundary="property_complete_"+crypto.randomUUID().replaceAll("-","");
     const metadata={name,mimeType:"application/json",parents:["appDataFolder"]};
     const body="--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(metadata)+
       "\r\n--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(data)+"\r\n--"+boundary+"--\r\n";
     const response=await dfetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,version",{
-      method:"POST",headers:{"Content-Type":"multipart/related; boundary="+boundary},body});
+      method:"POST",headers:{"Content-Type":"multipart/related; boundary="+boundary},body},parent);
     const file=await response.json();assertAuthEpoch(epoch);if(!file.id||!file.version)throw new Error("無法確認雲端檔案已儲存");return file;
   }
   async function updateLegacyProjection(main,bundle){
@@ -7660,6 +7691,10 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     syncFailCount = 0; retryMs = 5000;
   }
   function bumpSyncFail(){syncFailCount++;return false;}
+  function deferEditingSync(){
+    clearTimeout(pushTimer);if(!syncConnected||needReauth)return;
+    pushTimer=setTimeout(()=>syncNow(),2000);
+  }
   function scheduleSyncRetry(){
     clearTimeout(pushTimer);if(!syncConnected||needReauth)return;
     pushTimer=setTimeout(()=>syncNow(),retryMs);retryMs=Math.min(retryMs*2,60000);
@@ -7713,7 +7748,7 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     finally{if(preparingSync===preparation)preparingSync=false;}
     const ack=loadCloudAck();
     if(background&&!dirty&&ack&&Date.now()-ack.at<POLL_MS-1000&&syncFailCount===0){refreshLed();return {ok:true,skipped:true};}
-    if(window.isTableBusy?.()){scheduleSyncRetry();return {ok:false,reason:"busy"};}
+    if(window.isTableBusy?.()){deferEditingSync();return {ok:false,reason:"busy"};}
     const thisRun=++syncGen,runAbort=new AbortController();syncAbort=runAbort;inFlight=true;
     clearTimeout(pushTimer);pushTimer=null;syncActivity=dirty;
     if(syncActivity)setStatus("同步中…","busy");else refreshLed();
@@ -7755,19 +7790,15 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
       if(complete){
         syncActivity=false;resetSyncSuccess();needReauth=false;
         setStatus(dirty?"仍有變更等待同步":"已同步",dirty?"pending":"ok");
-        // Only captured, covered records owned by this writer can be retired.
-        if(lastPublished){
-          await pruneOwnCloudJournals(lastPublished,cleanupBundle);guard();
-          await maybeSnapshot(lastPublished.data);guard();
-        }
+        if(lastPublished)queueCloudMaintenance(lastPublished,cleanupBundle,epoch);
         setStatus(dirty?"仍有變更等待同步":"已同步",dirty?"pending":"ok");
         localStorage.setItem("property_app_lastsync_v1",String(Date.now()));window.renderLastSync();
-        if(dirty)scheduleSyncRetry();
+        if(dirty)window.scheduleSync();
       }else{dirty=true;bumpSyncFail();setStatus("資料正在合併，稍後繼續同步","warn");scheduleSyncRetry();}
     }catch(e){
       if(epoch!==authEpoch||thisRun!==syncGen||e?.code==="sync_cancelled")return {ok:false,reason:"cancelled"};
       dirty=true;
-      if(e?.message==="editing_busy"){setStatus("編輯中，完成後同步","pending");scheduleSyncRetry();}
+      if(e?.message==="editing_busy"){setStatus("編輯中，完成後同步","pending");deferEditingSync();}
       else if(isSyncAuthError(e)){markNeedReauth();}
       else{bumpSyncFail();setStatus(isAbortError(e)?"同步逾時，稍後重試":(e.message||"同步失敗")+"，稍後重試","warn");scheduleSyncRetry();}
       complete=false;
