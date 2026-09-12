@@ -1,5 +1,5 @@
-/* 物件總覽 2026.09.07G：成功載入完整新版後才啟用，離線保留正常頁面。 */
-const VERSION="20260907G";
+/* 物件總覽 2026.09.12A：成功載入完整新版後才啟用，離線保留正常頁面。 */
+const VERSION="20260912A";
 const SCOPE=new URL(self.registration.scope);
 const PREFIX="property-app-shell:"+encodeURIComponent(SCOPE.pathname)+":";
 const CACHE=PREFIX+VERSION;
@@ -39,4 +39,3 @@ self.addEventListener("fetch",e=>{
    {status:503,headers:{"Content-Type":"text/plain; charset=utf-8"}});
  })());
 });
-
