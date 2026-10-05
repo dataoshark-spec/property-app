@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261005C">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261005C">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261005F">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261005F">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261005C"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261005C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261005F"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261005F"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1215,8 +1215,11 @@
   /* ===== link paste popover ===== */
   .linkpop{position:fixed;z-index:200;display:none;width:340px;max-width:calc(100vw - 24px);background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:0 16px 40px rgba(22,34,42,.22);padding:13px;}
   .linkpop.show{display:block;}
-  .lp-head{display:flex;align-items:center;gap:7px;font-size:.84rem;font-weight:700;color:var(--ink);margin-bottom:9px;}
-  .lp-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);}
+  .lp-head{display:flex;align-items:center;gap:8px;font-size:15px;line-height:20px;font-weight:700;color:var(--ink);margin-bottom:9px;}
+  .lp-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:none;border-radius:6px;background:var(--accent-tint);color:var(--accent-deep);}
+  .lp-icon svg{width:14px;height:14px;}
+  .lp-name{font-size:16px;font-weight:700;color:var(--ink);white-space:nowrap;}
+  .lp-kind{font-size:12px;font-weight:400;color:var(--ink-soft);white-space:nowrap;}
   .lp-input{width:100%;font-family:inherit;font-size:.95rem;color:var(--ink);background:var(--surface-1);border:1px solid var(--line);border-radius:9px;padding:10px 11px;outline:none;}
   .lp-input:focus{border-color:var(--accent);background:var(--card);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
   .lp-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px;flex-wrap:wrap;}
@@ -1227,7 +1230,7 @@
   .lp-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
   .lp-btn.primary:hover{background:var(--accent-deep);}
   .lp-btn.disabled,.lp-btn:disabled{opacity:.4;pointer-events:none;}
-  .lp-hint{font-size:.74rem;color:var(--text-faint);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .lp-hint{font-size:14px;line-height:18px;font-weight:600;color:var(--accent-deep);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   /* ===== table: top mode toolbar (編輯/正常) ===== */
 
   /* ===== table: custom category cell ===== */
@@ -1620,7 +1623,7 @@
 
 <!-- ===== Link paste popover (table view) ===== -->
 <div class="linkpop" id="linkpop">
-  <div class="lp-head"><span class="lp-dot" id="lpDot"></span><span id="lpLabel">連結</span></div>
+  <div class="lp-head"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><span class="lp-name" id="lpLabel">連結</span><span class="lp-kind" id="lpKind" hidden>連結</span></div>
   <input class="lp-input" id="lpInput" type="url" placeholder="貼上網址（Ctrl+V）…" spellcheck="false" autocomplete="off">
   <div class="lp-actions">
     <div class="lp-left">
@@ -1637,7 +1640,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.10.05C：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.10.05F：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2073,7 +2076,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.10.05C";
+const APP_VERSION = "2026.10.05F";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -3742,22 +3745,21 @@ function addTableRow(){
 const lpop = document.getElementById("linkpop");
 const lpInput = document.getElementById("lpInput");
 const lpLabel = document.getElementById("lpLabel");
+const lpKind = document.getElementById("lpKind");
+function setLinkTitle(name){ lpLabel.textContent = name || "連結"; lpKind.hidden = !name; }
 const lpCaseName = document.getElementById("lpCaseName");
 function setLinkCaseName(name){ const text = (name || "").trim() || "未填案名"; lpCaseName.textContent = text; lpCaseName.title = text; }
-const lpDot = document.getElementById("lpDot");
 const lpOpenBtn = document.getElementById("lpOpen");
 const lpCopyBtn = document.getElementById("lpCopy");
 const CHIP_FIELD = { "591":"url591", "樂居":"urlLeju", "永慶":"urlI" };
-const CHIP_COLOR = { "591":"#2C6FB0", "樂居":"#C6553F", "永慶":"#0F7A5F" };
 let lpChip = null, lpNeed = null;   // lpNeed:備註欄「連結」標籤的編輯目標 {chip, ed}
 function lpRefresh(){ const empty = !lpInput.value.trim(); lpOpenBtn.classList.toggle("disabled", empty); lpCopyBtn.disabled = empty; }
 function openLinkPop(chip){
   if (lpChip && lpChip !== chip) commitLink();
   lpChip = chip;
   const label = chip.dataset.label, url = chip.dataset.url || "";
-  lpLabel.textContent = label + " 連結";
+  setLinkTitle(label);
   setLinkCaseName(tFindItem(chip)?.name);
-  lpDot.style.background = CHIP_COLOR[label] || "#0F7A5F";
   lpInput.value = url;
   const r = chip.getBoundingClientRect();
   lpop.classList.add("show");
@@ -3777,8 +3779,7 @@ function openLinkPopNeed(chip){
   lpNeed = { chip, ed };
   const row = ed?.closest(".needexp");
   setLinkCaseName(row ? items.find(x => x.id === row.dataset.for)?.name : document.getElementById("f_name").value);
-  lpLabel.textContent = "連結";
-  try { lpDot.style.background = (getComputedStyle(document.documentElement).getPropertyValue("--accent") || "#0F7A5F").trim(); } catch(_){ lpDot.style.background = "#0F7A5F"; }
+  setLinkTitle("");
   lpInput.value = chip.getAttribute("data-url") || "";
   const r = chip.getBoundingClientRect();
   lpop.classList.add("show");
