@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261007A">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261007A">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261007D">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261007D">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261007A"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261007A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261007D"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261007D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1640,7 +1640,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.10.07A：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.10.07D：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2076,7 +2076,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.10.07A";
+const APP_VERSION = "2026.10.07D";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -5234,7 +5234,12 @@ function commitNeedSeg(id, sg, val){
     // 任一段變動都重算「有/無」預覽(不再只看第 1 段,也不顯示真實內容)
     const tr = tableWrap.querySelector(`tr[data-id="${id}"]`);
     const cell = tr && tr.querySelector(".tneed");
-    if (cell){ const has = noteHasContent(it); cell.innerHTML = has ? '<span class="tneed-has">有</span>' : '<span class="tneed-ph">無</span>'; cell.removeAttribute("title"); }
+    if (cell){
+      const html = noteHasContent(it) ? '<span class="tneed-has">有</span>' : '<span class="tneed-ph">無</span>';
+      // 有／無未變時保留原 DOM，避免每次輸入切斷瀏覽器的連續復原記錄。
+      if (cell.innerHTML !== html) cell.innerHTML = html;
+      cell.removeAttribute("title");
+    }
   }
 }
 function commitNeedTitle(id, sg, val){
@@ -5341,65 +5346,100 @@ function restoreNeedRange(saved){
   } catch(_){ return false; }
 }
 function needLines(ed){ return [...ed.querySelectorAll(":scope > div")]; }
-function needOffsetInLine(line, container, offset){
-  const r = document.createRange();
-  r.selectNodeContents(line);
-  try { r.setEnd(container, offset); } catch(_){ return 0; }
-  return r.toString().length;
-}
-function needPointAtOffset(line, off){
-  const r0 = document.createRange(); r0.selectNodeContents(line);
-  const len = r0.toString().length;
-  off = Math.max(0, Math.min(off, len));
-  if (off === 0){
-    const w = document.createTreeWalker(line, NodeFilter.SHOW_TEXT, null);
-    const n = w.nextNode();
-    if (n) return { node: n, offset: 0 };
-    return { node: line, offset: 0 };
-  }
-  let pos = 0;
-  const w = document.createTreeWalker(line, NodeFilter.SHOW_TEXT, null);
-  let n;
-  while (n = w.nextNode()){
-    const t = n.textContent;
-    for (let i = 0; i < t.length; i++){
-      if (pos === off) return { node: n, offset: i };
-      pos++;
+// 格式操作前後可能由根層文字／BR 轉為 DIV；以一致的文字＋虛擬換行記住選取。
+// U+200B 只供游標定位；連結仍按標籤文字計數，不讀取或改動正式網址。
+function needSelectionMap(ed){
+  const point = (node, offset) => ({ node, offset });
+  const before = node => point(node.parentNode, Array.prototype.indexOf.call(node.parentNode.childNodes, node));
+  const after = node => { const p = before(node); return point(p.node, p.offset + 1); };
+  const isBlock = node => node.nodeType === 1 && /^(DIV|P)$/.test(node.tagName);
+  function walk(node, block){
+    if (node.nodeType === 3){
+      const out = [], text = node.data;
+      for (let i = 0; i < text.length; i++){
+        if (text[i] === "\u200B") continue;
+        const begin = i;
+        if (text[i] === "\r" && text[i + 1] === "\n") i++;
+        out.push({ ch: /[\r\n]/.test(text[begin]) ? "\n" : text[begin], before: point(node, begin), after: point(node, i + 1) });
+      }
+      return out;
     }
-    if (pos === off) return { node: n, offset: t.length };
+    if (node.nodeType !== 1) return [];
+    if (node.matches(".need-link-chip,.need-link")){
+      const text = node.textContent.replace(/\u200B/g, ""), out = [];
+      // 原生選取以標籤為單位；邊界始終放在標籤外，避免進入 contenteditable=false。
+      for (let i = 0; i < text.length; i++) out.push({ ch: text[i], before: before(node), after: after(node) });
+      return out;
+    }
+    if (node.tagName === "BR") return [{ ch: "\n", br: true, before: before(node), after: after(node) }];
+    const out = [];
+    let previous = null, previousBlock = false;
+    for (const child of node.childNodes){
+      const childBlock = isBlock(child), part = walk(child, childBlock);
+      if (!part.length && !childBlock) continue;
+      if (previous && (previousBlock || childBlock)){
+        // 根層 A<br><div>B</div> 的 BR 已提供邊界；相鄰 DIV 即使是空行仍須留一個換行。
+        if (previousBlock || !out.length || out[out.length - 1].ch !== "\n"){
+          out.push({
+            ch: "\n",
+            before: out.length ? out[out.length - 1].after : point(previous, previous.childNodes.length),
+            after: part.length ? part[0].before : point(child, 0)
+          });
+        }
+      }
+      out.push(...part);
+      previous = child;
+      previousBlock = childBlock;
+    }
+    // 最後一個 BR 是瀏覽器的空行／行尾佔位；兩個 BR 則仍保留一次真正換行。
+    if (block && out.length && out[out.length - 1].br) out.pop();
+    return out;
   }
-  return { node: r0.endContainer, offset: r0.endOffset };
+  return { atoms: walk(ed, true), start: point(ed, 0), end: point(ed, ed.childNodes.length) };
+}
+function needSelectionOffset(map, container, offset){
+  const at = document.createRange(); at.setStart(container, offset); at.collapse(true);
+  const probe = document.createRange();
+  const compare = p => { probe.setStart(p.node, p.offset); probe.collapse(true); return at.compareBoundaryPoints(Range.START_TO_START, probe); };
+  for (let i = 0; i < map.atoms.length; i++){
+    const atom = map.atoms[i];
+    if (compare(atom.before) <= 0) return i;
+    if (compare(atom.after) < 0) return i + 1;
+  }
+  return map.atoms.length;
+}
+function needSelectionPoint(map, offset, isEnd){
+  offset = Math.max(0, Math.min(offset, map.atoms.length));
+  if (isEnd) return offset ? map.atoms[offset - 1].after : map.start;
+  return offset < map.atoms.length ? map.atoms[offset].before : map.end;
 }
 function saveNeedBookmark(ed, rg){
-  const sL = lineDivOf(rg.startContainer, ed, rg.startOffset, false);
-  const eL = lineDivOf(rg.endContainer, ed, rg.endOffset, true);
-  if (!sL || !eL) return null;
-  const lines = needLines(ed);
-  const si = lines.indexOf(sL), ei = lines.indexOf(eL);
-  if (si < 0 || ei < 0) return null;
-  return {
-    si, ei,
-    so: needOffsetInLine(sL, rg.startContainer, rg.startOffset),
-    eo: needOffsetInLine(eL, rg.endContainer, rg.endOffset)
-  };
+  if (!ed || !rg || !ed.contains(rg.startContainer) || !ed.contains(rg.endContainer)) return null;
+  try {
+    const map = needSelectionMap(ed), sel = window.getSelection();
+    return {
+      so: needSelectionOffset(map, rg.startContainer, rg.startOffset),
+      eo: needSelectionOffset(map, rg.endContainer, rg.endOffset),
+      backward: !!(sel && !sel.isCollapsed && sel.anchorNode === rg.endContainer && sel.anchorOffset === rg.endOffset)
+    };
+  } catch(_){ return null; }
 }
 function restoreNeedBookmark(ed, bm){
-  if (!bm) return false;
-  const lines = needLines(ed);
-  const sL = lines[bm.si], eL = lines[bm.ei];
-  if (!sL || !eL) return false;
-  const start = needPointAtOffset(sL, bm.so);
-  const end = needPointAtOffset(eL, bm.eo);
-  if (!start || !end) return false;
+  if (!ed || !bm) return false;
   try {
-    const sel = window.getSelection(); sel.removeAllRanges();
-    const r = document.createRange();
-    r.setStart(start.node, start.offset);
-    r.setEnd(end.node, end.offset);
-    sel.addRange(r);
+    const map = needSelectionMap(ed);
+    const start = needSelectionPoint(map, bm.so, false), end = needSelectionPoint(map, bm.eo, true);
+    const sel = window.getSelection(), rg = document.createRange();
+    rg.setStart(start.node, start.offset); rg.setEnd(end.node, end.offset);
+    sel.removeAllRanges(); sel.addRange(rg);
+    if (bm.backward && !rg.collapsed){
+      if (typeof sel.setBaseAndExtent === "function") sel.setBaseAndExtent(end.node, end.offset, start.node, start.offset);
+      else if (typeof sel.extend === "function"){ sel.collapse(end.node, end.offset); sel.extend(start.node, start.offset); }
+    }
     return true;
   } catch(_){ return false; }
 }
+
 function reselectAfterNeedOp(ed, bookmark, pick){
   if (restoreNeedBookmark(ed, bookmark)) return true;
   return reselectNeedPick(pick, null);
@@ -5487,6 +5527,25 @@ function expandNeedSoftBreaks(ed){
   });
 }
 // 刪線/標題操作後清掉空連結標籤殼與空的 <s>,避免兩顆連結中間出現綠色空泡
+// 新空欄可能直接含文字節點；格式操作拆出 span 後仍須留在原本同一行。
+function normalizeNeedInlineRoot(ed){
+  let line = null;
+  const groups = [];
+  for (const node of [...ed.childNodes]){
+    if (node.nodeType === 1 && /^(DIV|P)$/.test(node.tagName)){ line = null; continue; }
+    if (!line){ line = document.createElement("div"); ed.insertBefore(line, node); groups.push(line); }
+    line.appendChild(node);
+  }
+  for (const group of groups){
+    const brs = [...group.children].filter(node => node.tagName === "BR");
+    if (brs.length > 1 && needLineOnlyBr(group)){
+      for (const br of brs){ const blank = document.createElement("div"); blank.appendChild(br); group.before(blank); }
+      group.remove(); continue;
+    }
+    const last = group.lastChild;
+    if (last && last.nodeType === 1 && last.tagName === "BR" && !needLineOnlyBr(group)) last.remove();
+  }
+}
 function cleanupNeedEd(ed){
   if (!ed) return;
   expandNeedSoftBreaks(ed);   // 先拆軟換行,再清空殼
@@ -5548,7 +5607,10 @@ function rangeFullyMarked(rg, sel){
   let n, seen = false;
   while (n = walker.nextNode()){
     if (!rg.intersectsNode(n)) continue;
-    if (!n.textContent.replace(/[\u200B\s]/g,"")) continue;        // 只看選取內、非空白的文字(零寬錨點不算)
+    const part = document.createRange(); part.selectNodeContents(n);
+    if (rg.compareBoundaryPoints(Range.START_TO_START, part) > 0) part.setStart(rg.startContainer, rg.startOffset);
+    if (rg.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(rg.endContainer, rg.endOffset);
+    if (!part.toString().replace(/[\u200B\s]/g,"")) continue;        // 只判斷實際選取的字，忽略空白與游標錨點。
     seen = true;
     if (!(n.parentElement && n.parentElement.closest(sel))) return false;   // 有一段不在標記內 → 非「整段已標記」
   }
@@ -5720,11 +5782,15 @@ function commitNeedFormatChange(scope,ed,value){
 function toggleNeedStrike(exp){
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount || sel.isCollapsed){ toast("先選取要加刪除線的文字"); return; }
-  const rg = sel.getRangeAt(0);
+  let rg = sel.getRangeAt(0);
   const ed = needFormatEditor(exp,rg);
   if (!ed || !exp.contains(ed)){ toast("先選取要加刪除線的文字"); return; }
-  const before = editToNeed(ed);
   const bookmark = saveNeedBookmark(ed, rg);
+  if (!bookmark) return;
+  normalizeNeedInlineRoot(ed);
+  if (!restoreNeedBookmark(ed, bookmark)) return;
+  rg = sel.getRangeAt(0);
+  const before = editToNeed(ed);
   const saved = saveNeedRange(rg);
   let pick = null;
   if (rangeFullyMarked(rg, "s,strike,.need-del")){
@@ -5736,6 +5802,7 @@ function toggleNeedStrike(exp){
     const sel2 = window.getSelection();
     if (sel2 && sel2.rangeCount) wrapRangeByLine(ed, sel2.getRangeAt(0), wrapStrikeRange, saved);
   }
+  normalizeNeedInlineRoot(ed);
   cleanupNeedEd(ed);
   const after = editToNeed(ed);
   if (after !== before){
@@ -5773,11 +5840,15 @@ function wrapHeadingRange(rg){
 function toggleNeedHeading(exp){
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount || sel.isCollapsed){ toast("先選取要設為標題的文字"); return; }
-  const rg = sel.getRangeAt(0);
+  let rg = sel.getRangeAt(0);
   const ed = needFormatEditor(exp,rg);
   if (!ed || !exp.contains(ed)){ toast("先選取要設為標題的文字"); return; }
-  const before = editToNeed(ed);
   const bookmark = saveNeedBookmark(ed, rg);
+  if (!bookmark) return;
+  normalizeNeedInlineRoot(ed);
+  if (!restoreNeedBookmark(ed, bookmark)) return;
+  rg = sel.getRangeAt(0);
+  const before = editToNeed(ed);
   const saved = saveNeedRange(rg);
   let pick = null;
   if (rangeFullyMarked(rg, "span.need-h")){
@@ -5788,6 +5859,7 @@ function toggleNeedHeading(exp){
     const sel2 = window.getSelection();
     if (sel2 && sel2.rangeCount) wrapRangeByLine(ed, sel2.getRangeAt(0), wrapHeadingRange, saved);
   }
+  normalizeNeedInlineRoot(ed);
   cleanupNeedEd(ed);
   const after = editToNeed(ed);
   if (after !== before){
@@ -6129,7 +6201,8 @@ function prepareNeedHeadingInput(ed, lineBreak, afterBreak){
   // 保留游標所在的刪線；標題內換行時，原有後半段仍保留標題。
   const rest = tail.extractContents();
   const next = heading.nextSibling;
-  const anchor = document.createTextNode("\u200B");
+  // 原生換行兩側各留一個錨點，復原／重做後游標仍停在正確行。
+  const anchor = document.createTextNode(lineBreak ? "\u200B\u200B" : "\u200B");
   needHeadingAnchors.add(anchor);
   heading.parentNode.insertBefore(wrapAnchor(anchor), next);
   if (hasContent(rest)){
@@ -6151,23 +6224,124 @@ function skipNeedHeadingAnchor(ed){
     node.deleteData(0, offset);
   }
 }
+// 原生刪除後重設同一游標的待輸入樣式，不要求整行刪空，也不重建內容。
+function resetNeedTypingAfterDelete(ed){
+  const sel = window.getSelection();
+  if (!ed || !sel || !sel.rangeCount || !sel.isCollapsed) return;
+  const caret = sel.getRangeAt(0);
+  if (!ed.contains(caret.startContainer)) return;
+  const el = caret.startContainer.nodeType === 1 ? caret.startContainer : caret.startContainer.parentElement;
+  if (el && el.closest("span.need-h, .nh")) return;
+  const saved = caret.cloneRange();
+  sel.removeAllRanges(); sel.addRange(saved);
+}
+
+// 只覆寫完整標題時切回普通字；任何標題仍有未選文字，保留原本的局部編輯行為。
+// 不先刪除選取、不重繪編輯器：保留原生的一次「取代」及其復原交易。
+const needHeadingReplacementAnchors = new WeakSet();
+function prepareNeedHeadingReplacement(ed){
+  const sel = window.getSelection();
+  if (!ed || !sel || !sel.rangeCount || sel.isCollapsed) return false;
+  const range = sel.getRangeAt(0);
+  if (!ed.contains(range.startContainer) || !ed.contains(range.endContainer)) return false;
+  // paste/compositionstart 與緊接的 beforeinput 不重複準備同一選取。
+  const alreadyPrepared = needHeadingReplacementAnchors.has(range.startContainer);
+  const useOriginalSelection = () => {
+    if (alreadyPrepared){
+      const current = saveNeedBookmark(ed, range);
+      if (current) restoreNeedBookmark(ed, current);
+    }
+    return false;
+  };
+
+  const hasContent = fragment => !!fragment.textContent.replace(/\u200B/g, "") ||
+    !!fragment.querySelector("br,.need-link-chip,.need-link,img");
+  const touched = [];
+  for (const heading of ed.querySelectorAll("span.need-h")){
+    const outer = heading.parentElement.closest("span.need-h");
+    if ((outer && ed.contains(outer)) || !range.intersectsNode(heading)) continue;
+    const part = document.createRange(); part.selectNodeContents(heading);
+    if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) part.setStart(range.startContainer, range.startOffset);
+    if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
+    if (hasContent(part.cloneContents())) touched.push({ heading, part });
+  }
+  if (!touched.length) return useOriginalSelection();
+  for (const { heading, part } of touched){
+    const before = document.createRange(); before.selectNodeContents(heading); before.setEnd(part.startContainer, part.startOffset);
+    const after = document.createRange(); after.selectNodeContents(heading); after.setStart(part.endContainer, part.endOffset);
+    if (hasContent(before.cloneContents()) || hasContent(after.cloneContents())) return useOriginalSelection();
+  }
+
+  if (alreadyPrepared) return true;
+  const bookmark = saveNeedBookmark(ed, range);
+  if (!bookmark) return false;
+  // 邊界可能仍落在未選取的上一段標題末端；以真正選取的第一個字定位。
+  const start = needSelectionPoint(needSelectionMap(ed), bookmark.so, false);
+  const startElement = start.node.nodeType === 1 ? start.node : start.node.parentElement;
+  let heading = startElement && startElement.closest("span.need-h");
+  if (heading && !ed.contains(heading)) heading = null;
+  if (heading){
+    for (let parent = heading.parentElement; parent && parent !== ed; parent = parent.parentElement){
+      if (isHeadingEl(parent)) heading = parent;
+    }
+  }
+  const anchor = document.createTextNode("\u200B\u200B");
+  needHeadingReplacementAnchors.add(anchor);
+  needHeadingAnchors.add(anchor);
+  const ordinary = document.createElement("span");
+  ordinary.style.color = "inherit";
+  ordinary.style.fontWeight = "inherit";
+  ordinary.style.fontSize = "inherit";
+  ordinary.appendChild(anchor);
+  if (heading){
+    // 起點標題中的刪線維持獨立；退出標題不會一併取消刪線。
+    const strikes = [];
+    for (let parent = startElement; parent && parent !== heading; parent = parent.parentElement){
+      if (isStrikeEl(parent)) strikes.unshift(parent.cloneNode(false));
+    }
+    let insertion = ordinary;
+    for (let i = strikes.length - 1; i >= 0; i--){ strikes[i].appendChild(insertion); insertion = strikes[i]; }
+    heading.before(insertion);
+  } else {
+    const at = document.createRange(); at.setStart(start.node, start.offset); at.collapse(true); at.insertNode(ordinary);
+  }
+  // 插入節點可能改變端點；沿用 B 版可見字座標，網址依然是不可分割的標籤。
+  const end = needSelectionPoint(needSelectionMap(ed), bookmark.eo, true);
+  const replacement = document.createRange(); replacement.setStart(anchor, 1); replacement.setEnd(end.node, end.offset);
+  sel.removeAllRanges(); sel.addRange(replacement);
+  return true;
+}
+
 const needHeadingComposing = new WeakSet();
+const needHeadingCompositionInput = new WeakSet();
 const needHeadingBreaks = new WeakSet();
 document.addEventListener("compositionstart", e => {
   const ed = needContentEditorFrom(e.target);
   if (!ed) return;
   needHeadingBreaks.delete(ed);
+  needHeadingCompositionInput.delete(ed);
   prepareNeedHeadingInput(ed, false);
   needHeadingComposing.add(ed);
 }, true);
 document.addEventListener("compositionend", e => {
   const ed = needContentEditorFrom(e.target);
-  if (ed) needHeadingComposing.delete(ed);
+  if (ed){ needHeadingComposing.delete(ed); needHeadingCompositionInput.delete(ed); }
 }, true);
 document.addEventListener("beforeinput", e => {
   const ed = needContentEditorFrom(e.target);
-  if (!ed || e.isComposing || needHeadingComposing.has(ed)) return;
+  if (!ed) return;
+  // 與客戶總覽一致：第一次真正輸入組字內容才準備取代，空取消不改選取。
+  if (e.inputType === "insertCompositionText"){
+    if (e.data && !needHeadingCompositionInput.has(ed)){
+      needHeadingCompositionInput.add(ed);
+      prepareNeedHeadingReplacement(ed);
+      prepareNeedHeadingInput(ed, false);
+    }
+    return;
+  }
+  if (e.isComposing || needHeadingComposing.has(ed)) return;
   if (e.inputType === "deleteContentBackward") skipNeedHeadingAnchor(ed);
+  if (e.inputType === "insertText" || e.inputType === "insertReplacementText") prepareNeedHeadingReplacement(ed);
   if (!["insertText", "insertParagraph", "insertLineBreak"].includes(e.inputType)) return;
   if (e.getTargetRanges && [...e.getTargetRanges()].some(r => !r.collapsed)) return;
   const lineBreak = e.inputType === "insertParagraph" || e.inputType === "insertLineBreak";
@@ -6176,7 +6350,9 @@ document.addEventListener("beforeinput", e => {
 }, true);
 document.addEventListener("input", e => {
   const ed = needContentEditorFrom(e.target);
-  if (!ed || !needHeadingBreaks.has(ed)) return;
+  if (!ed || e.isComposing || needHeadingComposing.has(ed)) return;
+  if (e.inputType && e.inputType.startsWith("delete")) resetNeedTypingAfterDelete(ed);
+  if (!needHeadingBreaks.has(ed)) return;
   needHeadingBreaks.delete(ed);
   if (!e.isComposing && (e.inputType === "insertParagraph" || e.inputType === "insertLineBreak")) prepareNeedHeadingInput(ed, false, true);
 }, true);
@@ -6193,7 +6369,7 @@ document.addEventListener("keydown", e => {
 }, true);
 document.addEventListener("paste", e => {
   const ed = needContentEditorFrom(e.target);
-  if (ed && !needHeadingComposing.has(ed)) prepareNeedHeadingInput(ed, false);
+  if (ed && !needHeadingComposing.has(ed)){ prepareNeedHeadingReplacement(ed); prepareNeedHeadingInput(ed, false); }
 }, true);
 
 // 邊打邊轉:保留 ~、行首「# 」、正在打的 http(s):// 網址
