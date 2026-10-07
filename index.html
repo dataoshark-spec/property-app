@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261005G">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261005G">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261007A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261007A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261005G"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261005G"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261007A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261007A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1640,7 +1640,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.10.05G：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.10.07A：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2076,7 +2076,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.10.05G";
+const APP_VERSION = "2026.10.07A";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -6085,6 +6085,117 @@ function syncNeedEdFromStorage(ed, val){
   const htmlFn = ed.classList.contains("fneed-ed") ? needToFormHTML : needToEditHTML;
   ed.innerHTML = htmlFn(val) || "<div><br></div>";
 }
+// 標題是選字格式：尾端追加及換行退出標題，內部改字保留格式。
+// 僅準備輸入位置；文字輸入、復原與儲存仍交給原本的編輯流程。
+const needHeadingAnchors = new WeakSet();
+function prepareNeedHeadingInput(ed, lineBreak, afterBreak){
+  const sel = window.getSelection();
+  if (!ed || !sel || !sel.rangeCount || !sel.isCollapsed) return;
+  const rg = sel.getRangeAt(0);
+  if (!ed.contains(rg.startContainer)) return;
+  const el = rg.startContainer.nodeType === 1 ? rg.startContainer : rg.startContainer.parentElement;
+  let heading = el && el.closest("span.need-h");
+  if (!heading || !ed.contains(heading)) return;
+  // 取消任何重疊的標題祖先，但不取消外層刪線。
+  for (let p = heading.parentElement; p && p !== ed; p = p.parentElement){
+    if (isHeadingEl(p)) heading = p;
+  }
+  const hasContent = frag => !!(frag.textContent.replace(/\u200B/g, "") || frag.querySelector("br,.need-link-chip,.need-link,img"));
+  const marks = [];
+  for (let p = el; p && p !== heading; p = p.parentElement){
+    if (isStrikeEl(p)) marks.unshift(p.cloneNode(false));
+  }
+  const wrapAnchor = anchor => {
+    let insertion = anchor;
+    for (let i = marks.length - 1; i >= 0; i--){ marks[i].appendChild(insertion); insertion = marks[i]; }
+    return insertion;
+  };
+  if (afterBreak){
+    const prefix = document.createRange();
+    prefix.selectNodeContents(heading); prefix.setEnd(rg.startContainer, rg.startOffset);
+    if (hasContent(prefix.cloneContents())) return;
+    const anchor = document.createTextNode("\u200B");
+    needHeadingAnchors.add(anchor);
+    heading.parentNode.insertBefore(wrapAnchor(anchor), heading);
+    const caret = document.createRange(); caret.setStart(anchor, 1); caret.collapse(true);
+    sel.removeAllRanges(); sel.addRange(caret);
+    return true;
+  }
+  const tail = document.createRange();
+  tail.selectNodeContents(heading);
+  tail.setStart(rg.startContainer, rg.startOffset);
+  if (!lineBreak && hasContent(tail.cloneContents())) return;
+
+  // 保留游標所在的刪線；標題內換行時，原有後半段仍保留標題。
+  const rest = tail.extractContents();
+  const next = heading.nextSibling;
+  const anchor = document.createTextNode("\u200B");
+  needHeadingAnchors.add(anchor);
+  heading.parentNode.insertBefore(wrapAnchor(anchor), next);
+  if (hasContent(rest)){
+    const right = heading.cloneNode(false);
+    right.appendChild(rest);
+    heading.parentNode.insertBefore(right, next);
+  }
+  const caret = document.createRange();
+  caret.setStart(anchor, 1); caret.collapse(true);
+  sel.removeAllRanges(); sel.addRange(caret);
+  return true;
+}
+// Backspace 不應為了本次建立的游標錨點多按一次；不碰網址自己的錨點。
+function skipNeedHeadingAnchor(ed){
+  const sel = window.getSelection();
+  if (!ed || !sel || !sel.rangeCount || !sel.isCollapsed) return;
+  const rg = sel.getRangeAt(0), node = rg.startContainer, offset = rg.startOffset;
+  if (ed.contains(node) && needHeadingAnchors.has(node) && offset > 0 && /^\u200B+$/.test(node.data.slice(0, offset))){
+    node.deleteData(0, offset);
+  }
+}
+const needHeadingComposing = new WeakSet();
+const needHeadingBreaks = new WeakSet();
+document.addEventListener("compositionstart", e => {
+  const ed = needContentEditorFrom(e.target);
+  if (!ed) return;
+  needHeadingBreaks.delete(ed);
+  prepareNeedHeadingInput(ed, false);
+  needHeadingComposing.add(ed);
+}, true);
+document.addEventListener("compositionend", e => {
+  const ed = needContentEditorFrom(e.target);
+  if (ed) needHeadingComposing.delete(ed);
+}, true);
+document.addEventListener("beforeinput", e => {
+  const ed = needContentEditorFrom(e.target);
+  if (!ed || e.isComposing || needHeadingComposing.has(ed)) return;
+  if (e.inputType === "deleteContentBackward") skipNeedHeadingAnchor(ed);
+  if (!["insertText", "insertParagraph", "insertLineBreak"].includes(e.inputType)) return;
+  if (e.getTargetRanges && [...e.getTargetRanges()].some(r => !r.collapsed)) return;
+  const lineBreak = e.inputType === "insertParagraph" || e.inputType === "insertLineBreak";
+  if (!lineBreak) needHeadingBreaks.delete(ed);
+  if (prepareNeedHeadingInput(ed, lineBreak) && lineBreak) needHeadingBreaks.add(ed);
+}, true);
+document.addEventListener("input", e => {
+  const ed = needContentEditorFrom(e.target);
+  if (!ed || !needHeadingBreaks.has(ed)) return;
+  needHeadingBreaks.delete(ed);
+  if (!e.isComposing && (e.inputType === "insertParagraph" || e.inputType === "insertLineBreak")) prepareNeedHeadingInput(ed, false, true);
+}, true);
+document.addEventListener("blur", e => {
+  const ed = needContentEditorFrom(e.target);
+  if (ed) needHeadingBreaks.delete(ed);
+}, true);
+document.addEventListener("keydown", e => {
+  if (e.isComposing || e.keyCode === 229) return;
+  const ed = needContentEditorFrom(e.target);
+  if (e.key === "Backspace" && ed && !needHeadingComposing.has(ed)) skipNeedHeadingAnchor(ed);
+  if (e.key !== "Enter") return;
+  if (ed && !needHeadingComposing.has(ed) && prepareNeedHeadingInput(ed, true)) needHeadingBreaks.add(ed);
+}, true);
+document.addEventListener("paste", e => {
+  const ed = needContentEditorFrom(e.target);
+  if (ed && !needHeadingComposing.has(ed)) prepareNeedHeadingInput(ed, false);
+}, true);
+
 // 邊打邊轉:保留 ~、行首「# 」、正在打的 http(s):// 網址
 function needKeepAsciiPunct(ch, before){
   if (ch === "~") return true;
@@ -6328,13 +6439,33 @@ function needClipboardHandler(e, isCut){
   if (!ed) return;
   const box = document.createElement("div");
   box.appendChild(sel.getRangeAt(0).cloneContents());
-  if (!box.querySelector(".need-link-chip, .need-link")) return;   // 選取裡沒有連結:交給系統預設,行為不變
-  const txt = fragToNeedText(box);
+  const hasLink = !!box.querySelector(".need-link-chip, .need-link");
+  if (!hasLink && !box.textContent.includes("\u200B")) return;
+  // 純文字中的標題游標錨點也不能進入剪貼簿；HTML 保留原有結構。
+  let cleanHTML = "";
+  if (!hasLink){
+    const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+    let node; while (node = walker.nextNode()) node.textContent = node.textContent.replace(/\u200B/g, "");
+    cleanHTML = box.innerHTML;
+  }
+  const txt = hasLink ? fragToNeedText(box) : sel.toString().replace(/\u200B/g, "");
   const cd = e.clipboardData || window.clipboardData;
   if (!cd || !cd.setData) return;
-  try { cd.setData("text/plain", txt); } catch(_){ return; }
+  try { cd.setData("text/plain", txt); if (cleanHTML) cd.setData("text/html", cleanHTML); } catch(_){ return; }
   e.preventDefault();
   if (isCut && ed.getAttribute("contenteditable") === "true"){
+    // 新增的純文字錨點分支沿用瀏覽器刪除交易，保留剪下後的復原。
+    if (!hasLink){
+      try {
+        if (document.execCommand("delete", false)){
+          if (ed.classList.contains("needexp-ed")){
+            const w = ed.closest(".needexp");
+            if (w) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
+          }
+          return;
+        }
+      } catch(_){}
+    }
     sel.deleteFromDocument();
     const htmlFn = ed.classList.contains("fneed-ed") ? needToFormHTML : needToEditHTML;
     ed.innerHTML = htmlFn(editToNeed(ed)) || "<div><br></div>";
