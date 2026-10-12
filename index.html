@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261007D">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261007D">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261012D">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261012D">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261007D"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261007D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261012D"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261012D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1080,7 +1080,7 @@
   /* 展開中:父列與展開區同用淡藍底,連成一塊聚焦區;用 !important 鎖定,任何 hover 都不會蓋掉 */
   .ptable tbody tr.exp-open td{background:var(--accent-tint) !important;border-bottom:none;}
   /* 已展開的那一列:欄位與下拉先鎖定,點一下=收合;垃圾桶保留操作並顯示刪除確認。 */
-  tr.exp-open .tcell[contenteditable],tr.exp-open .tcat-trigger,tr.exp-open .tchip,tr.exp-open .tdue-btn,tr.exp-open .gen-btn{pointer-events:none;}   /* 展開列鎖定:到期日鈕與生成鈕;不鎖定刪除鈕 */
+  tr.exp-open .tcell[contenteditable],tr.exp-open .tcat-trigger,tr.exp-open .tdue-btn,tr.exp-open .gen-btn{pointer-events:none;}   /* 展開列鎖定:到期日鈕與生成鈕;不鎖定刪除鈕 */
   .ptable tbody tr.exp-open td:first-child{box-shadow:inset 3px 0 0 var(--accent);}
   tr.needexp > td{padding:0;height:auto;background:var(--accent-tint) !important;border-bottom:1px solid var(--accent-tint-bd);border-right:none;border-radius:0 0 13px 13px;box-shadow:inset 3px 0 0 var(--accent), 0 18px 26px -12px rgba(22,34,42,.24);}
   /* 編輯模式:展開區(父列+展開列)背景改灰、左側邊線改中性色,與正常(唯讀)淺藍一眼可辨 */
@@ -1178,6 +1178,8 @@
   .needexp-ed:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,92,168,.12);}
   .needexp-ed div{min-height:1.25em;}
   .needexp-ed .nh{font-weight:800;font-size:1.06em;color:var(--accent-deep);}
+  /* 原生貼上可能產生固定字級 span；一般文字仍跟隨每欄字級，保留標題比例與原生復原。 */
+  .needexp-ed span[style]:not(.need-h),.fneed-ed span[style]:not(.need-h){font-size:inherit!important;}
   /* ===== 編輯表單:備註三段(富文本,與展開列同套但表單版) ===== */
   .f-need3{display:flex;flex-direction:column;gap:16px;}
   .fneed-seg{display:flex;flex-direction:column;gap:5px;}
@@ -1640,7 +1642,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.10.07D：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.10.12D：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2076,7 +2078,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.10.07D";
+const APP_VERSION = "2026.10.12D";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2192,7 +2194,12 @@ function buildFileName(d){
   const name = String(d.name == null ? "" : d.name).replace(/[／\/＊*＠@]/g, "");   // 案名去符號
   const price = d.price ? String(d.price).trim() : "";   // 空值或 0 皆視為未填,該段略過
   const agent = String(d.agent == null ? "" : d.agent).trim();
-  return [due, dist, name, price + agent].filter(x => x !== "").join("-");
+  let filename = [due, dist, name, price + agent].filter(x => x !== "").join("-");
+  // 只處理生成結果；原欄位不變，排序也繼續使用同一份生成名稱。
+  filename = filename.replace(/[<>:"/\\|?*]/g, ch => String.fromCharCode(ch.charCodeAt(0) + 0xFEE0)).replace(/[\x00-\x1F]/g, "");
+  filename = filename.replace(/[ .]+$/g, tail => tail.replace(/ /g, "　").replace(/\./g, "．"));
+  if (/^(?:CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\.|$)/i.test(filename)) filename = "_" + filename;
+  return filename;
 }
 function nameSegmentsHTML(name){
   const s = String(name == null ? "" : name);
@@ -2547,7 +2554,7 @@ const colFilter = { cat:null, layout:null, floor:null, agent:null, store:null };
 const fltP = { lo:null, hi:null };   // 售價範圍(比照客戶總覽「預算」)
 let fltField = null;
 const FLT_NAME = { cat:"類別", layout:"格局", floor:"樓層", price:"售價（萬）", agent:"承辦", store:"門市" };
-const numOrNull = v => { if (v == null) return null; v = String(v).replace(/[^\d.]/g,""); if (!v) return null; const n = parseFloat(v); return isNaN(n) ? null : n; };
+const numOrNull = v => { try { const n = PropertyCore.price(v); return n === "" ? null : n; } catch(_){ return NaN; } };
 function anyColFilter(){
   if (fltP.lo != null || fltP.hi != null) return true;
   return Object.keys(colFilter).some(k => colFilter[k] && colFilter[k].size);
@@ -2637,7 +2644,21 @@ function renderFltBody(){
     body.innerHTML = `<div class="fbud-hint">顯示售價落在此範圍內的物件(單位：萬)</div>
       <div class="fbud"><input id="fltLo" inputmode="numeric" placeholder="下限" value="${fltP.lo != null ? fltP.lo : ""}"><span class="bsep">–</span><input id="fltHi" inputmode="numeric" placeholder="上限" value="${fltP.hi != null ? fltP.hi : ""}"></div>`;
     const lo = document.getElementById("fltLo"), hi = document.getElementById("fltHi");
-    const upd = () => { fltP.lo = numOrNull(lo.value); fltP.hi = numOrNull(hi.value); saveColFilterState(); applyFilter(); };
+    const hint = body.querySelector(".fbud-hint"), defaultHint = hint.textContent;
+    hint.setAttribute("role", "status");
+    const upd = () => {
+      const nextLo = numOrNull(lo.value), nextHi = numOrNull(hi.value);
+      const badLo = Number.isNaN(nextLo), badHi = Number.isNaN(nextHi);
+      const reversed = !badLo && !badHi && nextLo != null && nextHi != null && nextLo > nextHi;
+      [[lo,badLo || reversed],[hi,badHi || reversed]].forEach(([input,bad]) => {
+        if (bad) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
+        input.style.borderColor = bad ? "var(--danger)" : "";
+      });
+      hint.textContent = badLo || badHi ? "請輸入有效售價（例如 1288.5）；目前保留上次有效範圍。" : reversed ? "下限不可大於上限；目前保留上次有效範圍。" : defaultHint;
+      hint.style.color = badLo || badHi || reversed ? "var(--danger)" : "";
+      if (badLo || badHi || reversed) return;
+      fltP.lo = nextLo; fltP.hi = nextHi; saveColFilterState(); applyFilter();
+    };
     lo.addEventListener("input", upd); hi.addEventListener("input", upd);
     return;
   }
@@ -2902,6 +2923,7 @@ function trowHTML(d){
   `</tr>`;
 }
 function renderTable(list){
+  if ((lpChip && tableWrap.contains(lpChip)) || (lpNeed && tableWrap.contains(lpNeed.ed))) commitLink();
   const oldScroll = tableWrap.querySelector(".tbody-wrap");
   const sTop = oldScroll ? oldScroll.scrollTop : 0, sLeft = oldScroll ? oldScroll.scrollLeft : 0;
   const head = tHeadHTML();
@@ -3491,22 +3513,13 @@ tableWrap.addEventListener("paste", e => {
   e.preventDefault();
   const cd0 = e.clipboardData || window.clipboardData;
   let tx = ""; try { tx = (cd0 && cd0.getData("text/plain")) || ""; } catch(err){}
+  if (!tx) return; // 空白剪貼簿或圖片不應刪除目前選取的文字。
   if (nedTitle && !nedBody){ // 標題:純文字、去換行(標題欄不轉全形符號)
     try { document.execCommand("insertText", false, tx.replace(/[\r\n\t]+/g," ")); } catch(err){}
     return;
   }
-  // 內容:符號轉全形(網址／~~／行首# 保留);游標緊鄰「連結」標籤之後補空格
-  tx = normalizeNeedSymbols(tx);
-  if (tx && caretAfterChip(nedBody)) tx = " " + tx;
   const w = nedBody.closest(".needexp"), sg = +nedBody.dataset.seg;
-  if (tx.indexOf("\n") < 0){
-    pasteNeedInline(nedBody, tx);   // 單行:Range 直接插入(不重繪/不用 execCommand)→ 連續貼上穩定
-  } else {
-    // 多行:照原樣插入再整段重繪(多行需要拆成多個 div)
-    try { document.execCommand("insertText", false, tx); } catch(err){}
-    nedBody.innerHTML = needToEditHTML(editToNeed(nedBody)) || "<div><br></div>";
-    placeNeedCaretEnd(nedBody);
-  }
+  pasteNeedField(nedBody, tx);
   if (w) commitNeedSeg(w.dataset.for, sg, editToNeed(nedBody));
 });
 // 「連結」標籤刪除:游標緊鄰標籤時按 Backspace/Delete 整顆刪除
@@ -3514,18 +3527,10 @@ tableWrap.addEventListener("keydown", e => {
   if (e.key !== "Backspace" && e.key !== "Delete") return;
   const ed = e.target.closest && e.target.closest('.needexp-ed[contenteditable="true"]');
   if (!ed) return;
-  const sel = window.getSelection(); if (!sel || !sel.rangeCount || !sel.isCollapsed) return;
-  const rng = sel.getRangeAt(0), node = rng.startContainer, off = rng.startOffset;
-  const isChip = n => !!(n && n.nodeType === 1 && n.classList && n.classList.contains("need-link-chip"));
-  let chip = null;
-  if (e.key === "Backspace"){
-    if (node.nodeType === 1) chip = isChip(node.childNodes[off-1]) ? node.childNodes[off-1] : null;
-    else if (node.nodeType === 3){ let o = off; while (o > 0 && node.textContent[o-1] === "\u200B") o--; if (o === 0) chip = isChip(node.previousSibling) ? node.previousSibling : null; }   // 跳過 chip 後的零寬錨點,游標在 chip 後按一次 backspace 即刪 chip
-  } else {
-    if (node.nodeType === 1) chip = isChip(node.childNodes[off]) ? node.childNodes[off] : null;
-    else if (node.nodeType === 3 && off === node.textContent.length) chip = isChip(node.nextSibling) ? node.nextSibling : null;
+  if (deleteNeedAdjacentChip(ed, e)){
+    const w = ed.closest(".needexp");
+    if (w) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
   }
-  if (chip){ e.preventDefault(); const _zw = chip.nextSibling; chip.remove(); if (_zw && _zw.nodeType === 3){ _zw.textContent = _zw.textContent.replace(/^\u200B/,""); if (!_zw.textContent) _zw.remove(); } const w = ed.closest(".needexp"); if (w) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed)); }
 }, true);
 tableWrap.addEventListener("input", e => {
   const c = e.target;
@@ -3735,10 +3740,13 @@ function addTableRow(){
   if (searchEl.value){ searchEl.value = ""; }   // 清除搜尋:否則新增的空白列會被搜尋過濾掉、看不到也無法輸入
   const cat = currentCat || (cats[0] && cats[0].key) || "";
   const it = { id: uid(), name:"", cat, layout:"", floor:"", price:"", addr:"", due:"", agent:"", tel:"", store:"", note:"", note2:"", note3:"", t1:"", t2:"", t3:"", url591:null, urlLeju:null, urlI:null, updatedAt: Date.now() };
+  const filtersCleared = applyColFilters([it]).length === 0;
+  if (filtersCleared) clearAllColFilters();
   items.push(it); saveItems(); onLocalChange("data");
   applyFilter();
   const row = tableWrap.querySelector(`tr[data-id="${it.id}"]`);
   if (row){ const nc = row.querySelector('.tcell[data-field="name"]'); if (nc) tCellEdit(nc); row.scrollIntoView({behavior:"smooth", block:"nearest"}); }
+  if (filtersCleared) toast("已清除欄位篩選，請填寫新增物件");
 }
 
 // ---- link paste popover ----
@@ -3752,10 +3760,12 @@ function setLinkCaseName(name){ const text = (name || "").trim() || "未填案�
 const lpOpenBtn = document.getElementById("lpOpen");
 const lpCopyBtn = document.getElementById("lpCopy");
 const CHIP_FIELD = { "591":"url591", "樂居":"urlLeju", "永慶":"urlI" };
-let lpChip = null, lpNeed = null;   // lpNeed:備註欄「連結」標籤的編輯目標 {chip, ed}
+let lpChip = null, lpNeed = null, lpSession = 0;   // lpNeed:備註欄「連結」標籤的編輯目標 {chip, ed}
 function lpRefresh(){ const empty = !lpInput.value.trim(); lpOpenBtn.classList.toggle("disabled", empty); lpCopyBtn.disabled = empty; }
 function openLinkPop(chip){
-  if (lpChip && lpChip !== chip) commitLink();
+  if (lpNeed || (lpChip && lpChip !== chip)) commitLink();
+  lpSession++;
+  lpNeed = null;
   lpChip = chip;
   const label = chip.dataset.label, url = chip.dataset.url || "";
   setLinkTitle(label);
@@ -3775,7 +3785,9 @@ function lpOutside(e){ if (e.target.closest("#linkpop") || e.target.closest(".tc
 // 備註欄「連結」標籤(need-link-chip)的編輯面板:貼上/清除/開啟/完成。與表格膠囊 openLinkPop 共用同一個浮層,但寫回路徑不同(靠 commitNeedSeg 重新序列化該段,而非寫 item 欄位)
 function openLinkPopNeed(chip){
   if (lpChip || (lpNeed && lpNeed.chip !== chip)) commitLink();
+  lpSession++;
   const ed = chip.closest(".needexp-ed, .fneed-ed");
+  lpChip = null;
   lpNeed = { chip, ed };
   const row = ed?.closest(".needexp");
   setLinkCaseName(row ? items.find(x => x.id === row.dataset.for)?.name : document.getElementById("f_name").value);
@@ -3813,8 +3825,8 @@ function commitLink(){
   if (it){ const field = CHIP_FIELD[lpChip.dataset.label]; if (field){ const v = url || null; if (it[field] !== v){ it[field] = v; it.updatedAt = Date.now(); saveItems(); onLocalChange("data"); } } }
   closeLinkPop();
 }
-function closeLinkPop(){ document.removeEventListener("click", lpOutside); lpop.classList.remove("show"); lpChip = null; lpNeed = null; if (window.refreshLed) window.refreshLed(); }
-lpInput.addEventListener("input", lpRefresh);
+function closeLinkPop(){ lpSession++; document.removeEventListener("click", lpOutside); lpop.classList.remove("show"); lpChip = null; lpNeed = null; if (window.refreshLed) window.refreshLed(); }
+lpInput.addEventListener("input", ()=>{ lpSession++; lpRefresh(); });
 lpInput.addEventListener("keydown", e=>{
   if (e.key==="Enter"){ e.preventDefault(); commitLink(); }
   else if (e.key==="Escape"){
@@ -3823,10 +3835,16 @@ lpInput.addEventListener("keydown", e=>{
   }
 });
 document.getElementById("lpDone").addEventListener("click", commitLink);
-document.getElementById("lpClear").addEventListener("click", ()=>{ lpInput.value=""; lpRefresh(); lpInput.focus(); });
+document.getElementById("lpClear").addEventListener("click", ()=>{ lpSession++; lpInput.value=""; lpRefresh(); lpInput.focus(); });
 document.getElementById("lpPaste").addEventListener("click", ()=>{
-  if (navigator.clipboard && navigator.clipboard.readText){ navigator.clipboard.readText().then(t=>{ lpInput.value=(t||"").trim(); lpRefresh(); lpInput.focus(); }).catch(()=>lpInput.focus()); }
-  else lpInput.focus();
+  const session = ++lpSession, before = lpInput.value;
+  const current = () => session === lpSession && lpop.classList.contains("show") && lpInput.value === before;
+  if (navigator.clipboard && navigator.clipboard.readText){
+    navigator.clipboard.readText().then(t=>{
+      if (!current()) return;
+      lpInput.value=(t||"").trim(); lpRefresh(); lpInput.focus();
+    }).catch(()=>{ if (current()) lpInput.focus(); });
+  } else lpInput.focus();
 });
 lpCopyBtn.addEventListener("click", ()=>{
   const text = lpInput.value.trim(); if (!text) return;
@@ -4213,6 +4231,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && confirmBg.classList.contains("open")){ e.preventDefault(); document.getElementById("confirmOk").click(); return; }
   if (e.key === "Tab") return;   // Tab 已由 capture 階段 trapFocusKey 處理
   if (e.key !== "Escape") return;
+  if (document.getElementById("dataSafetyPanel")){ e.preventDefault(); return; }
   const ib = document.getElementById("installBar");
   if (ib && ib.classList.contains("show")){ ib.classList.remove("show"); try { localStorage.setItem("property_app_install_dismiss_v1", "1"); } catch(err){} return; }
   const isOn = (id, cls) => { const el = document.getElementById(id); return el && el.classList.contains(cls); };
@@ -4353,6 +4372,7 @@ document.addEventListener("click", e => { if (!catSel.contains(e.target)) closeC
 renderCatOptions();
 let editingId = null;
 let formBaseRec=null,formBaseResetAt=0,formConflict=false;
+let formPendingNewId=null,formPendingNewBase=null,formPendingNewSaved=false,formPendingNewAliasRaw=null;
 let formNeedFontSizes=needFontPrefs(null);
 let formNeedOrder=[1,2,3];
 function setupFormNeedFonts(d){
@@ -4383,6 +4403,7 @@ function setupFormNeedFonts(d){
 function openForm(id){
   window.applyPropertyRefresh?.(true);
   editingId = id || null;
+  formPendingNewId=null;formPendingNewBase=null;formPendingNewSaved=false;formPendingNewAliasRaw=null;
   const d = id ? items.find(x => x.id === id) : null;
   document.getElementById("modalTitle").textContent = d ? "編輯物件" : "新增物件";
   document.getElementById("modalDelete").style.display = d ? "inline-flex" : "none";
@@ -4532,7 +4553,22 @@ function buildFormRec(){
 }
 const FORM_DRAFT_KEY="property_app_form_draft_v3";
 const LEGACY_FORM_DRAFT_KEY="property_app_form_draft_v2";
-function draftKey(){return FORM_DRAFT_KEY+":"+(editingId||"new")}
+function settlePendingNewDraft(){
+ if(!formPendingNewId || formPendingNewSaved)return;
+ if(PropertyCore.local().current?.items.some(r=>r.id===formPendingNewId)){
+  formBaseRec=PropertyCore.draftValues(formPendingNewBase||formBaseRec);
+  formPendingNewSaved=true;
+ }
+}
+function clearPendingNewAlias(){
+ if(!formPendingNewId)return;
+ const key=FORM_DRAFT_KEY+":new",raw=sessionStorage.getItem(key);
+ if(raw && (raw===formPendingNewAliasRaw || JSON.parse(raw)?.pendingNewId===formPendingNewId))sessionStorage.removeItem(key);
+}
+function draftKey(){
+ settlePendingNewDraft();
+ return FORM_DRAFT_KEY+":"+(formPendingNewId&&!formPendingNewSaved?"new":(editingId||"new"));
+}
 function legacyDraftKey(){return LEGACY_FORM_DRAFT_KEY+":"+(editingId||"new")}
 function readDraftRec(){
  const r={cat:formCat,...formNeedFontSizes,noteOrder:formNeedOrder.slice()};
@@ -4544,9 +4580,12 @@ function readDraftRec(){
 function saveFormDraft(){
  if(!modalBg.classList.contains("open")||!formBaseRec)return;
  try{
-  const payload={version:3,id:editingId||null,resetAt:formBaseResetAt,base:PropertyCore.draftValues(formBaseRec),values:PropertyCore.draftValues(readDraftRec())};
-  sessionStorage.setItem(draftKey(),JSON.stringify(payload));
-  if(formConflict)sessionStorage.setItem(draftKey()+":retained",JSON.stringify(payload));
+  const key=draftKey(),pendingNew=formPendingNewId&&!formPendingNewSaved;
+  const payload={version:3,id:pendingNew?null:(editingId||null),resetAt:formBaseResetAt,base:PropertyCore.draftValues(formBaseRec),values:PropertyCore.draftValues(readDraftRec())};
+  if(pendingNew)payload.pendingNewId=formPendingNewId;
+  sessionStorage.setItem(key,JSON.stringify(payload));
+  if(formConflict)sessionStorage.setItem(key+":retained",JSON.stringify(payload));
+  if(formPendingNewSaved)clearPendingNewAlias();
  }catch(e){toast("草稿尚未保存，請先保持此視窗開啟")}
 }
 function loadFormDraft(){
@@ -4567,10 +4606,17 @@ function loadFormDraft(){
   const r=JSON.parse(raw||"null");
   if(r && r.resetAt!==formBaseResetAt){sessionStorage.setItem(draftKey()+":retained",raw);sessionStorage.removeItem(draftKey());return null;}
   if(!r||r.version!==3||r.id!==(editingId||null))return null;
-  return {base:PropertyCore.draftValues(r.base),values:PropertyCore.draftValues(r.values)};
+  const base=PropertyCore.draftValues(r.base),values=PropertyCore.draftValues(r.values);
+  if(r.pendingNewId){
+   if(editingId || typeof r.pendingNewId!=="string" || !/^[A-Za-z0-9_-]{1,160}$/.test(r.pendingNewId))return null;
+   const latest=PropertyCore.local().readLatest();
+   if(latest.items.some(item=>item.id===r.pendingNewId)){sessionStorage.removeItem(draftKey());return null;}
+   if(latest.deleted[r.pendingNewId]){sessionStorage.setItem(draftKey()+":retained",raw);sessionStorage.removeItem(draftKey());return null;}
+  }
+  return {base,values};
  }catch(e){return null}
 }
-function clearFormDraft(){try{sessionStorage.removeItem(draftKey())}catch(e){}}
+function clearFormDraft(){try{sessionStorage.removeItem(draftKey());clearPendingNewAlias()}catch(e){}}
 function showLegacyDraftNotice(){
  let notice=document.getElementById("legacyDraftNotice");
  if(!notice){
@@ -4627,6 +4673,7 @@ function applyFormDraft(d){
 })();
 function commitFormIfOpen(){ saveFormDraft(); }
 function saveForm(){
+  settlePendingNewDraft();
   const name=normalizeName(F.name.value.trim());
   if(!name){ toast("請輸入案名");F.name.focus();return; }
   let rec;
@@ -4647,7 +4694,7 @@ function saveForm(){
     items[i]={...next,updatedAt:Date.now()};
   } else items.push({...rec,id:uid(),updatedAt:Date.now()});
   if(!saveItems()) {
-    if(!isEdit) { clearFormDraft();editingId=items[items.length-1].id;document.getElementById("modalTitle").textContent="編輯物件"; }
+    if(!isEdit) { try{formPendingNewAliasRaw=sessionStorage.getItem(FORM_DRAFT_KEY+":new")}catch(e){} editingId=items[items.length-1].id;formPendingNewId=editingId;formPendingNewBase=PropertyCore.draftValues(readDraftRec());formPendingNewSaved=false;document.getElementById("modalTitle").textContent="編輯物件"; }
     saveFormDraft(); return;
   }
   clearFormDraft();closeForm();applyFilter();onLocalChange("data");
@@ -5251,6 +5298,7 @@ function commitNeedTitle(id, sg, val){
   it.updatedAt = Date.now(); saveItems(); onLocalChange("data");
 }
 function commitAllSegs(ex){
+  if (lpNeed && lpNeed.ed && ex.contains(lpNeed.ed)) commitLink();
   // 只提交可編輯段落;唯讀顯示段落(.needexp-view)不該被序列化寫回 —— 它含顯示用「連結」,序列化會把網址洗成字面「連結」
   ex.querySelectorAll(".nseg-ed:not(.needexp-view)").forEach(ed => commitNeedSeg(ex.dataset.for, +ed.dataset.seg, editToNeed(ed)));
   ex.querySelectorAll(".nseg-t[data-titleedit]").forEach(t => commitNeedTitle(ex.dataset.for, +t.dataset.seg, t.textContent));
@@ -5681,10 +5729,12 @@ function splitMarkAtRange(mk, rg, sel){
   const preFrag = preR.cloneContents(), midFrag = splitR.cloneContents(), postFrag = postR.cloneContents();
   const frag = document.createDocumentFragment();
   if (needFragHasStuff(preFrag)){ const e = mk.cloneNode(false); e.appendChild(preFrag); frag.appendChild(e); }
+  else frag.appendChild(preFrag); // 空白也屬於使用者內容，只移除空格式，不刪文字。
   midFrag.querySelectorAll(sel).forEach(el => { const p = el.parentNode; while (el.firstChild) p.insertBefore(el.firstChild, el); el.remove(); });
   const midNodes = [...midFrag.childNodes];
   midNodes.forEach(nn => frag.appendChild(nn));
   if (needFragHasStuff(postFrag)){ const e = mk.cloneNode(false); e.appendChild(postFrag); frag.appendChild(e); }
+  else frag.appendChild(postFrag);
   mk.parentNode.replaceChild(frag, mk);
   return { midStart: midNodes[0] || null, midEnd: midNodes[midNodes.length - 1] || null };
 }
@@ -5813,19 +5863,26 @@ function toggleNeedStrike(exp){
 // —— inline 標題:與刪線同一套「選取範圍」邏輯,把選取的文字包成 <span class="need-h">(序列化為 §..§)。
 //    標題與刪線各自獨立、可並存(巢狀);沒選取則提示先選。跟 toggleNeedStrike 對稱。
 function unwrapHeadingsInRange(ed, rg, reselect){
-  let hit = false, first = null, last = null;
-  [...ed.querySelectorAll("span.need-h")].forEach(el => {
-    if (!isHeadingEl(el) || !el.isConnected) return;
-    let inter = false; try { inter = rg.intersectsNode(el); } catch(_){}
+  const bookmark = saveNeedBookmark(ed, rg);
+  if (!bookmark) return false;
+  let hit = false;
+  const marks = [...ed.querySelectorAll("span.need-h")].filter(el => isHeadingEl(el) && el.isConnected);
+  const mkR = document.createRange();
+  marks.reverse().forEach(mk => {
+    // 分割會換掉端點節點；每次以可見文字位置還原，保留選取外的標題。
+    if (!mk.isConnected || !restoreNeedBookmark(ed, bookmark)) return;
+    const live = window.getSelection().getRangeAt(0);
+    let inter = false; try { inter = live.intersectsNode(mk); } catch(_){}
     if (!inter) return;
-    hit = true;
-    while (el.firstChild){ const c = el.firstChild; el.parentNode.insertBefore(c, el); if (!first) first = c; last = c; }
-    el.remove();
+    mkR.selectNodeContents(mk);
+    let startCmp = 0, endCmp = 0;
+    try { startCmp = live.compareBoundaryPoints(Range.START_TO_START, mkR); endCmp = live.compareBoundaryPoints(Range.END_TO_END, mkR); } catch(_){}
+    if (startCmp <= 0 && endCmp >= 0){
+      while (mk.firstChild) mk.parentNode.insertBefore(mk.firstChild, mk);
+      mk.remove(); hit = true;
+    } else if (splitMarkAtRange(mk, live, "span.need-h")) hit = true;
   });
-  if (reselect !== false && hit && first && last){
-    try { const sel = window.getSelection(); sel.removeAllRanges();
-      const nr = document.createRange(); nr.setStartBefore(first); nr.setEndAfter(last); sel.addRange(nr); } catch(_){}
-  }
+  restoreNeedBookmark(ed, bookmark);
   return hit;
 }
 function wrapHeadingRange(rg){
@@ -5855,7 +5912,7 @@ function toggleNeedHeading(exp){
     pick = unmarkRange(ed, rg, "span.need-h");   // 整段都是標題 → 只取消選取範圍(部分選取時分割,不整段解除)
   } else {
     unwrapHeadingsInRange(ed, rg, false);
-    restoreNeedRange(saved);
+    if (!restoreNeedBookmark(ed, bookmark)) return;
     const sel2 = window.getSelection();
     if (sel2 && sel2.rangeCount) wrapRangeByLine(ed, sel2.getRangeAt(0), wrapHeadingRange, saved);
   }
@@ -5900,19 +5957,40 @@ function sizeNeedExp(){
 }
 if (window.ResizeObserver){ try { new ResizeObserver(() => requestAnimationFrame(sizeNeedExp)).observe(tableWrap); } catch(e){} }
 function needToPlain(t){ return (t||"").split("\n").map(ln => ln.replace(/^#\s+/,"")).join("\n"); }
-// 把純文字切成 [文字 / 網址] 片段;網址比對只吃合法 ASCII 字元,遇中文/全形符號自然斷開。
+// 把純文字切成 [文字 / 網址] 片段；顯示與符號轉換共用同一判界，完整保留網址原文。
 function needTokens(s){
   s = (s == null) ? "" : String(s);
-  const re = /https?:\/\/[A-Za-z0-9\-._~:\/?#\[\]@!$&'()*+,;=%]+/g;
+  const re = /https?:\/\//gi;
+  const ascii = /[A-Za-z0-9\-._~:\/?#\[\]@!$&'()*+,;=%]/;
+  const stop = /[\s\u0000-\u001F\u007F\u200B\uFEFF<>"\x60\\§，。！？；：、（）【】《》〈〉「」『』“”‘’]/;
   const toks = []; let last = 0, m;
   while ((m = re.exec(s))){
+    let end = re.lastIndex, inPath = false;
+    while (end < s.length){
+      const ch = s[end];
+      if (stop.test(ch)) break;
+      if (ch === "/" || ch === "?" || ch === "#") inPath = true;
+      // 網域後直接緊接中文說明不算路徑；明確的 /、?、# 後才接受 Unicode。
+      if (!ascii.test(ch) && !(inPath && ch.charCodeAt(0) > 127)) break;
+      end++;
+    }
+    let url = s.slice(m.index, end);
+    // 行文結尾標點維持原判界；合法且成對的路徑括號必須留在網址裡。
+    while (url.length > m[0].length){
+      const tail = url[url.length - 1];
+      if (/[.,;:!?]/.test(tail)){ url = url.slice(0, -1); continue; }
+      const open = tail === ")" ? "(" : tail === "]" ? "[" : "";
+      if (open){
+        const count = ch => [...url].filter(c => c === ch).length;
+        if (count(tail) > count(open)){ url = url.slice(0, -1); continue; }
+      }
+      break;
+    }
+    if (url.length <= m[0].length){ re.lastIndex = Math.max(end, re.lastIndex); continue; }
     if (m.index > last) toks.push({ t:"txt", v:s.slice(last, m.index) });
-    let url = m[0], tail = "";
-    const tm = /[)\]}>.,;:!?、，。）】」』]+$/.exec(url); // 去掉可能誤含的尾端標點
-    if (tm){ tail = url.slice(url.length - tm[0].length); url = url.slice(0, url.length - tm[0].length); }
-    if (url) toks.push({ t:"url", v:url });
-    if (tail) toks.push({ t:"txt", v:tail });
-    last = m.index + m[0].length;
+    toks.push({ t:"url", v:url });
+    last = m.index + url.length;
+    re.lastIndex = Math.max(end, re.lastIndex);
   }
   if (last < s.length) toks.push({ t:"txt", v:s.slice(last) });
   return toks;
@@ -5947,7 +6025,7 @@ function inlineHTML(t, seg){
     const close = t.indexOf(mark, pos + mlen);
     if (close < 0){ out += seg(t.slice(pos)); break; }
     const slice = t.slice(pos + mlen, close);
-    if (tag === "s" && !slice.replace(/[\u200B\s]/g, "") && !/https?:\/\//i.test(slice)){ i = close + mlen; continue; }   // 略過空的 ~~..~~,避免幽靈標記
+    if (tag === "s" && !slice.replace(/[\u200B\s]/g, "") && !/https?:\/\//i.test(slice)){ out += seg(slice); i = close + mlen; continue; }   // 空格式不渲染，原有空白仍保留。
     const inner = inlineHTML(slice, seg);
     out += (tag === "h") ? `<span class="need-h">${inner}</span>` : `<s class="need-del">${inner}</s>`;
     i = close + mlen;
@@ -6030,24 +6108,30 @@ function needLineOnlyBr(node){
   }
   return sawBr || !node.childNodes.length;
 }
-function needNodeText(el){
+function needNodeText(el, inheritedLineHeading){
+  const lineHeading = !!(inheritedLineHeading || (el.nodeType === 1 && /^(DIV|P)$/.test(el.tagName) && el.classList && el.classList.contains("nh")));
   let s = "";
   el.childNodes.forEach(n => {
     if (n.nodeType === 3){ s += n.textContent.replace(/\u200B/g,""); return; }
     if (n.nodeType === 1){
       if (n.classList && n.classList.contains("need-link-chip")){ s += (n.getAttribute("data-url") || ""); return; }
       if (n.classList && n.classList.contains("need-link")){ s += (n.getAttribute("data-url") || n.getAttribute("href") || ""); return; }   // 顯示用「連結」也還原成網址(否則序列化會吐字面「連結」,把存檔網址洗掉)
-      if (isHeadingEl(n)){ s += wrapNeedMark(needNodeText(n), "\u00a7", "\u00a7"); return; }   // inline 標題 → §..§(逐行)
-      if (isStrikeEl(n)){ s += wrapNeedMark(needNodeText(n), "~~", "~~"); return; }   // 刪除線 → ~~..~~(逐行,不可包住換行)
+      if (isHeadingEl(n)){ s += wrapNeedMark(needNodeText(n, lineHeading && !s), "\u00a7", "\u00a7"); return; }   // inline 標題 → §..§(逐行)
+      if (isStrikeEl(n)){ s += wrapNeedMark(needNodeText(n, lineHeading && !s), "~~", "~~"); return; }   // 刪除線 → ~~..~~(逐行,不可包住換行)
       if (n.tagName === "BR"){ s += "\n"; return; }   // 列內 <br> 要保留成換行,否則重開會黏成一團(U 版起的老 bug)
-      // 巢狀 DIV/P 當換行邊界(貼上 HTML 常見),避免重開黏成一團
+      // 區塊各自結束一行；空區塊也要計數，外層容器不能吞掉中間空行。
       if (n.tagName === "DIV" || n.tagName === "P"){
-        const inner = needLineOnlyBr(n) ? "" : needNodeText(n);
+        const inherited = lineHeading && !s;
+        let inner = needLineOnlyBr(n) ? "" : needNodeText(n, inherited);
+        // 扣除子區塊最後的 BR／行結束佔位，再由本層補一次，避免容器層數增加換行。
+        if (inner.endsWith("\n")) inner = inner.slice(0, -1);
+        // 舊式整行標題只標記首行；該行已有外層標題時，不重複添加 #。
+        if (!inherited && n.classList && n.classList.contains("nh") && inner.split("\n", 1)[0].trim()) inner = "# " + inner;
         if (s && !s.endsWith("\n")) s += "\n";
-        s += inner;
+        s += inner + "\n";
         return;
       }
-      s += needNodeText(n);
+      s += needNodeText(n, lineHeading && !s);
     }
   });
   return s;
@@ -6055,36 +6139,40 @@ function needNodeText(el){
 function editToNeed(ed){
   const out = [];
   const pushLine = (t, isH) => { out.push(isH && String(t).trim() ? ("# " + t) : t); };
-  const pushMarked = (inner, open, close) => {
-    wrapNeedMark(inner, open, close).split("\n").forEach(p => out.push(p));
+  const pushParts = (t, isH) => {
+    let parts = String(t).split("\n");
+    if (parts.length > 1 && parts[parts.length - 1] === "") parts = parts.slice(0, -1);   // 尾端 <br> 多出的空段丟掉
+    parts.forEach((part, idx) => pushLine(part, isH && idx === 0));
+  };
+  // 清空後輸入或貼上可能留下根層文字／BR／行內標記；相鄰節點仍屬同一段。
+  // 僅讀取節點，不重建編輯 DOM，保留原生選取及復原交易。
+  let inline = [];
+  const flushInline = () => {
+    if (!inline.length) return;
+    const t = needNodeText({ childNodes: inline });
+    inline = [];
+    if (t) pushParts(t, false);
   };
   ed.childNodes.forEach(node => {
-    if (node.nodeType === 3){ const _t = node.textContent.replace(/\u200B/g,""); if (_t) out.push(_t); return; }
-    if (node.nodeType === 1){
-      if (node.tagName === "BR"){ out.push(""); return; }
-      if (node.classList && node.classList.contains("need-link-chip")){ out.push(node.getAttribute("data-url") || ""); return; }
-      if (node.classList && node.classList.contains("need-link")){ out.push(node.getAttribute("data-url") || node.getAttribute("href") || ""); return; }   // 顯示用「連結」也還原成網址(否則會把存檔網址洗成字面「連結」)
-      if (isHeadingEl(node)){ pushMarked(needNodeText(node), "\u00a7", "\u00a7"); return; }
-      if (isStrikeEl(node)){ pushMarked(needNodeText(node), "~~", "~~"); return; }
-      const isH = node.classList && node.classList.contains("nh");
-      if (needLineOnlyBr(node)){ pushLine("", isH); return; }
-      const t = needNodeText(node);
-      let parts = String(t).split("\n");
-      if (parts.length > 1 && parts[parts.length - 1] === "") parts = parts.slice(0, -1);   // 尾端 <br> 多出的空段丟掉
-      parts.forEach((part, idx) => pushLine(part, isH && idx === 0));
+    if (node.nodeType !== 1 || !/^(DIV|P)$/.test(node.tagName)){
+      inline.push(node); return;
     }
+    flushInline();
+    const isH = node.classList && node.classList.contains("nh");
+    if (needLineOnlyBr(node)){ pushLine("", isH); return; }
+    pushParts(needNodeText(node), isH);
   });
+  flushInline();
   return out.join("\n").replace(/\s+$/,"");
 }
 // 備註「內容」半形符號→全形。刻意保留:
 // 1) ~~ 刪線語法的半形 ~
 // 2) 行首「# 」整行標題標記
-// 3) http(s):// 網址(連結標籤／linkify 只認 ASCII)
+// 3) http(s):// 網址(含大小寫協定與 Unicode 路徑，原文不改碼)
 // 不做英文字母大寫(與案名 normalizeName 不同),避免動到一般內文。
 function normalizeNeedSymbols(s){
   s = String(s == null ? "" : s);
   if (!s) return s;
-  const URL_RE = /https?:\/\/[A-Za-z0-9\-._~:\/?#\[\]@!$&'()*+,;=%]+/g;
   function convChunk(chunk){
     let out = "";
     for (const ch of chunk){
@@ -6096,15 +6184,7 @@ function normalizeNeedSymbols(s){
     return out;
   }
   function convProtectUrls(text){
-    let out = "", last = 0, m;
-    URL_RE.lastIndex = 0;
-    while ((m = URL_RE.exec(text))){
-      out += convChunk(text.slice(last, m.index));
-      out += m[0];
-      last = m.index + m[0].length;
-    }
-    out += convChunk(text.slice(last));
-    return out;
+    return needTokens(text).map(tk => tk.t === "url" ? tk.v : convChunk(tk.v)).join("");
   }
   return s.split("\n").map(line => {
     const m = /^(#\s+)([\s\S]*)$/.exec(line);
@@ -6144,8 +6224,9 @@ function repairNeedBrokenStrikeLines(t){
   });
 }
 function normalizeNeedStorage(t){
-  // 只清「同一行內」的空 ~~ / 零寬字;不可用 \\s(含換行),否則相鄰兩行 ~~\\n~~ 會被刪掉、多行刪線黏成一大段
-  t = String(t == null ? "" : t).replace(/\u200B/g, "").replace(/~~[\u200B\t ]*~~/g, "");
+  // 只移除「同一行內」的空刪線標記，保留其中空白；零寬字仍只供游標使用。
+  // 不可用 \\s(含換行)，否則相鄰兩行 ~~\\n~~ 會被合併。
+  t = String(t == null ? "" : t).replace(/\u200B/g, "").replace(/~~([\t ]*)~~/g, "$1");
   t = repairNeedCrossLineMarks(t);
   // 保留使用者的行內刪線與換行，不再推測舊資料斷行。
   return normalizeNeedSymbols(t);
@@ -6369,7 +6450,16 @@ document.addEventListener("keydown", e => {
 }, true);
 document.addEventListener("paste", e => {
   const ed = needContentEditorFrom(e.target);
-  if (ed && !needHeadingComposing.has(ed)){ prepareNeedHeadingReplacement(ed); prepareNeedHeadingInput(ed, false); }
+  const cd = e.clipboardData || window.clipboardData;
+  let text = ""; try { text = (cd && cd.getData("text/plain")) || ""; } catch(_){}
+  if (text && ed && !needHeadingComposing.has(ed)){
+    if (prepareNeedHeadingReplacement(ed)){
+      // HTML 貼上同時取代整個暫時錨點，避免留下只有零寬字元的空行。
+      const sel = window.getSelection(), range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+      if (range && needHeadingReplacementAnchors.has(range.startContainer)) range.setStart(range.startContainer, 0);
+    }
+    prepareNeedHeadingInput(ed, false);
+  }
 }, true);
 
 // 邊打邊轉:保留 ~、行首「# 」、正在打的 http(s):// 網址
@@ -6588,19 +6678,26 @@ document.addEventListener("keydown", e => {
 function fragToNeedText(box){
   const lines = []; let cur = "";
   const flush = () => { lines.push(cur); cur = ""; };
+  const append = text => {
+    const parts = String(text).split("\n");
+    parts.forEach((part, index) => { if (index) flush(); cur += part; });
+  };
   const walk = n => {
     // 編輯連結後的零寬字元僅供游標定位，不能跟著網址進入剪貼簿。
-    if (n.nodeType === 3){ cur += n.textContent.replace(/\u200B/g, ""); return; }
+    if (n.nodeType === 3){ append(n.textContent.replace(/\u200B/g, "")); return; }
     if (n.nodeType !== 1) return;
-    if (n.classList && n.classList.contains("need-link-chip")){ cur += (n.getAttribute("data-url") || ""); return; }
-    if (n.classList && n.classList.contains("need-link")){ cur += (n.getAttribute("data-url") || n.getAttribute("href") || ""); return; }   // 正常模式的「連結」(span data-url;舊 <a> href 相容)也還原成網址
-    if (isStrikeEl(n)){ cur += wrapNeedMark(needNodeText(n), "~~", "~~"); return; }   // 刪除線 → ~~..~~(逐行,與存檔一致)
+    if (n.classList && n.classList.contains("need-link-chip")){ append(n.getAttribute("data-url") || ""); return; }
+    if (n.classList && n.classList.contains("need-link")){ append(n.getAttribute("data-url") || n.getAttribute("href") || ""); return; }
+    if (isStrikeEl(n)){ append(wrapNeedMark(needNodeText(n), "~~", "~~")); return; }
     if (n.tagName === "BR"){ flush(); return; }
     const isLine = (n.tagName === "DIV" || n.tagName === "P");
-    if (isLine){ if (cur.trim()) flush(); else cur = ""; }   // 行區塊前的殘留:有內容才成行,純空白(HTML 排版縫隙)直接丟棄
-    if (isLine && n.classList && n.classList.contains("nh")) cur += "# ";   // 標題列還原成「# 」語法
+    if (isLine){ if (cur.trim()) flush(); else cur = ""; }
+    const emittedBefore = lines.length;
+    if (isLine && n.classList && n.classList.contains("nh")) cur += "# ";
     n.childNodes.forEach(walk);
-    if (isLine) flush();
+    // BR 或內層區塊已結束該行時，外層 DIV 不再多補一次換行。
+    // 真正的空 DIV 仍須保留一行；多個 BR 每個都各自計數。
+    if (isLine && (cur || lines.length === emittedBefore)) flush();
   };
   box.childNodes.forEach(walk);
   if (cur) lines.push(cur);
@@ -6612,7 +6709,7 @@ function needClipboardHandler(e, isCut){
   const an = sel.anchorNode;
   const anEl = an ? (an.nodeType === 1 ? an : an.parentElement) : null;
   const ed = anEl && anEl.closest ? anEl.closest(".needexp-ed, .fneed-ed") : null;
-  if (!ed) return;
+  if (!ed || !ed.contains(sel.focusNode)) return;
   const box = document.createElement("div");
   box.appendChild(sel.getRangeAt(0).cloneContents());
   const hasLink = !!box.querySelector(".need-link-chip, .need-link");
@@ -6630,26 +6727,12 @@ function needClipboardHandler(e, isCut){
   try { cd.setData("text/plain", txt); if (cleanHTML) cd.setData("text/html", cleanHTML); } catch(_){ return; }
   e.preventDefault();
   if (isCut && ed.getAttribute("contenteditable") === "true"){
-    // 新增的純文字錨點分支沿用瀏覽器刪除交易，保留剪下後的復原。
-    if (!hasLink){
-      try {
-        if (document.execCommand("delete", false)){
-          if (ed.classList.contains("needexp-ed")){
-            const w = ed.closest(".needexp");
-            if (w) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
-          }
-          return;
-        }
-      } catch(_){}
-    }
-    sel.deleteFromDocument();
-    const htmlFn = ed.classList.contains("fneed-ed") ? needToFormHTML : needToEditHTML;
-    ed.innerHTML = htmlFn(editToNeed(ed)) || "<div><br></div>";
-    cleanupNeedEd(ed);   // 剪下後重繪,殘餘網址仍是標籤
-    if (typeof placeNeedCaretEnd === "function") placeNeedCaretEnd(ed);
+    // 純文字與網址標籤都交由原生刪除交易，保留剪下後的復原與選取位置。
+    // 不在交易後重建 innerHTML，否則瀏覽器無法復原原本的標籤。
+    try { document.execCommand("delete", false); } catch(_){}
     if (ed.classList.contains("needexp-ed")){
-      const w = ed.closest(".needexp"), sg = +ed.dataset.seg;
-      if (w && typeof commitNeedSeg === "function") commitNeedSeg(w.dataset.for, sg, editToNeed(ed));
+      const w = ed.closest(".needexp");
+      if (w) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
     }
   }
 }
@@ -6689,70 +6772,60 @@ function placeNeedCaretEnd(el){
     const r = document.createRange(); r.selectNodeContents(target); r.collapse(false);
     const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); } catch(_){}
 }
-// 單行貼上:用 Range API 直接把內容插到游標處(網址→標籤),不重繪整段、不依賴已廢棄的 execCommand
-// → 避免 innerHTML 重建 DOM 擾動焦點造成「連續貼上第二次沒反應」
+// 只插入經過轉義的文字及本站產生的連結標籤，保留瀏覽器的貼上復原交易。
 function pasteNeedInline(ed, tx){
-  const sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
-  const rg = sel.getRangeAt(0);
-  if (!sel.isCollapsed) rg.deleteContents();
-  const frag = document.createDocumentFragment();
-  let lastNode = null;
-  needTokens(tx).forEach(tk => {
-    if (tk.t === "url"){
-      const chip = document.createElement("span");
-      chip.className = "need-link-chip"; chip.setAttribute("contenteditable", "false");
-      chip.setAttribute("data-url", tk.v); chip.setAttribute("draggable", "false");
-      chip.textContent = "連結";
-      frag.appendChild(chip);
-      lastNode = document.createTextNode("\u200B"); frag.appendChild(lastNode);   // chip 後的游標錨點
-    } else {
-      lastNode = document.createTextNode(tk.v); frag.appendChild(lastNode);
-    }
-  });
-  if (!lastNode) return;
-  rg.insertNode(frag);
-  // 插入到空列佔位時,清掉後方殘留 <br>,避免 cleanup→expandNeedSoftBreaks 拆出尾端空行、游標掉進空行
-  try {
-    let n = lastNode.nextSibling;
-    while (n && n.nodeType === 3 && !String(n.textContent || "").replace(/\u200B/g, "").trim()) n = n.nextSibling;
-    if (n && n.nodeType === 1 && n.tagName === "BR"){
-      let onlyEmpty = true;
-      for (let x = n.nextSibling; x; x = x.nextSibling){
-        if (x.nodeType === 3 && String(x.textContent || "").replace(/\u200B/g, "").trim()){ onlyEmpty = false; break; }
-        if (x.nodeType === 1 && x.tagName !== "BR"){ onlyEmpty = false; break; }
-      }
-      if (onlyEmpty) n.remove();
-    }
-  } catch(_){}
-  try { const nr = document.createRange(); nr.setStartAfter(lastNode); nr.collapse(true);
-    sel.removeAllRanges(); sel.addRange(nr); } catch(_){}
+  if (!ed || !tx) return false;
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || !ed.contains(sel.anchorNode) || !ed.contains(sel.focusNode)) return false;
+  const html = needTokens(tx).map(tk => tk.t === "url"
+    ? '<span class="need-link-chip" contenteditable="false" data-url="' + esc(tk.v) + '" draggable="false">連結</span>\u200B'
+    : esc(tk.v)).join("");
+  try { return document.execCommand("insertHTML", false, html); } catch(_){ return false; }
 }
-// 卡片表單備註欄(.fneed-ed):貼上網址→「連結」標籤(與表格展開區同一套)
+// 表格及卡片使用相同插入方式，不重繪整欄，也不把游標移到欄位尾端。
 function pasteNeedField(ed, tx){
-  if (!ed) return;
-  tx = normalizeNeedSymbols(String(tx == null ? "" : tx));
-  if (tx && caretAfterChip(ed)) tx = " " + tx;
-  if (tx.indexOf("\n") < 0){
-    pasteNeedInline(ed, tx);
-    cleanupNeedEd(ed);
-    try {
-      let target = null;
-      for (let i = ed.childNodes.length - 1; i >= 0; i--){
-        const n = ed.childNodes[i];
-        if (n.nodeType === 3 && String(n.textContent || "").replace(/\u200B/g, "").trim()){ target = n; break; }
-        if (n.nodeType === 1 && !(typeof needLineOnlyBr === "function" && needLineOnlyBr(n))){ target = n; break; }
-      }
-      if (target){
-        const r = document.createRange(); r.selectNodeContents(target); r.collapse(false);
-        const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-      }
-    } catch(_){}
-  } else {
-    try { document.execCommand("insertText", false, tx); } catch(err){}
-    ed.innerHTML = needToFormHTML(editToNeed(ed)) || "<div><br></div>";
-    placeNeedCaretEnd(ed);
-    cleanupNeedEd(ed);
+  if (!ed || !tx) return false;
+  tx = normalizeNeedSymbols(String(tx).replace(/\r\n?/g, "\n"));
+  if (!tx) return false;
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || !ed.contains(sel.anchorNode) || !ed.contains(sel.focusNode)) return false;
+  if (sel.isCollapsed && caretAfterChip(ed)) tx = " " + tx;
+  if (!tx.includes("\n")) return pasteNeedInline(ed, tx);
+  const htmlFn = ed.classList.contains("fneed-ed") ? needToFormHTML : needToEditHTML;
+  try { return document.execCommand("insertHTML", false, htmlFn(tx)); } catch(_){ return false; }
+}
+// 越過網址的零寬游標錨點，但不越過一般空白、換行或其他文字。
+function deleteNeedAdjacentChip(ed, e){
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || !sel.isCollapsed || !ed.contains(sel.anchorNode)) return false;
+  const caret = sel.getRangeAt(0), backwards = e.key === "Backspace";
+  const chips = [...ed.querySelectorAll(".need-link-chip")];
+  if (backwards) chips.reverse();
+  for (const chip of chips){
+    const edge = document.createRange();
+    if (backwards) edge.setStartAfter(chip); else edge.setStartBefore(chip);
+    edge.collapse(true);
+    const order = edge.compareBoundaryPoints(Range.START_TO_START, caret);
+    if (backwards ? order > 0 : order < 0) continue;
+    const gap = document.createRange();
+    if (backwards){ gap.setStart(edge.startContainer, edge.startOffset); gap.setEnd(caret.startContainer, caret.startOffset); }
+    else { gap.setStart(caret.startContainer, caret.startOffset); gap.setEnd(edge.startContainer, edge.startOffset); }
+    const fragment = gap.cloneContents();
+    if (fragment.textContent.replace(/\u200B/g, "") || fragment.querySelector("br,div,p,.need-link-chip")) continue;
+    const removal = document.createRange(); removal.selectNode(chip);
+    const anchor = chip.nextSibling;
+    if (anchor && anchor.nodeType === 3){
+      const zeroWidth = anchor.data.match(/^\u200B+/);
+      if (zeroWidth) removal.setEnd(anchor, zeroWidth[0].length);
+    }
+    const original = caret.cloneRange();
+    sel.removeAllRanges(); sel.addRange(removal);
+    e.preventDefault();
+    let done = false; try { done = document.execCommand("delete", false); } catch(_){}
+    if (!done){ sel.removeAllRanges(); sel.addRange(original); }
+    return done;
   }
+  return false;
 }
 [F.note, F.note2, F.note3].forEach(ed => {
   if (!ed) return;
@@ -6771,18 +6844,7 @@ function pasteNeedField(ed, tx){
   });
   ed.addEventListener("keydown", e => {
     if (e.key !== "Backspace" && e.key !== "Delete") return;
-    const sel = window.getSelection(); if (!sel || !sel.rangeCount || !sel.isCollapsed) return;
-    const rng = sel.getRangeAt(0), node = rng.startContainer, off = rng.startOffset;
-    const isChip = n => !!(n && n.nodeType === 1 && n.classList && n.classList.contains("need-link-chip"));
-    let chip = null;
-    if (e.key === "Backspace"){
-      if (node.nodeType === 1) chip = isChip(node.childNodes[off-1]) ? node.childNodes[off-1] : null;
-      else if (node.nodeType === 3){ let o = off; while (o > 0 && node.textContent[o-1] === "\u200B") o--; if (o === 0) chip = isChip(node.previousSibling) ? node.previousSibling : null; }
-    } else {
-      if (node.nodeType === 1) chip = isChip(node.childNodes[off]) ? node.childNodes[off] : null;
-      else if (node.nodeType === 3 && off === node.textContent.length) chip = isChip(node.nextSibling) ? node.nextSibling : null;
-    }
-    if (chip){ e.preventDefault(); const _zw = chip.nextSibling; chip.remove(); if (_zw && _zw.nodeType === 3){ _zw.textContent = _zw.textContent.replace(/^\u200B/,""); if (!_zw.textContent) _zw.remove(); } }
+    deleteNeedAdjacentChip(ed, e);
   });
 });
 
@@ -7002,17 +7064,26 @@ function confirmApplyBackup(parsed){
   askConfirm("匯入備份檔？", `將以備份檔的 ${n} 筆資料覆蓋本機。${cloudNote}`, () => applyBackup(parsed));
 }
 // 「匯入備份檔」的來源選擇(手機 / Google 雲端)綁定在下方 Google 雲端 IIFE 內
+let importReadId=0;
 importFile.addEventListener("change", e => {
+  const readId=++importReadId;
   const file = e.target.files[0];
   if (!file) return;
   if(file.size>15000000){toast("備份檔案過大，請檢查檔案");importFile.value="";return;}
-  const reader = new FileReader();
-  reader.onload = () => {
-    try { confirmApplyBackup(JSON.parse(reader.result)); }
-    catch (err) { toast("匯入失敗：格式不正確"); }
-    importFile.value = "";
-  };
-  reader.readAsText(file);
+  const current=()=>readId===importReadId;
+  const readFailed=()=>{if(!current())return;importFile.value="";toast("匯入失敗：無法讀取檔案，請重新選擇後再試");};
+  try{
+    const reader = new FileReader();
+    reader.onload = () => {
+      if(!current())return;
+      try { confirmApplyBackup(JSON.parse(reader.result)); }
+      catch (err) { toast("匯入失敗：格式不正確"); }
+      importFile.value = "";
+    };
+    reader.onerror=readFailed;
+    reader.onabort=()=>{if(!current())return;importFile.value="";toast("已取消讀取備份檔");};
+    reader.readAsText(file);
+  }catch(err){readFailed();}
 });
 document.getElementById("importBtn").addEventListener("click", () => importFile.click());
 document.getElementById("resetBtn").addEventListener("click",()=>{
@@ -7588,24 +7659,29 @@ let syncConnected = false, syncEmail = null;
   }
 
   // ---- Drive REST helpers ----
-  function tfetch(url, opts, ms){
+  function assertSyncSignal(signal){
+    if(signal && signal.aborted){ const error=new Error("AbortError"); error.name="AbortError"; throw error; }
+  }
+  function tfetch(url, opts, ms, parentSignal){
     ms = ms || FETCH_MS;
     const ac = new AbortController();
-    const parent = syncAbort;
+    const parent = parentSignal === undefined ? (syncAbort && syncAbort.signal) : parentSignal;
+    const abort = function(){ ac.abort(); };
     if (parent){
-      if (parent.signal.aborted) ac.abort();
-      else parent.signal.addEventListener("abort", function(){ ac.abort(); }, { once: true });
+      if (parent.aborted) ac.abort();
+      else parent.addEventListener("abort", abort, { once: true });
     }
     const timer = setTimeout(function(){ ac.abort(); }, ms);
     const o = Object.assign({}, opts, { signal: ac.signal });
-    return fetch(url, o).finally(function(){ clearTimeout(timer); });
+    return fetch(url, o).then(function(res){ assertSyncSignal(ac.signal); return res; }).finally(function(){ clearTimeout(timer); });
   }
   async function dfetch(url, opts){
-    const token = await ensureToken();
+    const signal = syncAbort && syncAbort.signal;
+    const token = await ensureToken(); assertSyncSignal(signal);
     opts = opts || {}; opts.headers = Object.assign({}, opts.headers, { Authorization: "Bearer " + token });
-    let res = await tfetch(url, opts);
-    if (res.status === 401){ accessToken = null; clearGToken(); const t2 = await requestToken(false); opts.headers.Authorization = "Bearer " + t2; res = await tfetch(url, opts); }
-    if(!res.ok) throw new Error("Google 雲端回應失敗（"+res.status+"）");
+    let res = await tfetch(url, opts, undefined, signal); assertSyncSignal(signal);
+    if (res.status === 401){ accessToken = null; clearGToken(); const t2 = await requestToken(false); assertSyncSignal(signal); opts.headers.Authorization = "Bearer " + t2; res = await tfetch(url, opts, undefined, signal); assertSyncSignal(signal); }
+    if(!res.ok){ const error=new Error("Google 雲端回應失敗（"+res.status+"）"); error.httpStatus=res.status; throw error; }
     return res;
   }
   async function findFile(name){
@@ -7624,23 +7700,54 @@ let syncConnected = false, syncEmail = null;
     return data.id;
   }
   let freshMainFile=false;
-  async function ensureFileId(){
+  async function createMainFile(assertCurrent){
+    const signal=syncAbort?.signal;
+    const checkCurrent=()=>{assertSyncSignal(signal);if(assertCurrent)assertCurrent();};
+    checkCurrent();
+    // Only first creation changes: never leave a metadata-only main file between requests.
+    const main=mergeMain(buildLocal(),null);
+    PropertyCore.stateFromMain(main);
+    main.rev=1; main.lastWriteBy=deviceId; main.updatedAt=Date.now();
+    const json=JSON.stringify(main);
+    let boundary="property_main_"+Date.now().toString(36);
+    while(json.indexOf(boundary)!==-1) boundary+="_";
+    const body="--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+
+      JSON.stringify({name:MAIN_NAME,parents:["appDataFolder"],mimeType:"application/json"})+
+      "\r\n--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+json+
+      "\r\n--"+boundary+"--";
+    checkCurrent();
+    const res=await dfetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",{
+      method:"POST",headers:{"Content-Type":"multipart/related; boundary="+boundary},body:body});
+    checkCurrent();
+    const data=await res.json();
+    checkCurrent();
+    if(!data.id) throw new Error("雲端檔案建立未完成");
+    return data.id;
+  }
+  async function ensureFileId(assertCurrent){
+    const signal=syncAbort?.signal;
+    const checkCurrent=()=>{assertSyncSignal(signal);if(assertCurrent)assertCurrent();};
+    checkCurrent();
     if (fileId) return fileId;
     const f = await findFile(MAIN_NAME);
-    fileId = f ? f.id : await createFile(MAIN_NAME);
+    checkCurrent();
+    const id = f ? f.id : await createMainFile(assertCurrent);
+    checkCurrent();
+    fileId = id;
     freshMainFile=!f;
     return fileId;
   }
   async function getVersion(){
+    const signal = syncAbort && syncAbort.signal;
     const res = await dfetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?fields=version");
-    const data = await res.json();
+    const data = await res.json(); assertSyncSignal(signal);
     if(!data.version)throw new Error("無法確認雲端版本");
     return data.version;
   }
   async function download(){
+    const signal = syncAbort && syncAbort.signal;
     const res=await dfetch("https://www.googleapis.com/drive/v3/files/"+fileId+"?alt=media");
-    const text=await res.text();
-    if(!text && freshMainFile) return null;
+    const text=await res.text(); assertSyncSignal(signal);
     if(!text) throw new Error("雲端資料為空，已停止覆寫");
     let data;
     try{data=JSON.parse(text);PropertyCore.stateFromMain(data)}
@@ -7648,9 +7755,10 @@ let syncConnected = false, syncEmail = null;
     return data;
   }
   async function upload(id,obj){
+    const signal = syncAbort && syncAbort.signal;
     const res=await dfetch("https://www.googleapis.com/upload/drive/v3/files/"+id+"?uploadType=media&fields=version",{
       method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(obj)});
-    const data=await res.json();if(!data.version)throw new Error("無法確認上傳結果");
+    const data=await res.json();assertSyncSignal(signal);if(!data.version)throw new Error("無法確認上傳結果");
     if(id===fileId) freshMainFile=false;
     return data.version;
   }
@@ -7913,25 +8021,26 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     } else { off.style.display = ""; on.style.display = "none"; }
   };
 
-  let syncGen = 0;
-  function isSyncAuthError(e){ return e && (e.error === "access_denied" || e.error === "interaction_required" || e.error === "login_required"); }
+  let syncGen = 0, pollRecoveryPending = false, syncRetryTimer = null;
+  function isSyncAuthError(e){ return e && (e.httpStatus === 401 || e.error === "access_denied" || e.error === "interaction_required" || e.error === "login_required"); }
   function isAbortError(e){ return e && (e.name === "AbortError" || e.message === "AbortError" || e.message === "token_timeout"); }
   function markNeedReauth(){
-    needReauth = true; syncFailCount = 0;
+    needReauth = true; syncFailCount = 0; pollRecoveryPending = false; syncRetryTimer = null;
     clearTimeout(pushTimer); pushTimer = null;
     setStatus("需要重新連結", "warn"); window.renderSyncCard();
   }
   function resetSyncSuccess(){
-    syncFailCount = 0; retryMs = 5000;
+    syncFailCount = 0; retryMs = 5000; pollRecoveryPending = false;
+    if (syncRetryTimer !== null){ clearTimeout(syncRetryTimer); if (pushTimer === syncRetryTimer) pushTimer = null; }
+    syncRetryTimer = null;
   }
   function bumpSyncFail(){
-    syncFailCount++;
-    if (syncFailCount >= SYNC_FAIL_MAX){ markNeedReauth(); return true; }
-    return false;
+    syncFailCount = Math.min(syncFailCount + 1, SYNC_FAIL_MAX);
   }
   function scheduleSyncRetry(){
     clearTimeout(pushTimer);
-    pushTimer = setTimeout(function(){ syncNow(); }, retryMs);
+    const timer = setTimeout(function(){ if (pushTimer === timer) pushTimer = null; if (syncRetryTimer === timer) syncRetryTimer = null; syncNow(); }, retryMs);
+    pushTimer = timer; syncRetryTimer = timer;
     retryMs = Math.min(retryMs * 2, 60000);
   }
   function maybeBootSync(){
@@ -7986,21 +8095,27 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
     }
     const wasDirty = dirty;
     if (window.isTableBusy && window.isTableBusy()){ clearTimeout(pushTimer); pushTimer = setTimeout(function(){ syncNow(); }, 2000); return { ok: false, reason: "busy" }; }
+    pollRecoveryPending = false;
     const thisRun = ++syncGen;
     syncAbort = new AbortController();
     const runAbort = syncAbort;
+    const assertRun = function(){
+      if(thisRun !== syncGen){ const error=new Error("AbortError"); error.name="AbortError"; throw error; }
+      assertSyncSignal(runAbort.signal);
+    };
+    const readVersion = async function(){ const version=await getVersion(); assertRun(); return version; };
     inFlight = true; setStatus("同步中…", "busy");
-    let __wd = setTimeout(function(){ if (inFlight && thisRun === syncGen){ runAbort.abort(); inFlight = false; setStatus("同步逾時，稍後重試", "warn"); if (window.refreshLed) window.refreshLed(); } }, SYNC_WATCHDOG_MS);
+    let __wd = setTimeout(function(){ if (inFlight && thisRun === syncGen){ runAbort.abort(); dirty = true; inFlight = false; setStatus("同步逾時，稍後重試", "warn"); if (window.refreshLed) window.refreshLed(); } }, SYNC_WATCHDOG_MS);
     let syncComplete = false;
     try {
-      await ensureToken();
-      await ensureFileId();
+      await ensureToken(); assertRun();
+      await ensureFileId(assertRun); assertRun();
       let tries = 0, pushed = null;
       while (tries < 3){
         tries++;
-        const versionBefore=await getVersion();
-        const remote = await download();
-        if(versionBefore!==await getVersion()) continue;
+        const versionBefore=await readVersion();
+        const remote = await download(); assertRun();
+        if(versionBefore!==await readVersion()) continue;
         if(window.isTableBusy && window.isTableBusy()) throw new Error("editing_busy");
         if (remote && remote.__syncCorrupt){
           dirty = wasDirty || dirty;
@@ -8017,21 +8132,22 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
           else applyMerged(merged);
         }
         const needPush = !remote || mergedCanon !== canonical(remote);
-        if (!needPush){ lastVersion = versionBefore; syncComplete = true; confirmSyncCheck(merged); break; }
+        if (!needPush){ if(freshMainFile) pushed=merged; lastVersion = versionBefore; syncComplete = true; confirmSyncCheck(merged); break; }
         merged.rev = ((remote && remote.rev) || 0) + 1; merged.lastWriteBy = deviceId; merged.updatedAt = Date.now();
         if(window.isTableBusy && window.isTableBusy()) throw new Error("editing_busy");
-        if(versionBefore!==await getVersion()) continue;
+        if(versionBefore!==await readVersion()) continue;
         if(window.isTableBusy && window.isTableBusy()) throw new Error("editing_busy");
-        const newVer = await upload(fileId, merged);
-        const afterVer = await getVersion();
+        const newVer = await upload(fileId, merged); assertRun();
+        const afterVer = await readVersion();
         pushed = merged;
         if (afterVer && newVer && afterVer === newVer){ lastVersion = afterVer; syncComplete = true; confirmSyncCheck(merged); break; }
       }
       if (!syncComplete){
         dirty = true;
-        if (!bumpSyncFail()){ setStatus("同步未完成，稍後重試", "warn"); scheduleSyncRetry(); }
+        bumpSyncFail(); setStatus("同步未完成，稍後重試", "warn"); scheduleSyncRetry();
       } else {
         if (pushed) maybeSnapshot(pushed);
+        freshMainFile=false;
         resetSyncSuccess();
         needReauth = false;
         setStatus(dirty?"仍有變更等待同步":"已同步", dirty?"busy":"ok");
@@ -8039,15 +8155,16 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
         window.renderLastSync();
       }
     } catch (e){
+      if(thisRun !== syncGen) return { ok:false, reason:"superseded" };
       dirty = dirty || wasDirty;
       if(e && e.message==="editing_busy"){
         dirty=true;setStatus("編輯中，完成後同步","busy");scheduleSyncRetry();
       } else if (isSyncAuthError(e)){
         markNeedReauth();
       } else if (isAbortError(e)){
-        if (!bumpSyncFail()){ setStatus("同步逾時，稍後重試", "warn"); scheduleSyncRetry(); }
+        bumpSyncFail(); setStatus("同步逾時，稍後重試", "warn"); scheduleSyncRetry();
       } else {
-        if (!bumpSyncFail()){ setStatus((e.message||"同步失敗")+"，稍後重試", "warn"); scheduleSyncRetry(); }
+        bumpSyncFail(); setStatus((e.message||"同步失敗")+"，稍後重試", "warn"); scheduleSyncRetry();
       }
     } finally {
       if (thisRun === syncGen){
@@ -8064,9 +8181,19 @@ function sortKeys(o){ const r = {}; Object.keys(o).sort().forEach(function(k){ r
   function startPolling(){
     stopPolling();
     pollTimer = setInterval(async function(){
-      if (!syncConnected || document.hidden || inFlight || needReauth) return;
+      if (!syncConnected || document.hidden || inFlight || needReauth || (syncRetryTimer !== null && pushTimer === syncRetryTimer && syncFailCount > 0)) return;
       if (dirty){ syncNow(); return; }
-      try { await ensureFileId(); const v = await getVersion(); if (v && v !== lastVersion) syncNow(); } catch(e){syncFailCount++;setStatus("雲端連線失敗，稍後重試","warn");refreshLed();}
+      const pollGen=syncGen;
+      const isCurrentPoll=function(){ return syncConnected && !inFlight && pollGen===syncGen; };
+      const assertPoll=function(){ if(!isCurrentPoll()){ const error=new Error("AbortError"); error.name="AbortError"; throw error; } };
+      try {
+        await ensureFileId(assertPoll); assertPoll(); const v = await getVersion(); assertPoll();
+        if (v && (v !== lastVersion || pollRecoveryPending)) await syncNow();
+      } catch(e){
+        if(!isCurrentPoll()) return;
+        if (isSyncAuthError(e)) markNeedReauth();
+        else { pollRecoveryPending = true; bumpSyncFail(); setStatus("雲端連線失敗，稍後重試","warn"); refreshLed(); }
+      }
     }, POLL_MS);
   }
   function stopPolling(){ if (pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
