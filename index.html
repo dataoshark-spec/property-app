@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261105E">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261105E">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261105F">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261105F">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261105E"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261105E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261105F"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261105F"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1342,11 +1342,13 @@
   .lp-name-edit{min-width:0;max-width:180px;flex:1;padding:4px 6px;border:1px solid var(--accent);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;}
   .lp-name[hidden],.lp-name-edit[hidden]{display:none;}
   #linkSettingsRows{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
-  .link-setting-row{display:grid;grid-template-columns:24px minmax(0,1fr) 36px 66px;align-items:center;gap:8px;}
+  .link-setting-row{display:grid;grid-template-columns:24px minmax(0,1fr) 36px 64px 66px;align-items:center;gap:6px;}
   .link-position{color:var(--ink-soft);font-variant-numeric:tabular-nums;text-align:center;}
   .link-setting-name{min-width:0;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card);color:var(--ink);font:inherit;}
   .link-setting-color{appearance:none;-webkit-appearance:none;width:36px;height:36px;padding:5px;border:1px solid var(--line);border-radius:11px;background:var(--card);cursor:pointer;overflow:hidden;transition:border-color .12s,background .12s;}
-  .link-setting-color::before{content:"";display:block;width:100%;height:100%;border-radius:7px;background:var(--selected-color);box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);}
+  .link-setting-color::before{content:"字";display:grid;place-items:center;width:100%;height:100%;border-radius:7px;background:var(--selected-color);color:var(--selected-ink);font-size:13px;font-weight:700;line-height:1;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);}
+  .link-text-color{min-width:0;width:64px;height:36px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font:inherit;font-size:13px;padding:0 4px;cursor:pointer;}
+  .link-text-color:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   .link-setting-color[aria-expanded="true"]{border-color:var(--accent);background:var(--accent-tint);}
   .link-palette-head,.link-palette-foot{display:none;}
   .palette-pop.link-palette{width:292px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;padding:16px;border-radius:18px;box-shadow:0 12px 36px rgba(22,43,39,.17),0 2px 8px rgba(22,43,39,.07);}
@@ -1377,10 +1379,18 @@
   .link-setting-color:focus-visible,.link-order-buttons button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   @media(hover:hover){.link-setting-color:hover,.link-order-buttons button:not(:disabled):hover{border-color:var(--accent-tint-bd);background:var(--accent-tint);color:var(--accent-deep);}}
   .link-order-buttons button:not(:disabled):active{background:var(--surface-2);}
-  .link-renamed-row{grid-template-columns:minmax(0,1fr) 36px;padding-top:12px;border-top:1px solid var(--line);color:var(--ink-soft);}
-  @media(max-width:600px){.modal .link-f input{font-size:16px;}.modal .link-f .link-name-input{font-size:16px;height:36px;}.lp-name-edit{font-size:16px;}.link-setting-name{font-size:16px;}}
+  .link-renamed-row{grid-template-columns:minmax(0,1fr) 36px 64px;padding-top:12px;border-top:1px solid var(--line);color:var(--ink-soft);}
+  @media(max-width:440px){
+    .link-setting-row:not(.link-renamed-row){grid-template-columns:22px minmax(0,1fr) 64px 66px;row-gap:6px;}
+    .link-setting-row:not(.link-renamed-row) .link-position{grid-column:1;grid-row:1;}
+    .link-setting-row:not(.link-renamed-row) .link-setting-name{grid-column:2 / -1;grid-row:1;}
+    .link-setting-row:not(.link-renamed-row) .link-setting-color{grid-column:2;grid-row:2;justify-self:end;}
+    .link-setting-row:not(.link-renamed-row) .link-text-color{grid-column:3;grid-row:2;}
+    .link-setting-row:not(.link-renamed-row) .link-order-buttons{grid-column:4;grid-row:2;}
+  }
+  @media(max-width:600px){.modal .link-f input{font-size:16px;}.modal .link-f .link-name-input{font-size:16px;height:36px;}.lp-name-edit{font-size:16px;}.link-setting-name,.link-text-color{font-size:16px;}}
 
-  /* 2026.11.05E: preserve row height; category badge stays centered at narrow widths. */
+  /* 2026.11.05F: preserve row height; category badge stays centered at narrow widths. */
   .ptable tbody td.tcat{padding:0 4px;text-align:center;}
   .ptable .tcat-trigger,.ptable .tcat-badge{height:29px;max-width:100%;padding:0 4px;line-height:1.2;vertical-align:middle;}
   .ptable .tcat-label{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1714,7 +1724,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.11.05E：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.11.05F：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -1860,6 +1870,14 @@ function settings(value){
  if(value.renamedLinkColor!=null){
   if(typeof value.renamedLinkColor!=="string"||!/^#[0-9a-f]{6}$/i.test(value.renamedLinkColor))fail("改名連結顏色不正確");
   s.renamedLinkColor=value.renamedLinkColor;
+ }
+ if(value.linkTextColors!=null){
+  if(!Array.isArray(value.linkTextColors)||value.linkTextColors.length!==4||[0,1,2,3].some(i=>!["auto","white","black"].includes(value.linkTextColors[i])))fail("連結文字顏色不正確");
+  s.linkTextColors=value.linkTextColors.slice();
+ }
+ if(value.renamedLinkTextColor!=null){
+  if(!["auto","white","black"].includes(value.renamedLinkTextColor))fail("改名連結文字顏色不正確");
+  s.renamedLinkTextColor=value.renamedLinkTextColor;
  }
  if(value._updatedAt!=null){if(!stamp(value._updatedAt)) fail("設定時間不正確");s._updatedAt=value._updatedAt;}
  return s;
@@ -2166,7 +2184,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.05E";
+const APP_VERSION = "2026.11.05F";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2211,7 +2229,7 @@ const normUrl = u => safeUrl(u);
 const LINK_FIELDS=["url591","urlLeju","urlI","url4"];
 const LINK_NAMES=["591","樂居","永慶","其他"];
 const LINK_COLORS=["#2c6fb0","#c6553f","#0c7d64","#e9b62d"];
-let linkPreferences={defaultLinkNames:LINK_NAMES.slice(),linkOrder:[1,2,3,4],linkColors:LINK_COLORS.slice(),renamedLinkColor:"#687f95"};
+let linkPreferences={defaultLinkNames:LINK_NAMES.slice(),linkOrder:[1,2,3,4],linkColors:LINK_COLORS.slice(),renamedLinkColor:"#687f95",linkTextColors:["auto","auto","auto","auto"],renamedLinkTextColor:"auto"};
 function linkBaseName(d,slot){return d?.["linkBaseName"+slot]||LINK_NAMES[slot-1];}
 function linkDefaultName(slot){return linkPreferences.defaultLinkNames[slot-1]||LINK_NAMES[slot-1];}
 function linkName(d,slot){return linkIsRenamed(d,slot)?d["linkName"+slot]:linkDefaultName(slot);}
@@ -2230,7 +2248,12 @@ function linkInk(hex){
   return .2126*c[0]+.7152*c[1]+.0722*c[2]>.179?"#17232b":"#ffffff";
 }
 function linkColor(d,slot){return linkIsRenamed(d,slot)?linkPreferences.renamedLinkColor:linkPreferences.linkColors[slot-1];}
-function linkStyle(d,slot){const color=linkColor(d,slot);return `--link-color:${color};--link-ink:${linkInk(color)}`;}
+function linkTextInk(mode,color){return mode==="white"?"#ffffff":mode==="black"?"#17232b":linkInk(color);}
+function propertyLinkInk(d,slot){
+  const mode=linkIsRenamed(d,slot)?linkPreferences.renamedLinkTextColor:linkPreferences.linkTextColors?.[slot-1];
+  return linkTextInk(mode,linkColor(d,slot));
+}
+function linkStyle(d,slot){const color=linkColor(d,slot);return `--link-color:${color};--link-ink:${propertyLinkInk(d,slot)}`;}
 function linkChip(d,slot){
   const href=safeUrl(d[LINK_FIELDS[slot-1]]),label=linkName(d,slot),attrs=`data-slot="${slot}" style="${linkStyle(d,slot)}" title="${esc(label)}"`;
   return href
@@ -4495,7 +4518,7 @@ function refreshFormLinks(){
   linkPreferences.linkOrder.forEach((slot,index)=>{
     const block=modalBg.querySelector(`[data-link-slot="${slot}"]`),label=document.getElementById("f_linkname"+slot),color=linkColor(values,slot);
     if(fields.children[index]!==block)fields.insertBefore(block,fields.children[index]||null);
-    label.style.setProperty("--link-color",color);label.style.setProperty("--link-ink",linkInk(color));
+    label.style.setProperty("--link-color",color);label.style.setProperty("--link-ink",propertyLinkInk(values,slot));
     inputs[slot-1].placeholder=linkName(values,slot)+" 連結";
   });
 }
@@ -7392,12 +7415,22 @@ document.getElementById("themePicker").addEventListener("click", e=>{
 function saveLinkPreferences(){
   onLocalChange("settings");renderLinkSettings();applyFilter();
 }
+function makeLinkTextColorSelect(slot){
+  const select=document.createElement("select");select.className="link-text-color";select.dataset.linkTextSlot=String(slot);
+  [["auto","自動"],["white","白字"],["black","黑字"]].forEach(([value,text])=>{const option=document.createElement("option");option.value=value;option.textContent=text;select.appendChild(option);});
+  select.addEventListener("change",()=>{
+    if(slot==="renamed")linkPreferences.renamedLinkTextColor=select.value;
+    else linkPreferences.linkTextColors[slot-1]=select.value;
+    saveLinkPreferences();
+  });
+  return select;
+}
 function renderLinkSettings(){
   const host=document.getElementById("linkSettingsRows");if(!host)return;
   const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
   if(!host.dataset.bound){host.dataset.bound="1";host.addEventListener("focusout",()=>requestAnimationFrame(renderLinkSettings));}
   // Keep the focused editor and its unsaved text intact when background preferences arrive.
-  const active=document.activeElement,editing=host.contains(active)&&active.matches("input"),existing=[...host.querySelectorAll("[data-link-slot]")].map(r=>Number(r.dataset.linkSlot));
+  const active=document.activeElement,editing=host.contains(active)&&active.matches("input,select"),existing=[...host.querySelectorAll("[data-link-slot]")].map(r=>Number(r.dataset.linkSlot));
   const order=editing&&existing.length===4?existing:linkPreferences.linkOrder;
   order.forEach((slot,index)=>{
     let row=host.querySelector(`[data-link-slot="${slot}"]`);
@@ -7408,19 +7441,25 @@ function renderLinkSettings(){
       name.addEventListener("change",()=>{const value=name.value.trim();if(!value){name.value=linkPreferences.defaultLinkNames[slot-1];toast("請填寫連結名稱");return;}linkPreferences.defaultLinkNames[slot-1]=value;saveLinkPreferences();});
       color.type="button";color.dataset.linkColorSlot=String(slot);color.setAttribute("aria-haspopup","dialog");color.setAttribute("aria-expanded","false");color.addEventListener("click",()=>openPalette(color));
       [-1,1].forEach(delta=>{const b=make("button");b.type="button";b.dataset.delta=delta;b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${delta<0?'M12 19V5m-6 6 6-6 6 6':'M12 5v14m-6-6 6 6 6-6'}"/></svg>`;b.onclick=()=>{const order=linkPreferences.linkOrder,i=order.indexOf(slot);if(i+delta<0||i+delta>3)return;[order[i],order[i+delta]]=[order[i+delta],order[i]];saveLinkPreferences();};controls.append(b);});
-      row.append(position,name,color,controls);
+      row.append(position,name,color,makeLinkTextColorSelect(slot),controls);
     }
     if(host.children[index]!==row)host.insertBefore(row,host.children[index]||null);
     const name=row.querySelector(".link-setting-name"),color=row.querySelector(".link-setting-color");
     row.querySelector(".link-position").textContent=String(index+1);
     if(active!==name)name.value=linkPreferences.defaultLinkNames[slot-1];
     color.dataset.color=linkPreferences.linkColors[slot-1];color.style.setProperty("--selected-color",color.dataset.color);
+    const textColor=row.querySelector(".link-text-color"),textMode=linkPreferences.linkTextColors[slot-1];
+    if(active!==textColor)textColor.value=textMode;
+    textColor.setAttribute("aria-label",`順序 ${index+1} 連結文字顏色`);
+    color.style.setProperty("--selected-ink",linkTextInk(textMode,color.dataset.color));
     name.setAttribute("aria-label",`順序 ${index+1} 預設連結名稱`);color.setAttribute("aria-label",`順序 ${index+1} 連結顏色`);
     row.querySelectorAll(".link-order-buttons button").forEach(b=>{const delta=Number(b.dataset.delta);b.disabled=index+delta<0||index+delta>3;b.setAttribute("aria-label",`將 ${linkPreferences.defaultLinkNames[slot-1]} ${delta<0?'往前':'往後'}移`);});
   });
   let renamed=host.querySelector(".link-renamed-row");
-  if(!renamed){renamed=make("div","link-setting-row link-renamed-row");const color=make("button","link-setting-color");color.type="button";color.dataset.linkColorSlot="renamed";color.setAttribute("aria-label","單獨改名連結的共同顏色");color.setAttribute("aria-haspopup","dialog");color.setAttribute("aria-expanded","false");color.onclick=()=>openPalette(color);renamed.append(make("span","","單獨改名顏色"),color);host.append(renamed);}
+  if(!renamed){renamed=make("div","link-setting-row link-renamed-row");const color=make("button","link-setting-color");color.type="button";color.dataset.linkColorSlot="renamed";color.setAttribute("aria-label","單獨改名連結的共同顏色");color.setAttribute("aria-haspopup","dialog");color.setAttribute("aria-expanded","false");color.onclick=()=>openPalette(color);const textColor=makeLinkTextColorSelect("renamed");textColor.setAttribute("aria-label","單獨改名連結的文字顏色");renamed.append(make("span","","單獨改名顏色"),color,textColor);host.append(renamed);}
   const renamedColor=renamed.querySelector(".link-setting-color");renamedColor.dataset.color=linkPreferences.renamedLinkColor;renamedColor.style.setProperty("--selected-color",renamedColor.dataset.color);
+  const renamedText=renamed.querySelector(".link-text-color");if(active!==renamedText)renamedText.value=linkPreferences.renamedLinkTextColor;
+  renamedColor.style.setProperty("--selected-ink",linkTextInk(linkPreferences.renamedLinkTextColor,renamedColor.dataset.color));
 }
 
 // ===== 設定的收集 / 套用(供備份、匯入、雲端同步共用;含 到期提醒 與 外觀主題) =====
@@ -7431,7 +7470,7 @@ function collectSettings(){
 function applySettings(s){
   if (!s || typeof s !== "object") return;
   s=PropertyCore.settings(s);
-  linkPreferences={defaultLinkNames:(s.defaultLinkNames||LINK_NAMES).slice(),linkOrder:(s.linkOrder||[1,2,3,4]).slice(),linkColors:(s.linkColors||LINK_COLORS).slice(),renamedLinkColor:s.renamedLinkColor||"#687f95"};
+  linkPreferences={defaultLinkNames:(s.defaultLinkNames||LINK_NAMES).slice(),linkOrder:(s.linkOrder||[1,2,3,4]).slice(),linkColors:(s.linkColors||LINK_COLORS).slice(),renamedLinkColor:s.renamedLinkColor||"#687f95",linkTextColors:(s.linkTextColors||["auto","auto","auto","auto"]).slice(),renamedLinkTextColor:s.renamedLinkTextColor||"auto"};
   renderLinkSettings();
   if (s.density === "compact" || s.density === "normal"){
     density = s.density; saveDensity();
