@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261105G">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261105G">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261105I">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261105I">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261105G"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261105G"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261105I"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261105I"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -404,6 +404,31 @@
   .topbar .ct{margin-left:auto;font-size:.8rem;color:var(--ink-soft);
     background:var(--card);border:1px solid var(--line);padding:5px 11px;border-radius:999px;
     font-variant-numeric:tabular-nums;}
+
+  /* list-count:start — fixed header position; only the count contents slide */
+  #list .topbar .ttl{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #list .topbar .ct{position:relative;display:flex;align-items:stretch;width:124px;height:34px;flex:0 0 124px;padding:0;}
+  .list-count-toggle{appearance:none;position:relative;min-width:0;flex:1;border:0;border-radius:999px;background:transparent;color:inherit;font:inherit;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;}
+  .list-count-toggle::after{content:"";position:absolute;inset:-5px 0;}
+  .list-count-window{display:block;overflow:hidden;border-radius:999px;}
+  .list-count-track{display:flex;transform:translateX(calc(var(--count-index,0) * -100%));transition:transform .16s ease;}
+  .list-count-toggle.dragging .list-count-track{transition:none;}
+  .list-count-part{display:flex;align-items:center;justify-content:center;gap:5px;flex:0 0 100%;min-width:0;height:32px;padding:0 4px 0 9px;}
+  .list-count-name{min-width:0;max-width:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .list-count-value{display:inline-flex;align-items:baseline;gap:3px;flex:none;font-variant-numeric:tabular-nums;}
+  .list-count-value b{font-size:.82rem;font-weight:700;color:var(--accent-deep);}
+  .list-count-value small{font-size:.7rem;}
+  .list-count-next{appearance:none;position:relative;display:grid;place-items:center;width:24px;flex:0 0 24px;padding:0 6px 0 0;border:0;border-radius:0 999px 999px 0;background:transparent;color:var(--text-faint);cursor:pointer;}
+  .list-count-next svg{width:12px;height:12px;}
+  .list-count-next:disabled{opacity:.25;cursor:default;}
+  #listCount [hidden]{display:none!important;}
+  #listCount:focus-within{border-color:var(--accent);}
+  .list-count-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+  @media(max-width:440px){#list .topbar{gap:7px;padding-left:12px;padding-right:12px;}}
+  @media(max-width:360px){#list .topbar{gap:6px;padding-left:10px;padding-right:10px;}#list .topbar .ct{width:110px;flex-basis:110px;}.list-count-name{max-width:30px;}}
+  @media(pointer:coarse){.list-count-next{display:none;}.list-count-part{padding:0 8px;}}
+  @media(prefers-reduced-motion:reduce){.list-count-track{transition:none;}}
+  /* list-count:end */
 
   .search{display:flex;align-items:center;gap:10px;padding:12px 18px 0;}
   .search-box{position:relative;flex:1;min-width:0;display:flex;}
@@ -1333,7 +1358,7 @@
   .card .price-value{flex:0 0 auto;}
   .card .price .links{flex:0 1 58%;max-width:240px;}
   .links .property-link,.dtl-links .property-link{min-width:0;justify-content:center;}
-  /* 2026.11.05G card compact links: keep the four slots together and retain their configured colors. */
+  /* 2026.11.05I card compact links: keep the four slots together and retain their configured colors. */
   .card .price{flex-wrap:wrap;row-gap:4px;}
   .card .price .links{flex:0 0 210px;width:210px;max-width:100%;margin-left:auto;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
   .card .price .links .property-link,
@@ -1344,7 +1369,7 @@
   .card .price .links .property-link.off{color:var(--text-faint);}
   .card .price .links .property-link .ext{display:none;}
   @media (max-width:600px),(pointer:coarse){.card .price .links .property-link{height:44px;}}
-  /* End 2026.11.05G card compact links. */
+  /* End 2026.11.05I card compact links. */
   .link-group.collapsed .link-fields{grid-template-columns:repeat(2,minmax(0,1fr));}
   .link-f{min-width:0;display:flex;flex-direction:column;gap:7px;}
   .modal .link-f .link-name-input{width:100%;min-width:0;padding:5px 8px;height:30px;border:1px solid var(--line);border-left:3px solid var(--link-color);border-radius:7px;background:var(--surface-1);font-size:.8rem;font-weight:600;color:var(--ink);text-align:center;text-overflow:ellipsis;}
@@ -1392,17 +1417,18 @@
   @media(hover:hover){.link-setting-color:hover,.link-order-buttons button:not(:disabled):hover{border-color:var(--accent-tint-bd);background:var(--accent-tint);color:var(--accent-deep);}}
   .link-order-buttons button:not(:disabled):active{background:var(--surface-2);}
   .link-renamed-row{grid-template-columns:minmax(0,1fr) 36px 64px;padding-top:12px;border-top:1px solid var(--line);color:var(--ink-soft);}
+  /* 2026.11.05I: keep each mobile link setting on one row. */
   @media(max-width:440px){
-    .link-setting-row:not(.link-renamed-row){grid-template-columns:22px minmax(0,1fr) 64px 66px;row-gap:6px;}
-    .link-setting-row:not(.link-renamed-row) .link-position{grid-column:1;grid-row:1;}
-    .link-setting-row:not(.link-renamed-row) .link-setting-name{grid-column:2 / -1;grid-row:1;}
-    .link-setting-row:not(.link-renamed-row) .link-setting-color{grid-column:2;grid-row:2;justify-self:end;}
-    .link-setting-row:not(.link-renamed-row) .link-text-color{grid-column:3;grid-row:2;}
-    .link-setting-row:not(.link-renamed-row) .link-order-buttons{grid-column:4;grid-row:2;}
+    #linkSettingsCard{padding-left:12px;padding-right:12px;}
+    .link-setting-row:not(.link-renamed-row){grid-template-columns:16px minmax(48px,1fr) 34px 60px 66px;gap:4px;}
+    .link-setting-row:not(.link-renamed-row) .link-setting-name{padding-left:6px;padding-right:6px;}
+    .link-setting-row:not(.link-renamed-row) .link-setting-color{width:34px;padding:4px;}
+    .link-setting-row:not(.link-renamed-row) .link-text-color{width:60px;padding-left:3px;padding-right:3px;}
   }
+  /* End 2026.11.05I mobile link setting row. */
   @media(max-width:600px){.modal .link-f input{font-size:16px;}.modal .link-f .link-name-input{font-size:16px;height:36px;}.lp-name-edit{font-size:16px;}.link-setting-name,.link-text-color{font-size:16px;}}
 
-  /* 2026.11.05G: preserve row height; category badge stays centered at narrow widths. */
+  /* 2026.11.05I: preserve row height; category badge stays centered at narrow widths. */
   .ptable tbody td.tcat{padding:0 4px;text-align:center;}
   .ptable .tcat-trigger,.ptable .tcat-badge{height:29px;max-width:100%;padding:0 4px;line-height:1.2;vertical-align:middle;}
   .ptable .tcat-label{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1451,7 +1477,11 @@
       <header class="topbar">
         <button class="back" id="backBtn" aria-label="返回">←</button>
         <span class="ttl" id="listTitle">全部物件</span>
-        <span class="ct" id="listCount"></span>
+        <span class="ct" id="listCount">
+          <button type="button" class="list-count-toggle" id="listCountToggle" aria-label="切換筆數顯示" aria-pressed="false"><span id="listCountTotal">欄位 0 筆</span><span class="list-count-window" id="listCountWindow" hidden><span class="list-count-track" id="listCountTrack" aria-hidden="true"></span></span></button>
+          <button type="button" class="list-count-next" id="listCountNext" aria-label="查看下一個連結筆數" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+          <span class="list-count-status" id="listCountStatus" role="status" aria-live="polite"></span>
+        </span>
         <button class="sync-led" id="listLed" type="button" aria-label="同步" title="點一下立即同步・長按進入設定"><span class="led"></span></button>
       </header>
       <div class="tabs-row">
@@ -1736,7 +1766,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.11.05G：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.11.05I：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2196,7 +2226,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.05G";
+const APP_VERSION = "2026.11.05I";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2692,6 +2722,75 @@ const tableWrap = document.getElementById("tableWrap");
 const countEl  = document.getElementById("listCount");
 const titleEl  = document.getElementById("listTitle");
 const searchEl = document.getElementById("search");
+
+// list-count:start — local view preference; never writes property/settings/sync data.
+const listCounter=(()=>{
+  const KEY="property_app_countmode_v1";
+  const button=document.getElementById("listCountToggle"),total=document.getElementById("listCountTotal"),viewport=document.getElementById("listCountWindow"),track=document.getElementById("listCountTrack"),next=document.getElementById("listCountNext"),status=document.getElementById("listCountStatus");
+  let mode="total",index=0,stats={total:0,counts:[0,0,0,0]},signature="",gesture=null,ignoreClick=false,wheelAt=0;
+  try{if(storageOK&&localStorage.getItem(KEY)==="links")mode="links";}catch(e){}
+  function summarize(list){
+    const counts=[0,0,0,0];
+    for(const item of list)for(let i=0;i<4;i++)if(String(item[LINK_FIELDS[i]]??"").trim())counts[i]++;
+    return {total:list.length,counts};
+  }
+  function paint(offset=0){
+    const detailed=mode==="links",slot=linkPreferences.linkOrder[index],name=linkDefaultName(slot);
+    total.textContent=`欄位 ${stats.total} 筆`;
+    total.hidden=detailed;viewport.hidden=!detailed;next.hidden=!detailed;next.disabled=index===3;
+    button.setAttribute("aria-pressed",String(detailed));
+    const label=detailed?`${name} ${stats.counts[slot-1]} 筆`:`欄位 ${stats.total} 筆`;
+    button.setAttribute("aria-label",detailed?`${label}，第 ${index+1} 格，共四格。左右滑動或方向鍵查看；點擊切換為欄位總筆數`:`${label}。點擊切換為連結筆數`);
+    button.title=detailed?`${name}｜${stats.counts[slot-1]} 筆・左右滑動查看・點一下切換欄位筆數`:"點一下切換連結筆數";
+    const key=JSON.stringify([linkPreferences.linkOrder,linkPreferences.defaultLinkNames,stats.counts]);
+    if(key!==signature){
+      signature=key;
+      track.innerHTML=linkPreferences.linkOrder.map(s=>`<span class="list-count-part"><span class="list-count-name">${esc(linkDefaultName(s))}</span><span class="list-count-value"><b>${stats.counts[s-1]}</b><small>筆</small></span></span>`).join("");
+    }
+    track.style.transform=`translateX(calc(${-index*100}% + ${offset}px))`;
+    if(status.textContent!==label)status.textContent=label;
+  }
+  function refresh(list){stats=summarize(list);paint();}
+  function move(delta){index=Math.max(0,Math.min(3,index+delta));paint();}
+  button.addEventListener("click",e=>{
+    if(ignoreClick&&e.detail!==0){ignoreClick=false;return;}
+    ignoreClick=false;mode=mode==="links"?"total":"links";index=0;
+    try{if(storageOK)localStorage.setItem(KEY,mode);}catch(err){}
+    refresh(getFilteredItems());
+  });
+  button.addEventListener("pointerdown",e=>{
+    ignoreClick=false;
+    if(e.button!==0||!e.isPrimary||mode!=="links")return;
+    gesture={id:e.pointerId,x:e.clientX,y:e.clientY,dx:0,dy:0,width:button.clientWidth};
+    button.setPointerCapture(e.pointerId);
+  });
+  button.addEventListener("pointermove",e=>{
+    if(!gesture||gesture.id!==e.pointerId)return;
+    gesture.dx=e.clientX-gesture.x;gesture.dy=e.clientY-gesture.y;
+    if(Math.abs(gesture.dx)>8&&Math.abs(gesture.dx)>Math.abs(gesture.dy)*1.2){
+      button.classList.add("dragging");
+      const edge=(index===0&&gesture.dx>0)||(index===3&&gesture.dx<0),limit=gesture.width*.8;
+      paint(Math.max(-limit,Math.min(limit,gesture.dx))*(edge?.18:1));
+    }
+  });
+  function endGesture(e,cancel){
+    if(!gesture||gesture.id!==e.pointerId)return;
+    const g=gesture;gesture=null;button.classList.remove("dragging");
+    ignoreClick=cancel||Math.abs(g.dx)>8||Math.abs(g.dy)>8;
+    move(!cancel&&Math.abs(g.dx)>=24&&Math.abs(g.dx)>Math.abs(g.dy)*1.2?(g.dx<0?1:-1):0);
+  }
+  button.addEventListener("pointerup",e=>endGesture(e,false));
+  button.addEventListener("pointercancel",e=>endGesture(e,true));
+  button.addEventListener("lostpointercapture",e=>endGesture(e,true));
+  button.addEventListener("keydown",e=>{if(mode==="links"&&["ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();move(e.key==="ArrowRight"?1:-1);}});
+  button.addEventListener("wheel",e=>{
+    if(mode!=="links"||Math.abs(e.deltaX)<=Math.abs(e.deltaY))return;
+    e.preventDefault();const now=Date.now();if(now-wheelAt<250)return;wheelAt=now;move(e.deltaX>0?1:-1);
+  },{passive:false});
+  next.addEventListener("click",()=>move(1));
+  return {refresh};
+})();
+// list-count:end
 
 // ---- 記住上次畫面(封面或列表+分類) ----
 // PWA 切到背景太久、或切去 Chrome 開連結時,系統可能把 App 回收;回來時整頁重新載入,預設會落在封面。
@@ -4067,6 +4166,7 @@ function commitLink(){
     chip.replaceWith(rendered.firstElementChild);
   }
   closeLinkPop();
+  listCounter.refresh(getFilteredItems());
 }
 function closeLinkPop(){ lpSession++; document.removeEventListener("click", lpOutside); lpop.classList.remove("show"); lpChip = null; lpNeed = null; if (window.refreshLed) window.refreshLed(); }
 lpInput.addEventListener("input", ()=>{ lpSession++; lpRefresh(); });
@@ -4120,20 +4220,23 @@ document.getElementById("viewBtn").addEventListener("click", () => {
 });
 document.getElementById("modeBtn").addEventListener("click", () => setEditMode(!editMode));
 
-function applyFilter(){
-  syncToggleUI();
+function getFilteredItems(){
   // 多關鍵字搜尋:用「/」(半形或全形「／」皆可)分隔多個條件,「全部命中」才顯示(AND)。
   // 例:「北屯/大樓/322」= 同時符合這三個條件的物件;「/」本身只是分隔符,不參與比對。
   // 沒打「/」時行為與原本完全相同(單一關鍵字)。與客戶總覽同一套做法。
   const terms = searchEl.value.toLowerCase().split(/[\/／]/).map(t => t.trim()).filter(Boolean);
-  { const sc = document.getElementById("searchClear"); if (sc) sc.classList.toggle("show", !!searchEl.value); }   // 清除鈕:有字才顯示
-  tableWrap.classList.toggle("search-hint", !!searchEl.value || document.activeElement === searchEl);   // 搜尋中:點亮可搜尋的欄位標題
   let list = currentCat ? items.filter(d => d.cat === currentCat) : items.slice();
   if (terms.length) list = list.filter(d => { const hay = searchHay(d); return terms.every(t => hay.includes(t)); });
-  list = applyColFilters(list);   // 套用欄位標題篩選(類別/格局/樓層/售價/承辦/門市)
+  return applyColFilters(list);   // 套用欄位標題篩選(類別/格局/樓層/售價/承辦/門市)
+}
+function applyFilter(){
+  syncToggleUI();
+  { const sc = document.getElementById("searchClear"); if (sc) sc.classList.toggle("show", !!searchEl.value); }   // 清除鈕:有字才顯示
+  tableWrap.classList.toggle("search-hint", !!searchEl.value || document.activeElement === searchEl);   // 搜尋中:點亮可搜尋的欄位標題
+  let list = getFilteredItems();
   const fca = document.getElementById("fltClearAll"); if (fca) fca.classList.toggle("on", anyColFilter());   // 有篩選才顯示漏斗清除鈕
   list = sortList(list);
-  countEl.textContent = `${list.length} 筆`;
+  listCounter.refresh(list);
   titleEl.textContent = currentCat ? currentCat + "物件" : "全部物件";
   document.querySelectorAll(".tab").forEach(t =>
     t.classList.toggle("active", t.dataset.cat === currentCat));
@@ -7942,7 +8045,7 @@ document.addEventListener("pointercancel", endCatDrag);
     detailWasOpen = detailBg.classList.contains("open");
     const el = e.target;
     // 起點若在橫向捲動列 / 輸入框 / 下拉選單 / 表格 / 連結視窗上，則不攔截(讓它們正常運作)
-    skip = !!(el.closest && el.closest("#tabs, input, textarea, .cselect, .table-wrap, #linkpop, #catmenu, .palette-pop, select"));
+    skip = !!(el.closest && el.closest("#tabs, #listCount, input, textarea, .cselect, .table-wrap, #linkpop, #catmenu, .palette-pop, select"));
     if (modalBg.classList.contains("open")) skip = false;  // 編輯表單開啟時,允許滑動關閉
     if (detailWasOpen) skip = false;  // 詳情頁開啟時,允許滑動關閉(只回列表,不跳封面)
     const _cb = document.getElementById("calBg");
