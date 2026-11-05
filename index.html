@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261012D">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261012D">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261105B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261105B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261012D"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261012D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261105B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261105B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1321,6 +1321,49 @@
 .need-order-menu strong{font-weight:700}
 .need-order-position{white-space:nowrap}
 .need-order-label{color:var(--accent-deep);overflow-wrap:anywhere}
+
+  /* 四格連結：表格維持同排；卡片與表單各以兩格一排。 */
+  .property-link .link-text{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .property-link.on,.property-link.on:hover,.property-link.on:active{background:var(--link-color);border-color:var(--link-color);color:var(--link-ink);}
+  .ptable tbody td.tlinks{padding:0 8px;}
+  .tchips{gap:3px;align-items:center;}
+  .tchip.property-link{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;flex:0 0 30px;width:30px;height:29px;padding:0 2px;font-size:12px;line-height:1.2;border-radius:6px;}
+  .links,.dtl-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0;}
+  .card .price-value{flex:0 0 auto;}
+  .card .price .links{flex:0 1 58%;max-width:240px;}
+  .links .property-link,.dtl-links .property-link{min-width:0;justify-content:center;}
+  .link-group.collapsed .link-fields{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .link-f{min-width:0;display:flex;flex-direction:column;gap:7px;}
+  .modal .link-f .link-name-input{width:100%;min-width:0;padding:5px 8px;height:30px;border:1px solid var(--line);border-left:3px solid var(--link-color);border-radius:7px;background:var(--surface-1);font-size:.8rem;font-weight:600;color:var(--ink);text-align:center;text-overflow:ellipsis;}
+  .modal .link-f .link-name-input:focus{border-color:var(--link-color);}
+  .lp-head .lp-name{border:0;border-bottom:1px dashed currentColor;padding:0 0 2px;background:none;font:inherit;font-size:16px;color:inherit;cursor:pointer;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lp-head .lp-name:disabled{border:0;cursor:default;}
+  .lp-name-edit{min-width:0;max-width:180px;flex:1;padding:4px 6px;border:1px solid var(--accent);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;}
+  .lp-name[hidden],.lp-name-edit[hidden]{display:none;}
+  #linkSettingsRows{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .link-setting-row{display:grid;grid-template-columns:24px minmax(0,1fr) 36px 66px;align-items:center;gap:8px;}
+  .link-position{color:var(--ink-soft);font-variant-numeric:tabular-nums;text-align:center;}
+  .link-setting-name{min-width:0;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card);color:var(--ink);font:inherit;}
+  .link-setting-color{appearance:none;-webkit-appearance:none;width:36px;height:36px;padding:5px;border:1px solid var(--line);border-radius:11px;background:var(--card);cursor:pointer;overflow:hidden;transition:border-color .12s,background .12s;}
+  .link-setting-color::-webkit-color-swatch-wrapper{padding:0;}
+  .link-setting-color::-webkit-color-swatch{border:0;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);}
+  .link-setting-color::-moz-color-swatch{border:0;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);}
+  .link-order-buttons{display:flex;gap:4px;}
+  .link-order-buttons button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 31px;width:31px;height:34px;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink-soft);cursor:pointer;transition:color .12s,border-color .12s,background .12s;}
+  .link-order-buttons svg{display:block;width:16px;height:16px;flex:none;pointer-events:none;}
+  .link-order-buttons button:disabled{opacity:.28;cursor:default;}
+  .link-setting-color:focus-visible,.link-order-buttons button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  @media(hover:hover){.link-setting-color:hover,.link-order-buttons button:not(:disabled):hover{border-color:var(--accent-tint-bd);background:var(--accent-tint);color:var(--accent-deep);}}
+  .link-order-buttons button:not(:disabled):active{background:var(--surface-2);}
+  .link-renamed-row{grid-template-columns:minmax(0,1fr) 36px;padding-top:12px;border-top:1px solid var(--line);color:var(--ink-soft);}
+  @media(max-width:600px){.modal .link-f input{font-size:16px;}.modal .link-f .link-name-input{font-size:16px;height:36px;}.lp-name-edit{font-size:16px;}.link-setting-name{font-size:16px;}}
+
+  /* 2026.11.05B: preserve row height; category badge stays centered at narrow widths. */
+  .ptable tbody td.tcat{padding:0 4px;text-align:center;}
+  .ptable .tcat-trigger,.ptable .tcat-badge{height:29px;max-width:100%;padding:0 4px;line-height:1.2;vertical-align:middle;}
+  .ptable .tcat-label{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ptable thead th[data-col="note"]{padding-left:8px;padding-right:8px;}
+  .ptable .tneed{padding-left:8px;padding-right:8px;}
 </style>
 </head>
 <body>
@@ -1429,7 +1472,6 @@
 
       <div class="set-card">
         <div class="set-card-title">資料與備份</div>
-        <p class="set-card-desc">表格變更會自動儲存；物件表單按「儲存」才正式更新，切到背景只保存草稿。多個視窗的修改會在背景合併，編輯結束後更新畫面。建議定期匯出備份。</p>
         <div class="set-actions">
           <button class="s-btn" id="exportBtn">匯出備份檔</button>
           <button class="s-btn" id="importBtn">匯入備份檔</button>
@@ -1467,6 +1509,10 @@
         </div>
       </div>
 
+      <div class="set-card" id="linkSettingsCard">
+        <div class="set-card-title">連結名稱與顏色</div>
+        <div id="linkSettingsRows"></div>
+      </div>
       <div class="ver-line" id="verLine"></div>
     </div>
   </section>
@@ -1511,9 +1557,10 @@
             </button>
           </div>
           <div class="link-fields">
-            <label class="link-f"><span class="link-lab">591</span><input id="f_591" placeholder="591 連結"></label>
-            <label class="link-f"><span class="link-lab">樂居</span><input id="f_leju" placeholder="樂居 連結"></label>
-            <label class="link-f"><span class="link-lab">永慶</span><input id="f_i" placeholder="永慶 連結"></label>
+            <div class="link-f" data-link-slot="1"><input class="link-lab link-name-input" id="f_linkname1" aria-label="連結 1 名稱" maxlength="20"><input id="f_591" aria-label="連結 1 網址" placeholder="591 連結"></div>
+            <div class="link-f" data-link-slot="2"><input class="link-lab link-name-input" id="f_linkname2" aria-label="連結 2 名稱" maxlength="20"><input id="f_leju" aria-label="連結 2 網址" placeholder="樂居 連結"></div>
+            <div class="link-f" data-link-slot="3"><input class="link-lab link-name-input" id="f_linkname3" aria-label="連結 3 名稱" maxlength="20"><input id="f_i" aria-label="連結 3 網址" placeholder="永慶 連結"></div>
+            <div class="link-f" data-link-slot="4"><input class="link-lab link-name-input" id="f_linkname4" aria-label="連結 4 名稱" maxlength="20"><input id="f_4" aria-label="連結 4 網址" placeholder="其他 連結"></div>
           </div>
         </div>
         <div class="f-need3">
@@ -1625,7 +1672,7 @@
 
 <!-- ===== Link paste popover (table view) ===== -->
 <div class="linkpop" id="linkpop">
-  <div class="lp-head"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><span class="lp-name" id="lpLabel">連結</span><span class="lp-kind" id="lpKind" hidden>連結</span></div>
+  <div class="lp-head"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><button type="button" class="lp-name" id="lpLabel" aria-label="變更此物件的連結名稱">連結</button><input id="lpNameEdit" class="lp-name-edit" aria-label="此物件的連結名稱" maxlength="20" hidden><span class="lp-kind" id="lpKind" hidden>連結</span></div>
   <input class="lp-input" id="lpInput" type="url" placeholder="貼上網址（Ctrl+V）…" spellcheck="false" autocomplete="off">
   <div class="lp-actions">
     <div class="lp-left">
@@ -1642,11 +1689,11 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.10.12D：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.11.05B：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
-const FIELDS = ["name","cat","layout","floor","price","addr","due","agent","tel","store","url591","urlLeju","urlI","note","note2","note3","t1","t2","t3","noteFont1","noteFont2","noteFont3","noteOrder"];
+const FIELDS = ["name","cat","layout","floor","price","addr","due","agent","tel","store","url591","urlLeju","urlI","url4","linkBaseName1","linkBaseName2","linkBaseName3","linkBaseName4","linkName1","linkName2","linkName3","linkName4","note","note2","note3","t1","t2","t3","noteFont1","noteFont2","noteFont3","noteOrder"];
 const own = (o,k) => Object.prototype.hasOwnProperty.call(o,k);
 const clone = x => JSON.parse(JSON.stringify(x));
 const obj = x => !!x && typeof x === "object" && !Array.isArray(x);
@@ -1682,7 +1729,7 @@ function noteOrder(value){
 function text(v,k){
  if(v == null) return "";
  if(typeof v !== "string") fail(k+" 必須是文字");
- if(v.length > (k.startsWith("note") ? 50000 : 5000)) fail(k+" 內容過長");
+ if(v.length > (/^link(?:Base)?Name[1-4]$/.test(k) ? 20 : k.startsWith("note") ? 50000 : 5000)) fail(k+" 內容過長");
  return v;
 }
 function draftValues(value){
@@ -1721,7 +1768,7 @@ function record(r,index){
  d.updatedAt=r.updatedAt || 1700000000000;
  d._fieldUpdatedAt={};
  const validMeta = obj(r._fieldUpdatedAt) && r._metaAt === d.updatedAt;
- for(const f of FIELDS) d._fieldUpdatedAt[f]=(f==="noteOrder"||f.startsWith("noteFont")) && !own(r,f) ? 0 : validMeta && stamp(r._fieldUpdatedAt[f]) ? r._fieldUpdatedAt[f] : d.updatedAt;
+ for(const f of FIELDS) d._fieldUpdatedAt[f]=(f==="noteOrder"||f.startsWith("noteFont")||f==="url4"||/^link(?:Base)?Name[1-4]$/.test(f)) && !own(r,f) ? 0 : validMeta && stamp(r._fieldUpdatedAt[f]) ? r._fieldUpdatedAt[f] : d.updatedAt;
  d._metaAt=d.updatedAt;
  return d;
 }
@@ -1772,6 +1819,22 @@ function settings(value){
  if(value.fltP!=null){
   if(!obj(value.fltP)) fail("售價篩選格式不正確");s.fltP={};
   for(const f of ["lo","hi"]) s.fltP[f]=value.fltP[f]==null?null:price(value.fltP[f]);
+ }
+ if(value.defaultLinkNames!=null){
+  if(!Array.isArray(value.defaultLinkNames)||value.defaultLinkNames.length!==4||value.defaultLinkNames.some(n=>typeof n!=="string"||!n.trim()||n.length>20))fail("預設連結名稱不正確");
+  s.defaultLinkNames=value.defaultLinkNames.map(n=>n.trim());
+ }
+ if(value.linkOrder!=null){
+  if(!Array.isArray(value.linkOrder)||value.linkOrder.length!==4||![1,2,3,4].every(n=>value.linkOrder.includes(n)))fail("連結順序不正確");
+  s.linkOrder=value.linkOrder.slice();
+ }
+ if(value.linkColors!=null){
+  if(!Array.isArray(value.linkColors)||value.linkColors.length!==4||value.linkColors.some(c=>typeof c!=="string"||!/^#[0-9a-f]{6}$/i.test(c)))fail("連結顏色不正確");
+  s.linkColors=value.linkColors.slice();
+ }
+ if(value.renamedLinkColor!=null){
+  if(typeof value.renamedLinkColor!=="string"||!/^#[0-9a-f]{6}$/i.test(value.renamedLinkColor))fail("改名連結顏色不正確");
+  s.renamedLinkColor=value.renamedLinkColor;
  }
  if(value._updatedAt!=null){if(!stamp(value._updatedAt)) fail("設定時間不正確");s._updatedAt=value._updatedAt;}
  return s;
@@ -2078,7 +2141,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.10.12D";
+const APP_VERSION = "2026.11.05B";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2119,10 +2182,29 @@ const safeUrl = u => {
 };
 const openExtUrl = u => { const href = safeUrl(u); if (href) window.open(href, "_blank", "noopener"); };
 const normUrl = u => safeUrl(u);
-const linkChip = (url, label) => { const href = safeUrl(url);
+// 四格以固定槽位識別；名稱與排列不參與網址欄位的判定。
+const LINK_FIELDS=["url591","urlLeju","urlI","url4"];
+const LINK_NAMES=["591","樂居","永慶","其他"];
+const LINK_COLORS=["#2c6fb0","#c6553f","#0c7d64","#e9b62d"];
+let linkPreferences={defaultLinkNames:LINK_NAMES.slice(),linkOrder:[1,2,3,4],linkColors:LINK_COLORS.slice(),renamedLinkColor:"#687f95"};
+function linkBaseName(d,slot){return d?.["linkBaseName"+slot]||LINK_NAMES[slot-1];}
+function linkName(d,slot){return d?.["linkName"+slot]||linkBaseName(d,slot);}
+function linkIsRenamed(d,slot){return !!d?.["linkName"+slot]&&d["linkName"+slot]!==linkBaseName(d,slot);}
+function newLinkNames(){return Object.fromEntries([1,2,3,4].flatMap(slot=>[["linkBaseName"+slot,linkPreferences.defaultLinkNames[slot-1]],["linkName"+slot,""]]));}
+function linkInk(hex){
+  if(["#2c6fb0","#c6553f","#0c7d64","#687f95"].includes(hex.toLowerCase()))return "#ffffff";
+  const c=hex.slice(1).match(/../g).map(v=>{const n=parseInt(v,16)/255;return n<=.04045?n/12.92:Math.pow((n+.055)/1.055,2.4)});
+  return .2126*c[0]+.7152*c[1]+.0722*c[2]>.179?"#17232b":"#ffffff";
+}
+function linkColor(d,slot){return linkIsRenamed(d,slot)?linkPreferences.renamedLinkColor:linkPreferences.linkColors[slot-1];}
+function linkStyle(d,slot){const color=linkColor(d,slot);return `--link-color:${color};--link-ink:${linkInk(color)}`;}
+function linkChip(d,slot){
+  const href=safeUrl(d[LINK_FIELDS[slot-1]]),label=linkName(d,slot),attrs=`data-slot="${slot}" style="${linkStyle(d,slot)}" title="${esc(label)}"`;
   return href
-  ? `<a class="chip on" href="${esc(href)}" target="_blank" rel="noopener">${label} <span class="ext">↗</span></a>`
-  : `<span class="chip off">${label}</span>`; };
+    ? `<a class="chip on property-link" ${attrs} href="${esc(href)}" target="_blank" rel="noopener"><span class="link-text">${esc(label)}</span><span class="ext">↗</span></a>`
+    : `<span class="chip off property-link" ${attrs}><span class="link-text">${esc(label)}</span></span>`;
+}
+function propertyLinksHTML(d){return linkPreferences.linkOrder.map(slot=>linkChip(d,slot)).join("");}
 
 // 到期提醒固定 7 天:不提供設定,也不納入雲端同步,避免跨裝置同步時提醒門檻被改掉
 const dueSoonDays = 7;
@@ -2241,7 +2323,7 @@ function cardHTML(d){
       <div class="addr"><span class="cv" data-copy="${esc(d.addr)}">${esc(d.addr)}</span></div>
       <div class="price">
         ${d.price ? `<span class="price-value" data-copy="${esc(d.price)}"><span class="num">${money(d.price)}</span><span class="unit">萬</span></span>` : `<span class="price-value"></span>`}
-        <div class="links">${linkChip(d.url591, "591")}${linkChip(d.urlLeju, "樂居")}${linkChip(d.urlI, "永慶")}</div>
+        <div class="links">${propertyLinksHTML(d)}</div>
       </div>
       <div class="meta">
         <span data-copy="${esc(d.layout)}"><i class="ml">格局</i> ${esc(d.layout)}</span>
@@ -2829,12 +2911,12 @@ function setViewMode(vm){
 }
 
 // ---- table rendering ----
-const T_COLS = ["到期","類別","格局","案名","地址","樓層","售價","連結","承辦","電話","門市","備註"];
+const T_COLS = ["到期","類別","格局","案名","地址","樓層","售價","連結","承辦","電話","門市","註"];
 // ---- 表格欄寬調整(拖曳 + 雙擊自適應 + 記憶/同步)。備註(note,最後一欄)為彈性欄:不放把手、不給固定寬,自動吸收剩餘空間;其餘欄(含門市)皆可調右緣拉桿 ----
 const T_FIELDS = ["due","cat","layout","name","addr","floor","price","links","agent","tel","store","note"];
 const FLEX_FIELD = "note";   // 備註=彈性欄(最後一欄,無拉桿,自動吸收剩餘寬度),與客戶總覽「客戶需求」欄一致。其餘欄固定可調(右緣拉桿),表格 width:100% 撐滿
-const DEFAULT_COLW = {due:78,cat:80,layout:64,name:150,addr:200,floor:68,price:76,links:128,agent:78,tel:112,store:150};   // 各固定欄(可調);note(備註)為彈性欄不列(與客戶總覽 need 一致)
-const COLW_MIN = 48, COLW_MAX = 640, FLEX_MIN_FALLBACK = 72, DEL_W = 40;   // 彈性欄(備註)最小寬改為「剛好容納欄名」動態量測;量不到時用此保底
+const DEFAULT_COLW = {due:78,cat:80,layout:64,name:150,addr:200,floor:68,price:76,links:146,agent:78,tel:112,store:150};   // 各固定欄(可調);note(備註)為彈性欄不列(與客戶總覽 need 一致)
+const COLW_MIN = 48, COLW_MAX = 640, FLEX_MIN_FALLBACK = 36, DEL_W = 40;   // 彈性欄(備註)最小寬改為「剛好容納欄名」動態量測;量不到時用此保底
 function loadColW(){ if (storageOK){ try { const s = JSON.parse(localStorage.getItem("property_app_colw_v1") || "null"); if (s && typeof s === "object") return {...DEFAULT_COLW, ...s}; } catch(e){} } return {...DEFAULT_COLW}; }
 function saveColW(){ if (storageOK){ try { localStorage.setItem("property_app_colw_v1", JSON.stringify(colW)); } catch(e){} } }
 let colW = loadColW();
@@ -2852,7 +2934,7 @@ function flexMinWidth(){
   const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
   const lw = label.getBoundingClientRect().width;
   if (lw <= 0) return FLEX_MIN_FALLBACK;   // 尚未排版(初次渲染)→ 保底
-  return Math.max(COLW_MIN, Math.ceil(lw + pad + 6));
+  return Math.max(FLEX_MIN_FALLBACK, Math.ceil(lw + pad + 6));
 }
 function colSumMinWidth(){ let s = 0; for (const f in DEFAULT_COLW) s += (colW[f] || DEFAULT_COLW[f]); return s + flexMinWidth() + DEL_W; }   // 固定欄總和 + 彈性欄最小寬 + 刪除欄(永遠存在,切換模式寬度不變)
 // 產生 colgroup:固定欄用 colW(px)、彈性欄不給寬、編輯模式尾端加刪除欄
@@ -2880,13 +2962,41 @@ function setColWidth(field, w){
   tableWrap.querySelectorAll(`col[data-field="${field}"]`).forEach(c => c.style.width = w + "px");
   const mw = colSumMinWidth() + "px";
   tableWrap.querySelectorAll(".ptable").forEach(t => t.style.minWidth = mw);
+  queueTableDueFit();
 }
-function tchip(url, label, cls, tab){
-  const on = url && String(url).trim();
-  const u = on ? String(url) : "";
-  const tip = on ? (u.length > 46 ? u.slice(0,46) + "…" : u) : `尚未加入${label}連結`;
-  const tabAttr = tab ? ' tabindex="0"' : "";
-  return `<span class="tchip ${cls} ${on?'on':''}"${tabAttr} title="${esc(tip)}" data-label="${esc(label)}" data-url="${esc(url||'')}">${label}</span>`;
+// Only the visible date changes. Full ROC date remains available for copy/edit/sort.
+let tableDueFitFrame = 0;
+function tableDueMonthDay(full){
+  const raw = String(full || "");
+  if (!/^\d{5,7}$/.test(raw)) return raw;
+  const year = Number(raw.slice(0,-4)), month = Number(raw.slice(-4,-2)), day = Number(raw.slice(-2));
+  const date = new Date(Date.UTC(year + 1911, month - 1, day));
+  if (year < 1 || month < 1 || month > 12 || date.getUTCFullYear() !== year + 1911 || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return raw;
+  return raw.slice(-4);
+}
+function fitTableDueDates(){
+  tableWrap.querySelectorAll(".tbody-wrap [data-full-due]").forEach(el => {
+    if (el.clientWidth <= 0) return;
+    const full = el.dataset.fullDue || "", cs = getComputedStyle(el);
+    const available = el.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+    const shown = _measText(full, el) > available + 0.5 ? tableDueMonthDay(full) : full;
+    if (el.textContent !== shown) el.textContent = shown;
+  });
+}
+function queueTableDueFit(){
+  if (tableDueFitFrame) return;
+  tableDueFitFrame = requestAnimationFrame(() => { tableDueFitFrame = 0; fitTableDueDates(); });
+}
+if (window.ResizeObserver){ try { new ResizeObserver(queueTableDueFit).observe(tableWrap); } catch(e){} }
+if (document.fonts){
+  document.fonts.ready.then(queueTableDueFit);
+  if (document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", queueTableDueFit);
+}
+function tchip(d,slot,tab){
+  const url=d[LINK_FIELDS[slot-1]]||"",label=linkName(d,slot),on=!!safeUrl(url);
+  const tip=label+(on?"："+url:"：尚未加入連結");
+  const tabAttr=tab?' tabindex="0"':"";
+  return `<span class="tchip property-link ${on?'on':''}"${tabAttr} style="${linkStyle(d,slot)}" title="${esc(tip)}" data-slot="${slot}" data-label="${esc(label)}" data-url="${esc(url)}"><span class="link-text">${esc(label)}</span></span>`;
 }
 function trowHTML(d){
   const color = catColor(d.cat);
@@ -2894,15 +3004,15 @@ function trowHTML(d){
   const tTab = editMode ? ' tabindex="0"' : "";
   const catCell = editMode
     ? `<td class="tcat"><button type="button" class="tcat-trigger" data-field="cat" style="border-color:${safeColor(color)}"><span class="tcat-label">${esc(d.cat)}</span></button></td>`
-    : `<td class="tcat"><span class="tcat-badge" style="border-color:${safeColor(color)}">${esc(d.cat)}</span></td>`;
+    : `<td class="tcat"><span class="tcat-badge" style="border-color:${safeColor(color)}"><span class="tcat-label">${esc(d.cat)}</span></span></td>`;
   const delCell = editMode
     ? `<td class="tdel"><button data-act="del" title="刪除此列">${ICON_TRASH}</button></td>`
     : `<td class="tdel"></td>`;   // 正常模式空白佔位(欄仍在),編輯模式才放垃圾桶——切換不位移
   const ds = dueStatus(d.due);   // 方案 D:整列依到期狀態上底色閃爍
   const nameInner = editMode ? esc(d.name) : nameSegmentsHTML(d.name);   // 正常模式:案名依符號分段可點複製;編輯模式維持純文字可編輯
   const dueInner = editMode      // 編輯模式:到期日改為日曆選擇(不用鍵盤輸入);正常模式維持可點複製
-    ? `<button type="button" class="tdue-btn ${ds}" data-duecal="1" title="${esc(d.due)}">${esc(d.due)}</button>`
-    : `<div class="tcell tdue ${ds}" contenteditable="false" data-field="due" title="${esc(d.due)}">${esc(d.due)}</div>`;
+    ? `<button type="button" class="tdue-btn ${ds}" data-duecal="1" data-full-due="${esc(d.due)}" aria-label="到期日 ${esc(d.due)}" title="${esc(d.due)}">${esc(d.due)}</button>`
+    : `<div class="tcell tdue ${ds}" contenteditable="false" data-field="due" data-full-due="${esc(d.due)}" aria-label="到期日 ${esc(d.due)}" title="${esc(d.due)}">${esc(d.due)}</div>`;
   const _trCls = (((openNeedId===d.id) ? ("exp-open" + (editMode ? " exp-editing" : "") + " ") : "") + (ds ? "due-"+ds : "") + ((tselMode && selected.has(d.id)) ? " tsel-row" : "")).trim();
   return `<tr data-id="${esc(d.id)}"${_trCls ? ` class="${_trCls}"` : ""}>`+
     `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" tabindex="-1" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button>${dueInner}</td>`+
@@ -2913,7 +3023,7 @@ function trowHTML(d){
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="floor" title="${esc(d.floor)}">${esc(d.floor)}</div></td>`+
     `<td><div class="tcell tnum" contenteditable="${ce}"${tTab} data-field="price" title="${esc(d.price)}">${esc(d.price)}</div></td>`+
     `<td class="tlinks"><span class="tchips">`+
-      tchip(d.url591,"591","n591",editMode)+ tchip(d.urlLeju,"樂居","leju",editMode)+ tchip(d.urlI,"永慶","",editMode)+
+      linkPreferences.linkOrder.map(slot=>tchip(d,slot,editMode)).join("")+
     `</span></td>`+
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="agent" title="${esc(d.agent)}">${esc(d.agent)}</div></td>`+
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="tel" title="${esc(d.tel)}">${esc(d.tel)}</div></td>`+
@@ -2963,6 +3073,7 @@ function syncTableChrome(){
   if (!bw) return;
   const sbw = Math.max(0, bw.offsetWidth - bw.clientWidth);
   tableWrap.style.setProperty("--sbw", sbw + "px");
+  queueTableDueFit();
 }
 // ---- 欄寬:量測欄名最小寬、雙擊自適應、拖曳 ----
 function _measText(text, srcEl){
@@ -2991,7 +3102,7 @@ function colHeaderMin(idx){
 // 欄寬低於三顆總寬時膠囊會溢出疊到隔壁欄)→ 量出實際膠囊列寬當下限
 function colContentHardMin(field){
   if (field !== "links") return 0;
-  const FALLBACK = 132;   // 保底:三顆膠囊(591/樂居/永慶)估計最小寬,量測不到時採用
+  const FALLBACK = 146;   // 保底:三顆膠囊(591/樂居/永慶)估計最小寬,量測不到時採用
   const bodyTbl = tableWrap.querySelector(".tbody-wrap .ptable");
   const chips = bodyTbl && bodyTbl.querySelector(".tchips");
   if (!chips) return FALLBACK;
@@ -3009,7 +3120,7 @@ function colContentHardMin(field){
   const td = chips.closest("td");
   let pad = 0;
   if (td){ const cs = getComputedStyle(td); pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0); }
-  return Math.ceil(sum + pad + 4);
+  return Math.ceil(sum + pad + 1);
 }
 // 雙擊自適應:量「欄名 + 最長內容」的實際文字寬(用隱藏元素量,不可用 scrollWidth)
 function autoFitColumn(field){
@@ -3033,11 +3144,16 @@ function autoFitColumn(field){
     if (cell){
       const cs = getComputedStyle(cell);
       const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
-      const w = _measText(cell.textContent, cell) + pad;
+      const w = _measText(cell.dataset.fullDue ?? cell.textContent, cell) + pad;
       if (w > maxW) maxW = w;
     } else {
       const sp = td.querySelector(".tcat-badge, .tcat-trigger, .tchips, .tdue-btn");  // 類別膠囊 / 連結膠囊組 / 到期日鈕:本身即內容寬
-      if (sp && sp.offsetWidth > maxW) maxW = sp.offsetWidth;
+      if (sp && sp.hasAttribute("data-full-due")){
+        const cs = getComputedStyle(sp);
+        const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
+        const w = _measText(sp.dataset.fullDue, sp) + pad;
+        if (w > maxW) maxW = w;
+      } else if (sp && sp.offsetWidth > maxW) maxW = sp.offsetWidth;
     }
   });
   const w = Math.max(hMin, Math.min(COLW_MAX, Math.ceil(maxW) + 10));
@@ -3149,7 +3265,8 @@ function openTableDueCal(trigger){
       if ((cur.due||"") === nv) return;
       cur.due = nv; cur.updatedAt = Date.now(); saveItems(); onLocalChange("data");
       if (trigger.isConnected){                          // 觸發鈕仍在畫面:就地更新到期色(按鈕+整列)
-        trigger.textContent = nv; trigger.title = nv;
+        trigger.textContent = nv; trigger.title = nv; trigger.dataset.fullDue = nv; trigger.setAttribute("aria-label", "到期日 " + nv);
+        queueTableDueFit();
         const ds = dueStatus(nv);
         trigger.classList.remove("warn","over"); if (ds) trigger.classList.add(ds);
         const tr = trigger.closest("tr");
@@ -3627,7 +3744,7 @@ tableWrap.addEventListener("click", e=>{
 
 // ---- 正常模式:點格子複製內容 ----
 function copyCellText(cell, overrideText){
-  const text = (overrideText != null ? overrideText : (cell.textContent || "")).replace(/\s+/g, " ").trim();
+  const text = (overrideText != null ? overrideText : (cell.dataset.fullDue ?? cell.textContent ?? "")).replace(/\s+/g, " ").trim();
   if (!text) return;
   const ok = () => {
     cell.classList.remove("saved"); void cell.offsetWidth; cell.classList.add("saved");
@@ -3739,7 +3856,7 @@ function addTableRow(){
   if (!editMode){ editMode = true; saveEditMode(); }
   if (searchEl.value){ searchEl.value = ""; }   // 清除搜尋:否則新增的空白列會被搜尋過濾掉、看不到也無法輸入
   const cat = currentCat || (cats[0] && cats[0].key) || "";
-  const it = { id: uid(), name:"", cat, layout:"", floor:"", price:"", addr:"", due:"", agent:"", tel:"", store:"", note:"", note2:"", note3:"", t1:"", t2:"", t3:"", url591:null, urlLeju:null, urlI:null, updatedAt: Date.now() };
+  const it = { id: uid(), name:"", cat, layout:"", floor:"", price:"", addr:"", due:"", agent:"", tel:"", store:"", note:"", note2:"", note3:"", t1:"", t2:"", t3:"", url591:null, urlLeju:null, urlI:null, url4:null, ...newLinkNames(), updatedAt: Date.now() };
   const filtersCleared = applyColFilters([it]).length === 0;
   if (filtersCleared) clearAllColFilters();
   items.push(it); saveItems(); onLocalChange("data");
@@ -3754,12 +3871,14 @@ const lpop = document.getElementById("linkpop");
 const lpInput = document.getElementById("lpInput");
 const lpLabel = document.getElementById("lpLabel");
 const lpKind = document.getElementById("lpKind");
-function setLinkTitle(name){ lpLabel.textContent = name || "連結"; lpKind.hidden = !name; }
+const lpNameEdit=document.getElementById("lpNameEdit");
+function setLinkTitle(name){ lpLabel.textContent=name||"連結";lpKind.hidden=!name;lpLabel.disabled=!name;lpLabel.hidden=false;lpNameEdit.hidden=true;lpNameEdit.value=name||""; }
+lpLabel.addEventListener("click",()=>{if(!lpChip)return;lpLabel.hidden=true;lpNameEdit.hidden=false;lpNameEdit.focus();lpNameEdit.select();});
+lpNameEdit.addEventListener("keydown",e=>{if(e.isComposing)return;if(e.key==="Enter"){e.preventDefault();commitLink();}else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();closeLinkPop();}});
 const lpCaseName = document.getElementById("lpCaseName");
 function setLinkCaseName(name){ const text = (name || "").trim() || "未填案名"; lpCaseName.textContent = text; lpCaseName.title = text; }
 const lpOpenBtn = document.getElementById("lpOpen");
 const lpCopyBtn = document.getElementById("lpCopy");
-const CHIP_FIELD = { "591":"url591", "樂居":"urlLeju", "永慶":"urlI" };
 let lpChip = null, lpNeed = null, lpSession = 0;   // lpNeed:備註欄「連結」標籤的編輯目標 {chip, ed}
 function lpRefresh(){ const empty = !lpInput.value.trim(); lpOpenBtn.classList.toggle("disabled", empty); lpCopyBtn.disabled = empty; }
 function openLinkPop(chip){
@@ -3820,14 +3939,23 @@ function commitLink(){
   }
   if (!lpChip){ closeLinkPop(); return; }
   const url = lpInput.value.trim();
-  lpChip.dataset.url = url; lpChip.classList.toggle("on", !!url);
-  const it = tFindItem(lpChip);
-  if (it){ const field = CHIP_FIELD[lpChip.dataset.label]; if (field){ const v = url || null; if (it[field] !== v){ it[field] = v; it.updatedAt = Date.now(); saveItems(); onLocalChange("data"); } } }
+  const chip=lpChip,it=tFindItem(chip),slot=Number(chip.dataset.slot),field=LINK_FIELDS[slot-1];
+  if(it&&field){
+    const label=lpNameEdit.value.trim()||linkBaseName(it,slot),nameField="linkName"+slot;
+    const override=label===linkBaseName(it,slot)?"":label;
+    if((it[field]||"")!==url||(it[nameField]||"")!==override){
+      it[field]=url||null;it[nameField]=override;it.updatedAt=Date.now();
+      saveItems();onLocalChange("data");
+    }
+    const rendered=document.createElement("span");rendered.innerHTML=tchip(it,slot,editMode);
+    chip.replaceWith(rendered.firstElementChild);
+  }
   closeLinkPop();
 }
 function closeLinkPop(){ lpSession++; document.removeEventListener("click", lpOutside); lpop.classList.remove("show"); lpChip = null; lpNeed = null; if (window.refreshLed) window.refreshLed(); }
 lpInput.addEventListener("input", ()=>{ lpSession++; lpRefresh(); });
 lpInput.addEventListener("keydown", e=>{
+  if(e.isComposing)return;
   if (e.key==="Enter"){ e.preventDefault(); commitLink(); }
   else if (e.key==="Escape"){
     e.preventDefault(); e.stopPropagation();   // 必須擋冒泡:否則 document Esc 會接著 closeNeedExp 把展開整列收掉
@@ -4264,10 +4392,35 @@ const F = {
   price:document.getElementById("f_price"), addr:document.getElementById("f_addr"),
   due:document.getElementById("f_due"), agent:document.getElementById("f_agent"),
   tel:document.getElementById("f_tel"), store:document.getElementById("f_store"),
-  u591:document.getElementById("f_591"), uleju:document.getElementById("f_leju"), ui:document.getElementById("f_i"),
+  u591:document.getElementById("f_591"), uleju:document.getElementById("f_leju"), ui:document.getElementById("f_i"), u4:document.getElementById("f_4"),
   note:document.getElementById("f_note"), note2:document.getElementById("f_note2"), note3:document.getElementById("f_note3"),
   t1:document.getElementById("f_t1"), t2:document.getElementById("f_t2"), t3:document.getElementById("f_t3"),
 };
+
+let formLinkBases={};
+function formLinkValues(){
+  const out={};
+  [1,2,3,4].forEach(slot=>{
+    const base=formLinkBases[slot]||LINK_NAMES[slot-1],name=document.getElementById("f_linkname"+slot).value.trim()||base;
+    out["linkBaseName"+slot]=base;out["linkName"+slot]=name===base?"":name;
+  });
+  return out;
+}
+function refreshFormLinks(){
+  const values=formLinkValues(),inputs=[F.u591,F.uleju,F.ui,F.u4],fields=modalBg.querySelector(".link-fields");
+  linkPreferences.linkOrder.forEach((slot,index)=>{
+    const block=modalBg.querySelector(`[data-link-slot="${slot}"]`),label=document.getElementById("f_linkname"+slot),color=linkColor(values,slot);
+    if(fields.children[index]!==block)fields.insertBefore(block,fields.children[index]||null);
+    label.style.setProperty("--link-color",color);label.style.setProperty("--link-ink",linkInk(color));
+    inputs[slot-1].placeholder=linkName(values,slot)+" 連結";
+  });
+}
+function loadFormLinks(d){
+  const record=d||newLinkNames();
+  [1,2,3,4].forEach(slot=>{formLinkBases[slot]=linkBaseName(record,slot);document.getElementById("f_linkname"+slot).value=linkName(record,slot);});
+  F.u4.value=d?.url4||"";refreshFormLinks();
+}
+[1,2,3,4].forEach(slot=>document.getElementById("f_linkname"+slot).addEventListener("input",refreshFormLinks));
 
 // ---- 到期日:自製日曆選擇(民國年顯示 + 西元/民國轉換;與客戶總覽同一套) ----
 function todayROC(){
@@ -4421,6 +4574,7 @@ function openForm(id){
   F.u591.value   = d ? d.url591||""  : "";
   F.uleju.value  = d ? d.urlLeju||"" : "";
   F.ui.value     = d ? d.urlI||""   : "";
+  loadFormLinks(d);
   F.note.innerHTML  = (d && d.note)  ? needToFormHTML(d.note)  : "<div><br></div>";
   F.note2.innerHTML = (d && d.note2) ? needToFormHTML(d.note2) : "<div><br></div>";
   F.note3.innerHTML = (d && d.note3) ? needToFormHTML(d.note3) : "<div><br></div>";
@@ -4481,10 +4635,10 @@ function openDetail(id){
     <div class="dtl-card3">${cellC("售價", _price)}${cellC("格局", d.layout)}${cellC("樓層", d.floor)}${cellC("地址", d.addr, "dtl-addr")}</div>
   </div>`;
   // 連結:591/樂居/永慶(可開)
-  const _hasLink = d.url591 || d.urlLeju || d.urlI;
+  const _hasLink = LINK_FIELDS.some(field=>safeUrl(d[field]));
   const links = _hasLink ? `<div class="dtl-sec">
     <div class="dtl-h">${IC_LINK}連結</div>
-    <div class="dtl-links">${linkChip(d.url591,"591")}${linkChip(d.urlLeju,"樂居")}${linkChip(d.urlI,"永慶")}</div>
+    <div class="dtl-links">${propertyLinksHTML(d)}</div>
   </div>` : "";
   // 承辦:承辦人|電話 一排(電話可撥號),門市獨立一排
   const _telCell = d.tel
@@ -4545,7 +4699,7 @@ function buildFormRec(){
     price: PropertyCore.price(F.price.value),
     addr: F.addr.value.trim(), due: F.due.value.trim(),
     agent: F.agent.value.trim(), tel: F.tel.value.trim(), store: F.store.value.trim(),
-    url591: u591 || null, urlLeju: uLeju || null, urlI: uI || null,
+    url591: u591 || null, urlLeju: uLeju || null, urlI: uI || null, url4:safeUrl(F.u4.value.trim())||null, ...formLinkValues(),
     note: normalizeNeedStorage(editToNeed(F.note)), note2: normalizeNeedStorage(editToNeed(F.note2)), note3: normalizeNeedStorage(editToNeed(F.note3)),
     t1: F.t1.value.trim(), t2: F.t2.value.trim(), t3: F.t3.value.trim(),
     ...formNeedFontSizes, noteOrder:formNeedOrder.slice(),
@@ -4573,7 +4727,7 @@ function legacyDraftKey(){return LEGACY_FORM_DRAFT_KEY+":"+(editingId||"new")}
 function readDraftRec(){
  const r={cat:formCat,...formNeedFontSizes,noteOrder:formNeedOrder.slice()};
  for(const k of ["name","layout","floor","price","addr","due","agent","tel","store","t1","t2","t3"])r[k]=F[k].value;
- r.url591=F.u591.value;r.urlLeju=F.uleju.value;r.urlI=F.ui.value;
+ r.url591=F.u591.value;r.urlLeju=F.uleju.value;r.urlI=F.ui.value;r.url4=F.u4.value;Object.assign(r,formLinkValues());
  r.note=editToNeed(F.note);r.note2=editToNeed(F.note2);r.note3=editToNeed(F.note3);
  return r;
 }
@@ -4656,6 +4810,7 @@ function applyFormDraft(d){
   F.u591.value = d.url591 || "";
   F.uleju.value = d.urlLeju || "";
   F.ui.value = d.urlI || "";
+  loadFormLinks(d);
   F.note.innerHTML = d.note ? needToFormHTML(d.note) : "<div><br></div>";
   F.note2.innerHTML = d.note2 ? needToFormHTML(d.note2) : "<div><br></div>";
   F.note3.innerHTML = d.note3 ? needToFormHTML(d.note3) : "<div><br></div>";
@@ -7146,14 +7301,50 @@ document.getElementById("themePicker").addEventListener("click", e=>{
   onLocalChange("settings");   // 改主題也即時同步到雲端
 });
 
+function saveLinkPreferences(){
+  onLocalChange("settings");renderLinkSettings();applyFilter();
+}
+function renderLinkSettings(){
+  const host=document.getElementById("linkSettingsRows");if(!host)return;
+  const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
+  if(!host.dataset.bound){host.dataset.bound="1";host.addEventListener("focusout",()=>requestAnimationFrame(renderLinkSettings));}
+  // Keep the focused editor and its unsaved text intact when background preferences arrive.
+  const active=document.activeElement,editing=host.contains(active)&&active.matches("input"),existing=[...host.querySelectorAll("[data-link-slot]")].map(r=>Number(r.dataset.linkSlot));
+  const order=editing&&existing.length===4?existing:linkPreferences.linkOrder;
+  order.forEach((slot,index)=>{
+    let row=host.querySelector(`[data-link-slot="${slot}"]`);
+    if(!row){
+      row=make("div","link-setting-row");row.dataset.linkSlot=slot;
+      const position=make("span","link-position"),name=make("input","link-setting-name"),color=make("input","link-setting-color"),controls=make("span","link-order-buttons");
+      name.maxLength=20;
+      name.addEventListener("change",()=>{const value=name.value.trim();if(!value){name.value=linkPreferences.defaultLinkNames[slot-1];toast("請填寫連結名稱");return;}linkPreferences.defaultLinkNames[slot-1]=value;saveLinkPreferences();});
+      color.type="color";color.addEventListener("change",()=>{linkPreferences.linkColors[slot-1]=color.value;saveLinkPreferences();});
+      [-1,1].forEach(delta=>{const b=make("button");b.type="button";b.dataset.delta=delta;b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${delta<0?'M12 19V5m-6 6 6-6 6 6':'M12 5v14m-6-6 6 6 6-6'}"/></svg>`;b.onclick=()=>{const order=linkPreferences.linkOrder,i=order.indexOf(slot);if(i+delta<0||i+delta>3)return;[order[i],order[i+delta]]=[order[i+delta],order[i]];saveLinkPreferences();};controls.append(b);});
+      row.append(position,name,color,controls);
+    }
+    if(host.children[index]!==row)host.insertBefore(row,host.children[index]||null);
+    const name=row.querySelector(".link-setting-name"),color=row.querySelector(".link-setting-color");
+    row.querySelector(".link-position").textContent=String(index+1);
+    if(active!==name)name.value=linkPreferences.defaultLinkNames[slot-1];
+    if(active!==color)color.value=linkPreferences.linkColors[slot-1];
+    name.setAttribute("aria-label",`順序 ${index+1} 預設連結名稱`);color.setAttribute("aria-label",`順序 ${index+1} 連結顏色`);
+    row.querySelectorAll("button").forEach(b=>{const delta=Number(b.dataset.delta);b.disabled=index+delta<0||index+delta>3;b.setAttribute("aria-label",`將 ${linkPreferences.defaultLinkNames[slot-1]} ${delta<0?'往前':'往後'}移`);});
+  });
+  let renamed=host.querySelector(".link-renamed-row");
+  if(!renamed){renamed=make("div","link-setting-row link-renamed-row");const color=make("input","link-setting-color");color.type="color";color.setAttribute("aria-label","單獨改名連結的共同顏色");color.onchange=()=>{linkPreferences.renamedLinkColor=color.value;saveLinkPreferences();};renamed.append(make("span","","單獨改名顏色"),color);host.append(renamed);}
+  const renamedColor=renamed.querySelector("input");if(active!==renamedColor)renamedColor.value=linkPreferences.renamedLinkColor;
+}
+
 // ===== 設定的收集 / 套用(供備份、匯入、雲端同步共用;含 到期提醒 與 外觀主題) =====
 function collectSettings(){
   const fs = serializeColFilterState();
-  return { density: density, sort: currentSort, theme: theme, colw: colW, fltorder: ensureFltOrder(), expfocus: expFocus, colFilter: fs.colFilter, fltP: fs.fltP };
+  return { density: density, sort: currentSort, theme: theme, colw: colW, fltorder: ensureFltOrder(), expfocus: expFocus, colFilter: fs.colFilter, fltP: fs.fltP, ...PropertyCore.clone(linkPreferences) };
 }
 function applySettings(s){
   if (!s || typeof s !== "object") return;
   s=PropertyCore.settings(s);
+  linkPreferences={defaultLinkNames:(s.defaultLinkNames||LINK_NAMES).slice(),linkOrder:(s.linkOrder||[1,2,3,4]).slice(),linkColors:(s.linkColors||LINK_COLORS).slice(),renamedLinkColor:s.renamedLinkColor||"#687f95"};
+  renderLinkSettings();
   if (s.density === "compact" || s.density === "normal"){
     density = s.density; saveDensity();
     if (cardsEl) cardsEl.classList.toggle("compact", density === "compact");
