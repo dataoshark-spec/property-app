@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261105B">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261105B">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261105E">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261105E">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261105B"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261105B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261105E"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261105E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1327,7 +1327,8 @@
   .property-link.on,.property-link.on:hover,.property-link.on:active{background:var(--link-color);border-color:var(--link-color);color:var(--link-ink);}
   .ptable tbody td.tlinks{padding:0 8px;}
   .tchips{gap:3px;align-items:center;}
-  .tchip.property-link{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;flex:0 0 30px;width:30px;height:29px;padding:0 2px;font-size:12px;line-height:1.2;border-radius:6px;}
+  .tchip.property-link{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;flex:0 0 30px;width:30px;height:26px;padding:0 2px;font-size:11.5px;font-weight:600;line-height:1.2;border-radius:7px;}
+  .ptable.ro .tchip.property-link:not(.on){opacity:1;color:var(--text-faint);background:var(--surface-1);border-color:var(--line);}
   .links,.dtl-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0;}
   .card .price-value{flex:0 0 auto;}
   .card .price .links{flex:0 1 58%;max-width:240px;}
@@ -1345,9 +1346,30 @@
   .link-position{color:var(--ink-soft);font-variant-numeric:tabular-nums;text-align:center;}
   .link-setting-name{min-width:0;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card);color:var(--ink);font:inherit;}
   .link-setting-color{appearance:none;-webkit-appearance:none;width:36px;height:36px;padding:5px;border:1px solid var(--line);border-radius:11px;background:var(--card);cursor:pointer;overflow:hidden;transition:border-color .12s,background .12s;}
-  .link-setting-color::-webkit-color-swatch-wrapper{padding:0;}
-  .link-setting-color::-webkit-color-swatch{border:0;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);}
-  .link-setting-color::-moz-color-swatch{border:0;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);}
+  .link-setting-color::before{content:"";display:block;width:100%;height:100%;border-radius:7px;background:var(--selected-color);box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);}
+  .link-setting-color[aria-expanded="true"]{border-color:var(--accent);background:var(--accent-tint);}
+  .link-palette-head,.link-palette-foot{display:none;}
+  .palette-pop.link-palette{width:292px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;padding:16px;border-radius:18px;box-shadow:0 12px 36px rgba(22,43,39,.17),0 2px 8px rgba(22,43,39,.07);}
+  .link-palette .link-palette-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .link-palette-head strong{font-size:.94rem;font-weight:700;color:var(--ink);white-space:nowrap;}
+  .link-palette-name{min-width:0;max-width:142px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem;color:var(--ink-soft);}
+  .link-palette .cpk-sv{height:128px;border-radius:11px;}
+  .link-palette .cpk-knob{width:15px;height:15px;}
+  .link-palette .cpk-slider{height:14px;border-radius:9px;}
+  .link-palette .cpk-thumb{width:18px;height:18px;box-shadow:0 1px 5px rgba(22,43,39,.2);}
+  .link-palette .cpk-row{margin-top:13px;}
+  .link-palette .cpk-prev{width:38px;height:38px;border-radius:10px;}
+  .link-palette .cpk-hex{font-size:.86rem;font-weight:500;background:var(--surface-1);height:38px;}
+  .link-palette .cpk-hex[aria-invalid="true"]{border-color:#C0341A;}
+  .link-palette .cpk-presets{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:14px;}
+  .link-palette .cpk-presets button{height:28px;aspect-ratio:auto;border-radius:8px;display:grid;place-items:center;}
+  .link-palette .cpk-presets svg{width:16px;height:16px;visibility:hidden;pointer-events:none;}
+  .link-palette .cpk-presets button[aria-pressed="true"]{outline:2px solid var(--ink-soft);outline-offset:2px;}
+  .link-palette .cpk-presets button[aria-pressed="true"] svg{visibility:visible;}
+  .link-palette .link-palette-foot{display:flex;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--line);}
+  .link-palette-done{border:0;border-radius:10px;background:var(--accent);color:#fff;font:inherit;font-size:.84rem;font-weight:600;padding:8px 20px;cursor:pointer;}
+  .link-palette :where(button,input,[tabindex="0"]):focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+  @media(max-width:600px){.link-palette .cpk-hex{font-size:16px;}}
   .link-order-buttons{display:flex;gap:4px;}
   .link-order-buttons button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 31px;width:31px;height:34px;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink-soft);cursor:pointer;transition:color .12s,border-color .12s,background .12s;}
   .link-order-buttons svg{display:block;width:16px;height:16px;flex:none;pointer-events:none;}
@@ -1358,12 +1380,15 @@
   .link-renamed-row{grid-template-columns:minmax(0,1fr) 36px;padding-top:12px;border-top:1px solid var(--line);color:var(--ink-soft);}
   @media(max-width:600px){.modal .link-f input{font-size:16px;}.modal .link-f .link-name-input{font-size:16px;height:36px;}.lp-name-edit{font-size:16px;}.link-setting-name{font-size:16px;}}
 
-  /* 2026.11.05B: preserve row height; category badge stays centered at narrow widths. */
+  /* 2026.11.05E: preserve row height; category badge stays centered at narrow widths. */
   .ptable tbody td.tcat{padding:0 4px;text-align:center;}
   .ptable .tcat-trigger,.ptable .tcat-badge{height:29px;max-width:100%;padding:0 4px;line-height:1.2;vertical-align:middle;}
   .ptable .tcat-label{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .ptable thead th[data-col="note"]{padding-left:8px;padding-right:8px;}
   .ptable .tneed{padding-left:8px;padding-right:8px;}
+  /* Both modes share date geometry; the full value remains in data-full-due. */
+  .ptable .tcell.tdue,.ptable .tdue-btn{display:block;box-sizing:border-box;width:100%;padding:9px 10px;min-height:40px;line-height:22px;font-family:inherit;font-size:.66rem;font-variant-numeric:tabular-nums;text-align:center;}
+  @media(max-width:819px){.ptable .tcell.tdue,.ptable .tdue-btn{padding-left:7px;padding-right:7px;}}
 </style>
 </head>
 <body>
@@ -1689,7 +1714,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.11.05B：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.11.05E：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2141,7 +2166,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.05B";
+const APP_VERSION = "2026.11.05E";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2188,8 +2213,16 @@ const LINK_NAMES=["591","樂居","永慶","其他"];
 const LINK_COLORS=["#2c6fb0","#c6553f","#0c7d64","#e9b62d"];
 let linkPreferences={defaultLinkNames:LINK_NAMES.slice(),linkOrder:[1,2,3,4],linkColors:LINK_COLORS.slice(),renamedLinkColor:"#687f95"};
 function linkBaseName(d,slot){return d?.["linkBaseName"+slot]||LINK_NAMES[slot-1];}
-function linkName(d,slot){return d?.["linkName"+slot]||linkBaseName(d,slot);}
+function linkDefaultName(slot){return linkPreferences.defaultLinkNames[slot-1]||LINK_NAMES[slot-1];}
+function linkName(d,slot){return linkIsRenamed(d,slot)?d["linkName"+slot]:linkDefaultName(slot);}
 function linkIsRenamed(d,slot){return !!d?.["linkName"+slot]&&d["linkName"+slot]!==linkBaseName(d,slot);}
+function linkNameEditValues(d,slot,value,initialLabel){
+  const baseField="linkBaseName"+slot,nameField="linkName"+slot,label=String(value||"").trim();
+  // Opening an editor or changing only a URL must not create a name override.
+  if(label===initialLabel)return {[baseField]:d?.[baseField]||"",[nameField]:d?.[nameField]||""};
+  const base=linkDefaultName(slot),name=label||base;
+  return {[baseField]:base,[nameField]:name===base?"":name};
+}
 function newLinkNames(){return Object.fromEntries([1,2,3,4].flatMap(slot=>[["linkBaseName"+slot,linkPreferences.defaultLinkNames[slot-1]],["linkName"+slot,""]]));}
 function linkInk(hex){
   if(["#2c6fb0","#c6553f","#0c7d64","#687f95"].includes(hex.toLowerCase()))return "#ffffff";
@@ -2965,7 +2998,27 @@ function setColWidth(field, w){
   queueTableDueFit();
 }
 // Only the visible date changes. Full ROC date remains available for copy/edit/sort.
-let tableDueFitFrame = 0;
+let tableDueFitFrame = 0, tableDueForceFit = false, tableDueLayout = null;
+const tableDueTextWidths = new Map();
+const TABLE_DUE_FONT_PROPS = ["fontFamily","fontSize","fontWeight","fontStyle","letterSpacing","fontVariantNumeric","textTransform"];
+function measureTableDueTexts(requests){
+  if(!requests.size)return;
+  const host=document.createElement("div"),measurements=[];
+  host.style.cssText="position:absolute;visibility:hidden;top:-9999px;left:-9999px;pointer-events:none;padding:0;margin:0;border:0;";
+  requests.forEach(({full,group},key)=>{
+    const el=document.createElement("span");
+    el.style.cssText="display:block;width:max-content;white-space:nowrap;padding:0;margin:0;border:0;";
+    TABLE_DUE_FONT_PROPS.forEach(p=>{el.style[p]=group.css[p];});
+    el.textContent=full;host.appendChild(el);measurements.push({el,key});
+  });
+  document.body.appendChild(host);
+  try{
+    // Insert once, then read all widths without changing layout between reads.
+    measurements.forEach(({el,key})=>{
+      tableDueTextWidths.set(key,el.getBoundingClientRect().width);
+    });
+  }finally{host.remove();}
+}
 function tableDueMonthDay(full){
   const raw = String(full || "");
   if (!/^\d{5,7}$/.test(raw)) return raw;
@@ -2974,23 +3027,52 @@ function tableDueMonthDay(full){
   if (year < 1 || month < 1 || month > 12 || date.getUTCFullYear() !== year + 1911 || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return raw;
   return raw.slice(-4);
 }
-function fitTableDueDates(){
-  tableWrap.querySelectorAll(".tbody-wrap [data-full-due]").forEach(el => {
-    if (el.clientWidth <= 0) return;
-    const full = el.dataset.fullDue || "", cs = getComputedStyle(el);
-    const available = el.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
-    const shown = _measText(full, el) > available + 0.5 ? tableDueMonthDay(full) : full;
-    if (el.textContent !== shown) el.textContent = shown;
+function fitTableDueDates(force = false){
+  const first=tableWrap.querySelector(".tbody-wrap [data-full-due]");
+  if(!first)return;
+  const width=first.clientWidth;if(width<=0)return;
+  const style=getComputedStyle(first);
+  const geometry=JSON.stringify([...TABLE_DUE_FONT_PROPS.map(p=>style[p]),style.paddingLeft,style.paddingRight]);
+  if(!force&&tableDueLayout&&tableDueLayout.first===first&&tableDueLayout.width===width&&tableDueLayout.geometry===geometry)return;
+  const groups=new Map(),entries=[];
+  // Read each shared style before measuring or changing any visible date.
+  tableWrap.querySelectorAll(".tbody-wrap [data-full-due]").forEach(el=>{
+    const weight=el.classList.contains("warn")||el.classList.contains("over")?"alert":"normal";
+    let group=groups.get(weight);
+    if(!group){
+      const cs=el===first?style:getComputedStyle(el);
+      group={css:Object.fromEntries(TABLE_DUE_FONT_PROPS.map(p=>[p,cs[p]])),font:JSON.stringify(TABLE_DUE_FONT_PROPS.map(p=>cs[p])),available:width-(parseFloat(cs.paddingLeft)||0)-(parseFloat(cs.paddingRight)||0)};
+      groups.set(weight,group);
+    }
+    const full=el.dataset.fullDue||"";entries.push({el,full,short:tableDueMonthDay(full),group});
   });
+  const requests=new Map();
+  entries.forEach(({full,short,group})=>{const key=group.font+"|"+full;if(short!==full&&!tableDueTextWidths.has(key))requests.set(key,{full,group});});
+  measureTableDueTexts(requests);
+  const updates=entries.map(({el,full,short,group})=>{
+    if(short===full)return {el,shown:full};
+    const key=group.font+"|"+full;
+    return {el,shown:tableDueTextWidths.get(key)>group.available+0.5?short:full};
+  });
+  // Write as a batch; no layout reads are interleaved with these updates.
+  updates.forEach(({el,shown})=>{if(el.textContent!==shown)el.textContent=shown;});
+  while(tableDueTextWidths.size>1024)tableDueTextWidths.delete(tableDueTextWidths.keys().next().value);
+  tableDueLayout={first,width,geometry};
 }
-function queueTableDueFit(){
+function queueTableDueFit(force = false){
+  tableDueForceFit=tableDueForceFit||force;
   if (tableDueFitFrame) return;
-  tableDueFitFrame = requestAnimationFrame(() => { tableDueFitFrame = 0; fitTableDueDates(); });
+  tableDueFitFrame = requestAnimationFrame(() => { tableDueFitFrame = 0; const runForce=tableDueForceFit;tableDueForceFit=false;fitTableDueDates(runForce); });
 }
-if (window.ResizeObserver){ try { new ResizeObserver(queueTableDueFit).observe(tableWrap); } catch(e){} }
+if (window.ResizeObserver){ try { new ResizeObserver(()=>{
+  const first=tableWrap.querySelector(".tbody-wrap [data-full-due]");if(!first)return;
+  const width=first.clientWidth;
+  if(width>0&&(!tableDueLayout||tableDueLayout.first!==first||tableDueLayout.width!==width))queueTableDueFit();
+}).observe(tableWrap); } catch(e){} }
 if (document.fonts){
-  document.fonts.ready.then(queueTableDueFit);
-  if (document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", queueTableDueFit);
+  const refreshDueFonts=()=>{tableDueTextWidths.clear();tableDueLayout=null;queueTableDueFit(true);};
+  document.fonts.ready.then(refreshDueFonts);
+  if (document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", refreshDueFonts);
 }
 function tchip(d,slot,tab){
   const url=d[LINK_FIELDS[slot-1]]||"",label=linkName(d,slot),on=!!safeUrl(url);
@@ -3266,11 +3348,11 @@ function openTableDueCal(trigger){
       cur.due = nv; cur.updatedAt = Date.now(); saveItems(); onLocalChange("data");
       if (trigger.isConnected){                          // 觸發鈕仍在畫面:就地更新到期色(按鈕+整列)
         trigger.textContent = nv; trigger.title = nv; trigger.dataset.fullDue = nv; trigger.setAttribute("aria-label", "到期日 " + nv);
-        queueTableDueFit();
         const ds = dueStatus(nv);
         trigger.classList.remove("warn","over"); if (ds) trigger.classList.add(ds);
         const tr = trigger.closest("tr");
         if (tr){ tr.classList.remove("due-warn","due-over"); if (ds) tr.classList.add("due-" + ds); }
+        fitTableDueDates(true);
       } else { applyFilter(); }                          // 期間表格被同步重繪過:整表重繪一次以顯示新值
     }
   });
@@ -3941,10 +4023,9 @@ function commitLink(){
   const url = lpInput.value.trim();
   const chip=lpChip,it=tFindItem(chip),slot=Number(chip.dataset.slot),field=LINK_FIELDS[slot-1];
   if(it&&field){
-    const label=lpNameEdit.value.trim()||linkBaseName(it,slot),nameField="linkName"+slot;
-    const override=label===linkBaseName(it,slot)?"":label;
-    if((it[field]||"")!==url||(it[nameField]||"")!==override){
-      it[field]=url||null;it[nameField]=override;it.updatedAt=Date.now();
+    const names=linkNameEditValues(it,slot,lpNameEdit.value,chip.dataset.label);
+    if((it[field]||"")!==url||Object.entries(names).some(([key,value])=>(it[key]||"")!==value)){
+      it[field]=url||null;Object.assign(it,names);it.updatedAt=Date.now();
       saveItems();onLocalChange("data");
     }
     const rendered=document.createElement("span");rendered.innerHTML=tchip(it,slot,editMode);
@@ -4031,6 +4112,7 @@ function applyFilter(){
       : `<p class="empty">${items.length ? "找不到符合的物件" : "尚無物件，點右下角「＋ 新增物件」開始建立。"}</p>`;
   }
   syncTableMode();
+  if(viewMode==="table")fitTableDueDates();
 }
 renderTabs();
 
@@ -4053,6 +4135,7 @@ function openList(cat){
   cover.style.display = "none";
   listView.classList.add("active");
   syncTableMode();
+  if(viewMode==="table")fitTableDueDates();
   window.scrollTo(0,0);
   requestAnimationFrame(updateLH);
 }
@@ -4294,6 +4377,7 @@ function tabTrapTarget(){
   if (calOpen && calOpen.classList.contains("open")) return calOpen.querySelector(".cal");
   const flt = document.getElementById("fltBg");
   if (flt && flt.classList.contains("open")) return flt.querySelector(".fpanel");
+  if (typeof palettePop !== "undefined" && palettePop.classList.contains("open") && palettePop.classList.contains("link-palette")) return palettePop;
   const cat = document.getElementById("catBg");
   if (cat && cat.classList.contains("open")) return cat.querySelector(".modal");
   const mbg = document.getElementById("modalBg");
@@ -4397,12 +4481,12 @@ const F = {
   t1:document.getElementById("f_t1"), t2:document.getElementById("f_t2"), t3:document.getElementById("f_t3"),
 };
 
-let formLinkBases={};
+let formLinkBases={},formLinkOverrides={},formLinkLabels={};
 function formLinkValues(){
   const out={};
   [1,2,3,4].forEach(slot=>{
-    const base=formLinkBases[slot]||LINK_NAMES[slot-1],name=document.getElementById("f_linkname"+slot).value.trim()||base;
-    out["linkBaseName"+slot]=base;out["linkName"+slot]=name===base?"":name;
+    const original={["linkBaseName"+slot]:formLinkBases[slot]||"",["linkName"+slot]:formLinkOverrides[slot]||""};
+    Object.assign(out,linkNameEditValues(original,slot,document.getElementById("f_linkname"+slot).value,formLinkLabels[slot]));
   });
   return out;
 }
@@ -4417,7 +4501,10 @@ function refreshFormLinks(){
 }
 function loadFormLinks(d){
   const record=d||newLinkNames();
-  [1,2,3,4].forEach(slot=>{formLinkBases[slot]=linkBaseName(record,slot);document.getElementById("f_linkname"+slot).value=linkName(record,slot);});
+  [1,2,3,4].forEach(slot=>{
+    formLinkBases[slot]=record["linkBaseName"+slot]||"";formLinkOverrides[slot]=record["linkName"+slot]||"";
+    formLinkLabels[slot]=linkName(record,slot);document.getElementById("f_linkname"+slot).value=formLinkLabels[slot];
+  });
   F.u4.value=d?.url4||"";refreshFormLinks();
 }
 [1,2,3,4].forEach(slot=>document.getElementById("f_linkname"+slot).addEventListener("input",refreshFormLinks));
@@ -7262,6 +7349,7 @@ function openSettings(){
   window.scrollTo(0,0);
 }
 function closeSettings(){
+  if (typeof palettePop !== "undefined" && palettePop.classList.contains("link-palette")) closePalette();
   saveNav("cover");   // 記住:回到封面
   settingsView.classList.remove("active");
   cover.style.display = "flex";
@@ -7315,10 +7403,10 @@ function renderLinkSettings(){
     let row=host.querySelector(`[data-link-slot="${slot}"]`);
     if(!row){
       row=make("div","link-setting-row");row.dataset.linkSlot=slot;
-      const position=make("span","link-position"),name=make("input","link-setting-name"),color=make("input","link-setting-color"),controls=make("span","link-order-buttons");
+      const position=make("span","link-position"),name=make("input","link-setting-name"),color=make("button","link-setting-color"),controls=make("span","link-order-buttons");
       name.maxLength=20;
       name.addEventListener("change",()=>{const value=name.value.trim();if(!value){name.value=linkPreferences.defaultLinkNames[slot-1];toast("請填寫連結名稱");return;}linkPreferences.defaultLinkNames[slot-1]=value;saveLinkPreferences();});
-      color.type="color";color.addEventListener("change",()=>{linkPreferences.linkColors[slot-1]=color.value;saveLinkPreferences();});
+      color.type="button";color.dataset.linkColorSlot=String(slot);color.setAttribute("aria-haspopup","dialog");color.setAttribute("aria-expanded","false");color.addEventListener("click",()=>openPalette(color));
       [-1,1].forEach(delta=>{const b=make("button");b.type="button";b.dataset.delta=delta;b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${delta<0?'M12 19V5m-6 6 6-6 6 6':'M12 5v14m-6-6 6 6 6-6'}"/></svg>`;b.onclick=()=>{const order=linkPreferences.linkOrder,i=order.indexOf(slot);if(i+delta<0||i+delta>3)return;[order[i],order[i+delta]]=[order[i+delta],order[i]];saveLinkPreferences();};controls.append(b);});
       row.append(position,name,color,controls);
     }
@@ -7326,13 +7414,13 @@ function renderLinkSettings(){
     const name=row.querySelector(".link-setting-name"),color=row.querySelector(".link-setting-color");
     row.querySelector(".link-position").textContent=String(index+1);
     if(active!==name)name.value=linkPreferences.defaultLinkNames[slot-1];
-    if(active!==color)color.value=linkPreferences.linkColors[slot-1];
+    color.dataset.color=linkPreferences.linkColors[slot-1];color.style.setProperty("--selected-color",color.dataset.color);
     name.setAttribute("aria-label",`順序 ${index+1} 預設連結名稱`);color.setAttribute("aria-label",`順序 ${index+1} 連結顏色`);
-    row.querySelectorAll("button").forEach(b=>{const delta=Number(b.dataset.delta);b.disabled=index+delta<0||index+delta>3;b.setAttribute("aria-label",`將 ${linkPreferences.defaultLinkNames[slot-1]} ${delta<0?'往前':'往後'}移`);});
+    row.querySelectorAll(".link-order-buttons button").forEach(b=>{const delta=Number(b.dataset.delta);b.disabled=index+delta<0||index+delta>3;b.setAttribute("aria-label",`將 ${linkPreferences.defaultLinkNames[slot-1]} ${delta<0?'往前':'往後'}移`);});
   });
   let renamed=host.querySelector(".link-renamed-row");
-  if(!renamed){renamed=make("div","link-setting-row link-renamed-row");const color=make("input","link-setting-color");color.type="color";color.setAttribute("aria-label","單獨改名連結的共同顏色");color.onchange=()=>{linkPreferences.renamedLinkColor=color.value;saveLinkPreferences();};renamed.append(make("span","","單獨改名顏色"),color);host.append(renamed);}
-  const renamedColor=renamed.querySelector("input");if(active!==renamedColor)renamedColor.value=linkPreferences.renamedLinkColor;
+  if(!renamed){renamed=make("div","link-setting-row link-renamed-row");const color=make("button","link-setting-color");color.type="button";color.dataset.linkColorSlot="renamed";color.setAttribute("aria-label","單獨改名連結的共同顏色");color.setAttribute("aria-haspopup","dialog");color.setAttribute("aria-expanded","false");color.onclick=()=>openPalette(color);renamed.append(make("span","","單獨改名顏色"),color);host.append(renamed);}
+  const renamedColor=renamed.querySelector(".link-setting-color");renamedColor.dataset.color=linkPreferences.renamedLinkColor;renamedColor.style.setProperty("--selected-color",renamedColor.dataset.color);
 }
 
 // ===== 設定的收集 / 套用(供備份、匯入、雲端同步共用;含 到期提醒 與 外觀主題) =====
@@ -7461,6 +7549,23 @@ palettePop.innerHTML =
   `<div class="cpk-row"><div class="cpk-prev"></div><input class="cpk-hex" maxlength="7" spellcheck="false" inputmode="text" aria-label="顏色編號"></div>`+
   `<div class="cpk-presets">${PALETTE.map(c=>`<button type="button" data-c="${c}" style="--pc:${c}" aria-label="快選 ${c}"></button>`).join("")}</div>`;
 document.body.appendChild(palettePop);
+// Link settings use the app palette while keeping the existing category path intact.
+const linkPaletteHead=document.createElement("div");linkPaletteHead.className="link-palette-head";
+linkPaletteHead.innerHTML='<strong>連結顏色</strong><span class="link-palette-name"></span>';
+palettePop.prepend(linkPaletteHead);
+const linkPaletteFoot=document.createElement("div");linkPaletteFoot.className="link-palette-foot";
+linkPaletteFoot.innerHTML='<button type="button" class="link-palette-done">完成</button>';
+palettePop.append(linkPaletteFoot);
+linkPaletteFoot.querySelector("button").addEventListener("click",()=>closePalette());
+const LINK_PALETTE=[...LINK_COLORS,"#687F95","#D57A3A","#9070AD","#AC6584","#368F99","#586A76"];
+function paletteLinkSlot(){
+  const value=paletteFor&&paletteFor.dataset.linkColorSlot;
+  return value==="renamed"?value:/^[1-4]$/.test(value||"")?Number(value):null;
+}
+function currentPaletteLinkColor(){const slot=paletteLinkSlot();return slot==="renamed"?linkPreferences.renamedLinkColor:slot?linkPreferences.linkColors[slot-1]:null;}
+function renderPalettePresets(link){
+  palettePop.querySelector(".cpk-presets").innerHTML=(link?LINK_PALETTE:PALETTE).map(c=>`<button type="button" data-c="${c}" style="--pc:${c}${link?';color:'+linkInk(c):''}" aria-label="快選 ${c}"${link?' aria-pressed="false"':''}>${link?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 12 4 4 8-8"/></svg>':''}</button>`).join("");
+}
 const cpkSvEl  = palettePop.querySelector(".cpk-sv");
 const cpkKnob  = palettePop.querySelector(".cpk-knob");
 const cpkHueEl = palettePop.querySelector(".cpk-hue");
@@ -7470,7 +7575,7 @@ const cpkValTh = cpkValEl.querySelector(".cpk-thumb");
 const cpkPctEl = palettePop.querySelector(".cpk-pct");
 const cpkPrev  = palettePop.querySelector(".cpk-prev");
 const cpkHexEl = palettePop.querySelector(".cpk-hex");
-let paletteFor = null, cpkH = 200, cpkS = 80, cpkV = 50, cpkDirty = false;
+let paletteFor = null, cpkH = 200, cpkS = 80, cpkV = 50, cpkDirty = false, linkHexDirty = false;
 function cpkHexNow(){ const [r,g,b]=hsvToRgb(cpkH,cpkS,cpkV); return rgbToHex(r,g,b); }
 function cpkRender(apply){
   const hex = cpkHexNow();
@@ -7483,13 +7588,32 @@ function cpkRender(apply){
   cpkPctEl.textContent = "深淺 "+Math.round(cpkV)+"%";
   cpkPrev.style.setProperty("--cpk-cur", hex);
   if (document.activeElement !== cpkHexEl) cpkHexEl.value = hex;
+  if (paletteLinkSlot()){
+    palettePop.querySelectorAll(".cpk-presets button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.c.toUpperCase()===hex)));
+    cpkSvEl.setAttribute("aria-valuenow",String(Math.round(cpkS)));
+    cpkSvEl.setAttribute("aria-valuetext",`飽和 ${Math.round(cpkS)}%，明亮 ${Math.round(cpkV)}%`);
+    cpkHueEl.setAttribute("aria-valuenow",String(Math.round(cpkH)));
+    cpkValEl.setAttribute("aria-valuenow",String(Math.round(cpkV)));
+    if(apply)cpkDirty=true;
+    return; // A preview must not enter collectSettings before the gesture commits.
+  }
   if (apply && paletteFor){
     const item = paletteFor.closest(".cat-item");
     const cat = item && cats.find(c => c.key === item.dataset.key);
     if (cat){ cat.color = hex; paletteFor.dataset.color = hex; paletteFor.style.setProperty("--cc", hex); cpkDirty = true; }
   }
 }
-function cpkCommit(){ if (cpkDirty){ cpkDirty = false; refreshCategories(); } }   // 存檔+重繪+排程同步
+function cpkCommit(){
+  if(!cpkDirty)return;
+  cpkDirty=false;
+  const slot=paletteLinkSlot();
+  if(slot){
+    const hex=cpkHexNow();if(String(currentPaletteLinkColor()).toUpperCase()===hex)return;
+    if(slot==="renamed")linkPreferences.renamedLinkColor=hex;else linkPreferences.linkColors[slot-1]=hex;
+    saveLinkPreferences();return;
+  }
+  refreshCategories();
+}   // 存檔+重繪+排程同步
 function cpkSet(hex, apply){
   const rgb = hexToRgb(hex); if (!rgb) return false;
   const hsv = rgbToHsv(rgb[0], rgb[1], rgb[2]);
@@ -7498,6 +7622,10 @@ function cpkSet(hex, apply){
 }
 function cpkDrag(el, onMove){
   el.addEventListener("pointerdown", e => {
+    if(paletteLinkSlot()){
+      if(document.activeElement===cpkHexEl){commitLinkPaletteHex();cpkHexEl.blur();}
+      el.focus({preventScroll:true});
+    }
     e.preventDefault();
     try { el.setPointerCapture(e.pointerId); } catch(err){}
     const move = ev => {
@@ -7522,30 +7650,69 @@ cpkDrag(cpkHueEl, (x)   => { cpkH = Math.min(359.9, x*360); cpkRender(true); });
 cpkDrag(cpkValEl, (x)   => { cpkV = x*100; cpkRender(true); });
 cpkHexEl.addEventListener("input", () => {
   const v = cpkHexEl.value.trim();
+  if(paletteLinkSlot()){
+    linkHexDirty=true;
+    const valid=!!hexToRgb(v);cpkHexEl.setAttribute("aria-invalid",String(!valid));
+    if(valid)cpkSet(v,false);
+    return;
+  }
   if (/^#?[0-9a-fA-F]{6}$/.test(v) || /^#?[0-9a-fA-F]{3}$/.test(v)) cpkSet(v.charAt(0)==="#" ? v : "#"+v, true);
 });
-cpkHexEl.addEventListener("change", cpkCommit);
-cpkHexEl.addEventListener("keydown", e => { if (e.key === "Enter"){ cpkHexEl.blur(); cpkCommit(); } });
+function commitLinkPaletteHex(){
+  if(!paletteLinkSlot()||!linkHexDirty)return;
+  linkHexDirty=false;
+  if(!cpkSet(cpkHexEl.value,true)){cpkDirty=false;cpkSet(currentPaletteLinkColor(),false);}
+  cpkHexEl.removeAttribute("aria-invalid");cpkHexEl.value=cpkHexNow();cpkCommit();
+}
+cpkHexEl.addEventListener("change", () => {if(paletteLinkSlot())commitLinkPaletteHex();else cpkCommit();});
+cpkHexEl.addEventListener("keydown", e => { if (e.key === "Enter"){ if(paletteLinkSlot())commitLinkPaletteHex(); cpkHexEl.blur(); cpkCommit(); } });
 palettePop.querySelector(".cpk-presets").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   cpkSet(b.dataset.c, true); cpkCommit();
 });
 function openPalette(btn){
-  paletteFor = btn; cpkDirty = false;
+  if(palettePop.classList.contains("open"))closePalette();
+  paletteFor = btn; cpkDirty = false; linkHexDirty=false;
+  const link=!!paletteLinkSlot();
+  palettePop.classList.toggle("link-palette",link);renderPalettePresets(link);
+  cpkHexEl.removeAttribute("aria-invalid");
+  if(link){
+    const slot=paletteLinkSlot();linkPaletteHead.querySelector(".link-palette-name").textContent=slot==="renamed"?"單獨改名":linkPreferences.defaultLinkNames[slot-1];
+    palettePop.setAttribute("role","dialog");palettePop.setAttribute("aria-label","連結顏色");btn.setAttribute("aria-expanded","true");
+  }else{palettePop.removeAttribute("role");palettePop.removeAttribute("aria-label");}
+  [cpkSvEl,cpkHueEl,cpkValEl].forEach((el,i)=>{
+    if(link){el.tabIndex=0;el.setAttribute("role","slider");el.setAttribute("aria-label",["顏色濃淡，左右調飽和、上下調明亮","色相","深淺"][i]);el.setAttribute("aria-valuemin","0");el.setAttribute("aria-valuemax",i===1?"360":"100");}
+    else{["tabindex","role","aria-valuemin","aria-valuemax","aria-valuenow","aria-valuetext"].forEach(a=>el.removeAttribute(a));if(i===0)el.removeAttribute("aria-label");else el.setAttribute("aria-label",i===1?"色相":"深淺");}
+  });
   cpkSet(btn.dataset.color || "#8494A0", false);
   palettePop.classList.add("open");
   const r = btn.getBoundingClientRect();
   const pw = palettePop.offsetWidth, ph = palettePop.offsetHeight;
-  const x = Math.min(Math.max(8, r.left), window.innerWidth - pw - 8);
+  const vw=link?document.documentElement.clientWidth:window.innerWidth;
+  const x = link?Math.max(8,Math.min(r.left,vw-pw-8)):Math.min(Math.max(8,r.left),vw-pw-8);
   let y = r.bottom + 8;
   if (y + ph > window.innerHeight - 8) y = Math.max(8, r.top - ph - 8);
   palettePop.style.left = x + "px"; palettePop.style.top = y + "px";
+  if(link){const first=palettePop.querySelector('.cpk-presets button[aria-pressed="true"]')||palettePop.querySelector(".cpk-presets button");first.focus({preventScroll:true});}
 }
 function closePalette(){
   if (!palettePop.classList.contains("open")) return;
+  if(paletteLinkSlot()&&document.activeElement===cpkHexEl)commitLinkPaletteHex();
   cpkCommit();   // 保底:關閉時若有未存的變更一併存檔同步
+  const trigger=paletteFor,link=!!paletteLinkSlot();
   palettePop.classList.remove("open"); paletteFor = null;
+  if(link&&trigger){trigger.setAttribute("aria-expanded","false");if(trigger.isConnected)trigger.focus({preventScroll:true});}
 }
+
+// Keyboard adjustment follows the same commit boundary as a completed drag.
+[cpkSvEl,cpkHueEl,cpkValEl].forEach((el,i)=>el.addEventListener("keydown",e=>{
+  if(!paletteLinkSlot()||!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End"].includes(e.key))return;
+  e.preventDefault();e.stopPropagation();const step=e.shiftKey?10:1,plus=e.key==="ArrowRight"||e.key==="ArrowUp",bound=(v,max)=>Math.max(0,Math.min(max,v));
+  if(i===0){if(e.key==="ArrowLeft"||e.key==="ArrowRight")cpkS=bound(cpkS+(plus?step:-step),100);else cpkV=e.key==="Home"?0:e.key==="End"?100:bound(cpkV+(plus?step:-step),100);}
+  else if(i===1)cpkH=e.key==="Home"?0:e.key==="End"?359.9:bound(cpkH+(plus?step:-step),359.9);
+  else cpkV=e.key==="Home"?0:e.key==="End"?100:bound(cpkV+(plus?step:-step),100);
+  cpkRender(true);cpkCommit();
+}));
 document.addEventListener("pointerdown", e => {
   if (palettePop.classList.contains("open") && !palettePop.contains(e.target) && !(paletteFor && paletteFor.contains(e.target))) closePalette();
 }, true);
@@ -7724,7 +7891,7 @@ document.addEventListener("pointercancel", endCatDrag);
     detailWasOpen = detailBg.classList.contains("open");
     const el = e.target;
     // 起點若在橫向捲動列 / 輸入框 / 下拉選單 / 表格 / 連結視窗上，則不攔截(讓它們正常運作)
-    skip = !!(el.closest && el.closest("#tabs, input, textarea, .cselect, .table-wrap, #linkpop, #catmenu, select"));
+    skip = !!(el.closest && el.closest("#tabs, input, textarea, .cselect, .table-wrap, #linkpop, #catmenu, .palette-pop, select"));
     if (modalBg.classList.contains("open")) skip = false;  // 編輯表單開啟時,允許滑動關閉
     if (detailWasOpen) skip = false;  // 詳情頁開啟時,允許滑動關閉(只回列表,不跳封面)
     const _cb = document.getElementById("calBg");
