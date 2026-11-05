@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261105F">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261105F">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261105G">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261105G">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261105F"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261105F"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261105G"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261105G"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1333,6 +1333,18 @@
   .card .price-value{flex:0 0 auto;}
   .card .price .links{flex:0 1 58%;max-width:240px;}
   .links .property-link,.dtl-links .property-link{min-width:0;justify-content:center;}
+  /* 2026.11.05G card compact links: keep the four slots together and retain their configured colors. */
+  .card .price{flex-wrap:wrap;row-gap:4px;}
+  .card .price .links{flex:0 0 210px;width:210px;max-width:100%;margin-left:auto;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
+  .card .price .links .property-link,
+  .card .price .links .property-link:hover,
+  .card .price .links .property-link:active{position:relative;isolation:isolate;box-sizing:border-box;height:28px;padding:0 5px;border:0;border-radius:9px;background:transparent;font-size:12px;font-weight:600;line-height:1.2;letter-spacing:0;}
+  .card .price .links .property-link::before{content:"";position:absolute;inset:50% 0 auto;height:28px;transform:translateY(-50%);box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--surface-1);z-index:-1;pointer-events:none;}
+  .card .price .links .property-link.on::before{background:var(--link-color);border-color:var(--link-color);}
+  .card .price .links .property-link.off{color:var(--text-faint);}
+  .card .price .links .property-link .ext{display:none;}
+  @media (max-width:600px),(pointer:coarse){.card .price .links .property-link{height:44px;}}
+  /* End 2026.11.05G card compact links. */
   .link-group.collapsed .link-fields{grid-template-columns:repeat(2,minmax(0,1fr));}
   .link-f{min-width:0;display:flex;flex-direction:column;gap:7px;}
   .modal .link-f .link-name-input{width:100%;min-width:0;padding:5px 8px;height:30px;border:1px solid var(--line);border-left:3px solid var(--link-color);border-radius:7px;background:var(--surface-1);font-size:.8rem;font-weight:600;color:var(--ink);text-align:center;text-overflow:ellipsis;}
@@ -1390,7 +1402,7 @@
   }
   @media(max-width:600px){.modal .link-f input{font-size:16px;}.modal .link-f .link-name-input{font-size:16px;height:36px;}.lp-name-edit{font-size:16px;}.link-setting-name,.link-text-color{font-size:16px;}}
 
-  /* 2026.11.05F: preserve row height; category badge stays centered at narrow widths. */
+  /* 2026.11.05G: preserve row height; category badge stays centered at narrow widths. */
   .ptable tbody td.tcat{padding:0 4px;text-align:center;}
   .ptable .tcat-trigger,.ptable .tcat-badge{height:29px;max-width:100%;padding:0 4px;line-height:1.2;vertical-align:middle;}
   .ptable .tcat-label{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1724,7 +1736,7 @@
 </div>
 
 <script id="property-core-source">
-/* 物件總覽 2026.11.05F：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
+/* 物件總覽 2026.11.05G：資料驗證、背景多視窗合併、持久化修改紀錄與草稿隔離。 */
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
@@ -2184,7 +2196,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.05F";
+const APP_VERSION = "2026.11.05G";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
