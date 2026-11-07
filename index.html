@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261106B">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261106B">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261107B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261107B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261106B"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261106B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261107B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261107B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -880,7 +880,7 @@
   .link-filter-rows{display:grid;gap:13px;padding:13px 0 8px;}
   .link-filter-row{display:grid;grid-template-columns:minmax(0,62px) minmax(0,1fr);gap:9px;align-items:center;}
   .link-filter-name{font-size:.84rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .link-filter-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;}
+  .link-filter-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;}
   .link-filter-option{min-width:0;min-height:35px;padding:5px 2px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink-soft);font:inherit;font-size:.78rem;white-space:nowrap;cursor:pointer;}
   .link-filter-option[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-tint);color:var(--accent-deep);font-weight:700;}
   .link-filter-trigger:focus-visible,.link-filter-option:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
@@ -1823,7 +1823,7 @@
   <div class="fpanel link-filter-panel" role="dialog" aria-modal="true" aria-labelledby="linkFilterTitle" aria-describedby="linkFilterHint">
     <div class="fpanel-head"><span id="linkFilterTitle">連結篩選</span><button type="button" class="fx" id="linkFilterX" aria-label="關閉連結篩選">✕</button></div>
     <div class="link-filter-rows" id="linkFilterRows"></div>
-    <p class="link-filter-hint" id="linkFilterHint">有＝已填網址　無＝已標記沒有<br>未填＝尚未填寫；多項條件必須全部符合。</p>
+    <p class="link-filter-hint" id="linkFilterHint">只點想篩的條件，再點一次可取消。<br>選了多個平台時，物件須符合每個平台的條件。</p>
     <div class="fpanel-foot"><button type="button" class="cal-fbtn cal-clear" id="linkFilterClear">清除篩選</button><button type="button" class="cal-fbtn cal-today" id="linkFilterApply">套用</button></div>
   </div>
 </div>
@@ -2311,7 +2311,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.06B";
+const APP_VERSION = "2026.11.07B";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2900,8 +2900,8 @@ const FLT_NAME = { cat:"類別", layout:"格局", floor:"樓層", price:"售價�
 const numOrNull = v => { try { const n = PropertyCore.price(v); return n === "" ? null : n; } catch(_){ return NaN; } };
 // link-filter:start
 const LINK_FILTER_KEY = "property_app_linkfilters_v1";
-const LINK_FILTER_VALUES = ["all","has","none","empty"];
-const LINK_FILTER_LABELS = ["不限","有","無","未填"];
+const LINK_FILTER_VALUES = ["has","empty","none"];
+const LINK_FILTER_LABELS = ["已填入","尚未填","已勾無"];
 function normalizeLinkFilters(value){ return [0,1,2,3].map(i => Array.isArray(value) && LINK_FILTER_VALUES.includes(value[i]) ? value[i] : "all"); }
 let linkFilterState = normalizeLinkFilters(null), linkFilterDraft = null;
 if (storageOK){ try { linkFilterState = normalizeLinkFilters(JSON.parse(localStorage.getItem(LINK_FILTER_KEY) || "null")); } catch(_){} }
@@ -2956,7 +2956,7 @@ document.getElementById("linkFilterRows").addEventListener("click", e => {
   if (!button || !linkFilterDraft) return;
   const slot = Number(button.dataset.linkFilterSlot), value = button.dataset.value;
   if (slot < 1 || slot > 4 || !LINK_FILTER_VALUES.includes(value)) return;
-  linkFilterDraft[slot-1] = value;
+  linkFilterDraft[slot-1] = linkFilterDraft[slot-1] === value ? "all" : value;
   renderLinkFilter();
   document.querySelector(`#linkFilterRows [data-link-filter-slot="${slot}"][data-value="${value}"]`)?.focus({preventScroll:true});
 });
