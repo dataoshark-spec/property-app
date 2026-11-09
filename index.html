@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261109E">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261109E">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261110A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261110A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261109E"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261109E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261110A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261110A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -732,15 +732,11 @@
   .link-none-check[hidden]{display:none;}
   .link-none-check input[type="checkbox"]{width:15px!important;height:15px!important;margin:0;padding:0;accent-color:var(--accent);flex:none;}
   .lp-none-check{margin-left:auto;padding:5px 0 5px 5px;}
-  .form-link-head{display:flex;align-items:center;gap:7px;min-width:0;}
   .modal-body .link-none-check{flex-direction:row;min-height:30px;font-weight:400;}
-  .form-link-head .link-name-input{flex:1;min-width:0;}
   .lp-input:disabled,.link-f input:disabled{background:var(--surface-1);color:var(--text-faint);cursor:default;}
   .property-link.link-none{color:var(--ink-soft)!important;background:var(--surface-1)!important;border-color:var(--line)!important;opacity:1;}
   .lp-btn:disabled{opacity:.4;cursor:default;}
   /* link-none:end */
-  .link-lab{font-size:.8rem;font-weight:600;color:var(--ink-soft);}
-  .link-group.collapsed .link-lab{font-size:.72rem;font-weight:400;color:var(--text-faint);text-align:center;}   /* 收合時:標籤縮小、減粗、上方置中(節省高度且對齊窄欄) */
   .link-f input{width:100%;box-sizing:border-box;transition:font-size .15s ease;}
   .link-group.collapsed .link-f input{text-overflow:ellipsis;font-size:.85em;}   /* 收合時窄框:文字縮小、過長網址尾端省略;展開恢復原大小 */
   .row2.store-row{grid-template-columns:minmax(0,2fr) minmax(0,1fr);}          /* 門市 2/3、到期日 1/3(與格局同寬) */
@@ -1241,8 +1237,8 @@
   @media (hover:hover){ .dtl-copy:hover{box-shadow:inset 0 0 0 100px rgba(15,122,95,.07);} }
   .dtl-copy.copied{animation:cardCopiedFlash .7s ease;}
   .dtl-body .needexp-ed{min-height:auto;}
-  .dtl-links{display:grid;gap:8px;min-width:0;}
-  .dtl-link-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;min-width:0;}
+  .dtl-links{--detail-gap:8px;display:grid;gap:var(--detail-gap);min-width:0;}
+  .dtl-link-row{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% + var(--detail-gap))/var(--detail-columns) - var(--detail-gap));justify-content:center;gap:var(--detail-gap);min-width:0;}
   .dtl-tel{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--accent-deep);background:var(--accent-tint);border:1px solid var(--accent-tint-bd);border-radius:9px;padding:9px 14px;font-weight:700;font-size:.95rem;}
   .dtl-tel svg{width:15px;height:15px;flex:none;}
   .dtl-tellink{color:var(--accent-deep);text-decoration:none;font-variant-numeric:tabular-nums;}   /* 承辦區格內電話:綠色可撥號連結 */
@@ -1460,8 +1456,16 @@
   @media(max-width:600px),(pointer:coarse){.card .more-links{height:44px;}}
   .link-group.collapsed .link-fields{grid-template-columns:repeat(2,minmax(0,1fr));}
   .link-f{min-width:0;display:flex;flex-direction:column;gap:7px;}
-  .modal .link-f .link-name-input{width:100%;min-width:0;padding:5px 8px;height:30px;border:1px solid var(--line);border-left:3px solid var(--link-color);border-radius:7px;background:var(--surface-1);font-size:.8rem;font-weight:600;color:var(--ink);text-align:center;text-overflow:ellipsis;}
-  .modal .link-f .link-name-input:focus{border-color:var(--link-color);}
+  .form-link-name-trigger{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:100%;padding:3px 2px 3px 0;border:0;border-radius:4px;background:transparent;color:var(--ink);font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;}
+  .form-link-name-trigger::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--link-color);}
+  .form-link-name-trigger span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .form-link-name-trigger svg{flex:none;width:12px;height:12px;color:var(--ink-soft);}
+  .form-link-name-trigger[aria-expanded="true"]{color:var(--accent-deep);}
+  .form-link-options{display:grid;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+  .form-link-options[hidden]{display:none;}
+  .form-link-options-actions{display:flex;justify-content:flex-end;gap:7px;}
+  .form-link-options-actions button{min-height:34px;flex:none;padding:5px 12px;font-size:.83rem;}
+  @media(pointer:coarse){.form-link-name-trigger,.form-link-options-actions button,.modal-body .form-link-options .link-none-check{min-height:44px;}}
   .lp-head .lp-name{border:0;border-bottom:1px dashed currentColor;padding:0 0 2px;background:none;font:inherit;font-size:16px;color:inherit;cursor:pointer;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .lp-head .lp-name:disabled{border:0;cursor:default;}
   .lp-name-edit{min-width:0;max-width:180px;flex:1;padding:4px 6px;border:1px solid var(--accent);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;}
@@ -1541,7 +1545,7 @@
     .link-setting-row:not(.link-renamed-row) .link-text-color{width:60px;padding-left:3px;padding-right:3px;}
   }
   /* End 2026.11.06B mobile link setting row. */
-  @media(max-width:600px){.modal .link-f input{font-size:16px;}.modal .link-f .link-name-input{font-size:16px;height:36px;}.lp-name-edit{font-size:16px;}.link-setting-name,.link-text-color{font-size:16px;}}
+  @media(max-width:600px){.modal .link-f input,.modal .form-link-options input{font-size:16px;}.lp-name-edit{font-size:16px;}.link-setting-name,.link-text-color{font-size:16px;}}
 
   /* 2026.11.06B: preserve row height; category badge stays centered at narrow widths. */
   .ptable tbody td.tcat{padding:0 4px;text-align:center;}
@@ -1774,6 +1778,14 @@
             </button>
           </div>
           <div class="link-fields"></div>
+          <section class="form-link-options" id="formLinkOptions" aria-label="此物件的連結欄位設定" hidden>
+            <label>此物件的連結名稱<input id="formLinkOptionName" maxlength="20" autocomplete="off"></label>
+            <label class="link-none-check"><input type="checkbox" id="formLinkOptionNone">這個物件沒有此連結</label>
+            <div class="form-link-options-actions">
+              <button type="button" class="btn-ghost" id="formLinkOptionCancel">取消</button>
+              <button type="button" class="btn-primary" id="formLinkOptionDone">完成</button>
+            </div>
+          </section>
         </div>
         <div class="f-need3">
           <div class="fneed-seg" data-need-font-seg="1"><div class="nseg-head fneed-head"><input class="fneed-t" id="f_t1" placeholder="標題"><span class="nseg-btns"></span></div><div class="fneed-c fneed-ed" id="f_note" contenteditable="true" spellcheck="false"></div></div>
@@ -2519,7 +2531,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.09E";
+const APP_VERSION = "2026.11.10A";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2608,15 +2620,17 @@ function propertyLinksHTML(d,compact=false){
   return chips+moreLinksButtonHTML(slots.length-visible.length);
 }
 function detailLinkRowsHTML(d,slots){
+  if(!slots.length)return "";
+  const rowCount=Math.ceil(slots.length/4),columns=Math.ceil(slots.length/rowCount);
   const rows=[];
   let start=0;
-  for(let left=Math.ceil(slots.length/4);left>0;left--){
+  for(let left=rowCount;left>0;left--){
     const size=Math.ceil((slots.length-start)/left);
     const chips=slots.slice(start,start+size).map(slot=>linkChip(d,slot)).join("");
     rows.push(`<div class="dtl-link-row">${chips}</div>`);
     start+=size;
   }
-  return rows.join("");
+  return `<div class="dtl-links" style="--detail-columns:${columns}">${rows.join("")}</div>`;
 }
 
 // 到期提醒固定 7 天:不提供設定,也不納入雲端同步,避免跨裝置同步時提醒門檻被改掉
@@ -4664,7 +4678,7 @@ function openMoreLinks(button){
   const slots=linkSlotIds().slice(visible);
   if(!slots.length)return;
   tableMorePanel.innerHTML=slots.map(slot=>{
-    const state=linkState(item,slot),hint=state==="none"?"已勾無":state==="empty"?"尚未填":"";
+    const state=linkState(item,slot),hint=state==="none"?"無連結":state==="empty"?"未填":"";
     return `<button type="button" data-slot="${slot}" data-none="${state==="none"}" class="${state}" style="${linkStyle(item,slot)}"><span aria-hidden="true" class="platform-dot"></span><span class="platform-name">${esc(linkName(item,slot))}</span>${hint?`<small>${hint}</small>`:""}</button>`;
   }).join("");
   tableMoreAnchor=anchor;
@@ -5313,7 +5327,11 @@ document.addEventListener("keydown", e => {
   if (isOn("catSel","open")){ closeCatSel(); return; }                                // 表單類別下拉
   if (isOn("catBg","open")){ closeCatManager(); return; }                             // 管理類別
   if (isOn("detailBg","open")){ closeDetail(); return; }                             // 物件明細(唯讀)
-  if (isOn("modalBg","open")){ closeForm(); return; }                                 // 編輯/新增表單
+  if (isOn("modalBg","open")){
+    if(formLinkOptionSlot!==null){e.preventDefault();finishFormLinkOptions(false);}
+    else closeForm();
+    return;
+  }
   if(!linkDeleteUI.picker.hidden){e.preventDefault();setLinkDeleteMode(false);linkDeleteUI.remove.focus();return;}
   // 無浮層時:設定頁 Esc→關設定;列表(卡片/表格) Esc→回封面(與 ← 相同)
   if (typeof settingsView !== "undefined" && settingsView && settingsView.classList.contains("active")){ closeSettings(); return; }
@@ -5335,12 +5353,18 @@ const F = {
 };
 
 const formLinkRows=new Map();
-const formLinkGroup=document.getElementById("linkGroup");
-const formLinkFields=formLinkGroup.querySelector(".link-fields");
+const formLinkGroup=document.getElementById("linkGroup"),formLinkFields=formLinkGroup.querySelector(".link-fields");
+const formLinkOptions=document.getElementById("formLinkOptions");
+const formLinkOptionName=document.getElementById("formLinkOptionName"),formLinkOptionNone=document.getElementById("formLinkOptionNone");
+let formLinkOptionSlot=null,formLinkOptionInitialName="";
+
 function formLinkRowValues(slot,row,normalizeUrl=false){
-  const values=linkNameEditValues(row.original,slot,row.name.value,row.initialLabel);
-  values["linkNone"+slot]=row.none.checked;
-  values[linkUrlField(slot)]=normalizeUrl?(safeUrl(row.url.value.trim())||null):row.url.value;
+  // Include the open panel when saving or recovering a draft. Cancel still discards its staged edits.
+  const editing=formLinkOptionSlot===slot;
+  const values=editing?linkNameEditValues(row.names,slot,formLinkOptionName.value,formLinkOptionInitialName):{...row.names};
+  const url=row.none?row.retainedUrl:row.url.value;
+  values["linkNone"+slot]=editing?formLinkOptionNone.checked:row.none;
+  values[linkUrlField(slot)]=normalizeUrl?(safeUrl(url.trim())||null):url;
   return values;
 }
 function formLinkValues(normalizeUrl=false){
@@ -5349,26 +5373,69 @@ function formLinkValues(normalizeUrl=false){
   return out;
 }
 function paintFormLinkRow(slot,row){
-  const values=formLinkRowValues(slot,row);
-  row.name.style.setProperty("--link-color",linkColor(values,slot));
-  row.name.style.setProperty("--link-ink",propertyLinkInk(values,slot));
-  row.url.placeholder=linkName(values,slot)+" 連結";
-  row.url.disabled=row.none.checked;
+  const label=linkName(row.names,slot);
+  row.label.textContent=label;
+  row.trigger.style.setProperty("--link-color",linkColor(row.names,slot));
+  row.trigger.title="設定「"+label+"」連結";
+  row.trigger.setAttribute("aria-label",row.trigger.title);
+  row.url.setAttribute("aria-label",label+(row.none?" 無連結":" 網址"));
+  row.url.disabled=row.none;
+  row.url.placeholder=row.none?"無連結":"輸入網址";
 }
+function setFormLinkNone(row,none){
+  if(row.none===none)return;
+  if(none){row.retainedUrl=row.url.value;row.url.value="";}
+  else{row.url.value=row.retainedUrl;row.retainedUrl="";}
+  row.none=none;
+}
+function hideFormLinkOptions(){
+  formLinkRows.get(formLinkOptionSlot)?.trigger.setAttribute("aria-expanded","false");
+  formLinkOptionSlot=null;
+  formLinkOptions.hidden=true;
+}
+function finishFormLinkOptions(apply){
+  const slot=formLinkOptionSlot,row=formLinkRows.get(slot);
+  if(!row)return;
+  if(apply){
+    row.names=linkNameEditValues(row.names,slot,formLinkOptionName.value,formLinkOptionInitialName);
+    setFormLinkNone(row,formLinkOptionNone.checked);
+    paintFormLinkRow(slot,row);
+  }
+  hideFormLinkOptions();
+  saveFormDraft();
+  row.trigger.focus();
+}
+function openFormLinkOptions(slot){
+  const row=formLinkRows.get(slot);if(!row)return;
+  if(slot===formLinkOptionSlot){finishFormLinkOptions(false);return;}
+  if(formLinkOptionSlot!==null){hideFormLinkOptions();saveFormDraft();}
+  formLinkOptionSlot=slot;formLinkOptionInitialName=linkName(row.names,slot);
+  formLinkOptionName.value=formLinkOptionInitialName;formLinkOptionNone.checked=row.none;
+  formLinkOptions.hidden=false;row.trigger.setAttribute("aria-expanded","true");
+  formLinkOptionName.focus();formLinkOptionName.select();
+}
+document.getElementById("formLinkOptionCancel").addEventListener("click",()=>finishFormLinkOptions(false));
+document.getElementById("formLinkOptionDone").addEventListener("click",()=>finishFormLinkOptions(true));
+formLinkOptionName.addEventListener("keydown",e=>{
+  if(e.isComposing||e.keyCode===229){
+    if(e.key==="Enter"||e.key==="Escape")e.stopPropagation();
+    return;
+  }
+  if(e.key==="Enter"){e.preventDefault();finishFormLinkOptions(true);}
+});
 function createFormLinkRow(slot,record){
-  const block=document.createElement("div"),head=document.createElement("div"),label=document.createElement("label");
-  block.className="link-f";block.dataset.linkSlot=slot;head.className="form-link-head";label.className="link-none-check";
-  const name=document.createElement("input"),url=document.createElement("input"),none=document.createElement("input");
-  name.id="f_linkname"+slot;name.className="link-lab link-name-input";name.maxLength=20;
+  const block=document.createElement("div"),trigger=document.createElement("button"),label=document.createElement("span"),url=document.createElement("input");
+  block.className="link-f";block.dataset.linkSlot=slot;
+  trigger.type="button";trigger.className="form-link-name-trigger";
+  trigger.setAttribute("aria-controls","formLinkOptions");trigger.setAttribute("aria-expanded","false");
+  trigger.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14.5 5.5 4 4M4 20l4.5-1 12-12a2.83 2.83 0 0 0-4-4l-12 12L4 20z"/></svg>';
+  trigger.prepend(label);trigger.addEventListener("click",()=>openFormLinkOptions(slot));
   url.id=({1:"f_591",2:"f_leju",3:"f_i",4:"f_4"})[slot]||"f_url"+slot;
-  none.type="checkbox";none.id="f_linknone"+slot;
-  label.append(none,document.createTextNode("無"));head.append(name,label);block.append(head,url);
-  const initialLabel=linkName(record,slot);
-  const original={["linkName"+slot]:record["linkName"+slot]||"",["linkBaseName"+slot]:record["linkBaseName"+slot]||""};
-  const row={block,name,url,none,initialLabel,original};
-  name.value=initialLabel;url.value=record[linkUrlField(slot)]||"";none.checked=linkIsNone(record,slot);
-  name.addEventListener("input",()=>paintFormLinkRow(slot,row));
-  none.addEventListener("change",()=>{paintFormLinkRow(slot,row);saveFormDraft();});
+  url.value=record[linkUrlField(slot)]||"";
+  block.append(trigger,url);
+  const names={["linkName"+slot]:record["linkName"+slot]||"",["linkBaseName"+slot]:record["linkBaseName"+slot]||""};
+  const row={block,trigger,label,url,names,retainedUrl:"",none:false};
+  setFormLinkNone(row,linkIsNone(record,slot));
   return row;
 }
 function reconcileFormLinks(record,updatingOpenForm){
@@ -5376,6 +5443,7 @@ function reconcileFormLinks(record,updatingOpenForm){
   formLinkGroup.hidden=!order.length;
   for(const [slot,row] of formLinkRows){
     if(active.has(slot))continue;
+    if(formLinkOptionSlot===slot)hideFormLinkOptions();
     row.block.remove();formLinkRows.delete(slot);
     if(updatingOpenForm && formBaseRec){
       for(const key of [linkUrlField(slot),"linkName"+slot,"linkBaseName"+slot,"linkNone"+slot])delete formBaseRec[key];
@@ -5386,15 +5454,12 @@ function reconcileFormLinks(record,updatingOpenForm){
     if(!row){
       row=createFormLinkRow(slot,record);formLinkRows.set(slot,row);
       if(updatingOpenForm && formBaseRec)Object.assign(formBaseRec,formLinkRowValues(slot,row));
-    }else{
-      const currentLabel=linkName(row.original,slot);
-      if(row.name.value===row.initialLabel)row.name.value=currentLabel;
-      row.initialLabel=currentLabel;
+    }else if(formLinkOptionSlot===slot){
+      const name=linkName(row.names,slot);
+      if(formLinkOptionName.value===formLinkOptionInitialName&&name!==formLinkOptionInitialName)formLinkOptionName.value=name;
+      formLinkOptionInitialName=name;
     }
     if(formLinkFields.children[index]!==row.block)formLinkFields.insertBefore(row.block,formLinkFields.children[index]||null);
-    row.name.setAttribute("aria-label","連結 "+(index+1)+" 名稱");
-    row.url.setAttribute("aria-label",linkDefaultName(slot)+" 網址");
-    row.none.setAttribute("aria-label",linkDefaultName(slot)+" 無連結");
     paintFormLinkRow(slot,row);
   });
 }
@@ -5402,7 +5467,7 @@ function refreshOpenFormLinks(){
   if(modalBg.classList.contains("open"))reconcileFormLinks(items.find(d=>d.id===editingId)||{},true);
 }
 function loadFormLinks(d){
-  formLinkFields.replaceChildren();formLinkRows.clear();
+  hideFormLinkOptions();formLinkFields.replaceChildren();formLinkRows.clear();
   reconcileFormLinks(d||newLinkNames(),false);
 }
 
@@ -5585,6 +5650,7 @@ function applyPendingMergeIfAny(){
 function closeForm(){
   closeNeedOrderUI();
   if(formConflict)saveFormDraft();else clearFormDraft();
+  hideFormLinkOptions();
   modalBg.classList.remove("open"); editingId=null;
   unlockOverlay(); applyPendingMergeIfAny();
 }
@@ -5619,7 +5685,7 @@ function openDetail(id){
   const _hasLink = detailSlots.some(slot=>safeUrl(d[linkUrlField(slot)])||linkIsNone(d,slot));
   const links = _hasLink ? `<div class="dtl-sec">
     <div class="dtl-h">${IC_LINK}連結</div>
-    <div class="dtl-links">${detailLinkRowsHTML(d,detailSlots)}</div>
+    ${detailLinkRowsHTML(d,detailSlots)}
   </div>` : "";
   // 承辦:承辦人|電話 一排(電話可撥號),門市獨立一排
   const _telCell = d.tel
