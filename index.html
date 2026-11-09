@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261109D">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261109D">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261109E">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261109E">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261109D"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261109D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261109E"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261109E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -310,6 +310,7 @@
   .cover-gear svg{width:20px;height:20px;}
   .cover-gear:active{transform:scale(.93) rotate(30deg);}
   #listGear{display:none;position:relative;width:36px;height:36px;padding:0;}
+  :is(#listGear,#setBack)[data-pointer-focus]:focus-visible{box-shadow:none;}
   #app.table-mode #listGear{display:inline-flex;}
   @media(pointer:coarse){#listGear::after{content:"";position:absolute;inset:-4px;border-radius:50%;}}
   .cover-actions{display:flex;flex-direction:row-reverse;align-items:center;gap:8px;}   /* 齒輪+同步燈成一組,兩圈間距 8px */
@@ -2518,7 +2519,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.09D";
+const APP_VERSION = "2026.11.09E";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -8234,13 +8235,24 @@ listGear.id="listGear";
 listGear.type="button";
 document.getElementById("listLed").before(listGear);
 let settingsTableReturn=null;
+const settingsBack=document.getElementById("setBack");
+// Keep focus on the navigation control without showing a keyboard ring for a pointer round trip.
+function focusSettingsControl(control,quiet){
+  control.toggleAttribute("data-pointer-focus",quiet);
+  control.focus({preventScroll:true});
+}
+for(const control of [listGear,settingsBack]){
+  const revealKeyboardFocus=()=>control.removeAttribute("data-pointer-focus");
+  control.addEventListener("keydown",revealKeyboardFocus);
+  control.addEventListener("blur",revealKeyboardFocus);
+}
 
-function openSettings(trigger){
+function openSettings(trigger,fromPointer=false){
   if(settingsView.classList.contains("active"))return;
   const fromTable=viewMode==="table"&&listView.classList.contains("active");
   if(fromTable){
     const body=tableWrap.querySelector(".tbody-wrap");
-    settingsTableReturn={top:body?.scrollTop||0,left:body?.scrollLeft||0,tabsLeft:document.getElementById("tabs").scrollLeft,trigger};
+    settingsTableReturn={top:body?.scrollTop||0,left:body?.scrollLeft||0,tabsLeft:document.getElementById("tabs").scrollLeft,trigger,quietGearFocus:trigger===listGear&&fromPointer};
     flushEditing();
     closeOtherOverlays("");
   }else{
@@ -8255,9 +8267,9 @@ function openSettings(trigger){
   syncTableMode();   // 離開表格頁就取消寬版,設定頁維持一般寬度
   saveNav("settings", currentCat);
   window.scrollTo(0,0);
-  if(fromTable)document.getElementById("setBack").focus({preventScroll:true});
+  if(fromTable)focusSettingsControl(settingsBack,settingsTableReturn.quietGearFocus);
 }
-function closeSettings(){
+function closeSettings(event){
   if (typeof palettePop !== "undefined" && palettePop.classList.contains("link-palette")) closePalette();
   if(linkDeleteUI.picker.hidden===false)setLinkDeleteMode(false);
   settingsView.classList.remove("active");
@@ -8276,7 +8288,9 @@ function closeSettings(){
     }
     document.getElementById("tabs").scrollLeft=position.tabsLeft;
     saveNav("list",currentCat);
-    (position.trigger||listGear).focus({preventScroll:true});
+    const trigger=position.trigger||listGear;
+    if(trigger===listGear)focusSettingsControl(trigger,position.quietGearFocus||event?.detail>0);
+    else trigger.focus({preventScroll:true});
     return;
   }
   saveNav("cover");
@@ -8286,9 +8300,9 @@ function closeSettings(){
   window.scrollTo(0,0);
 }
 for(const gear of [document.getElementById("coverGear"),listGear]){
-  gear.addEventListener("click",e=>{e.stopPropagation();openSettings(gear);});
+  gear.addEventListener("click",e=>{e.stopPropagation();openSettings(gear,e.detail>0);});
 }
-document.getElementById("setBack").addEventListener("click", closeSettings);
+settingsBack.addEventListener("click",closeSettings);
 (function(){ const v = document.getElementById("verLine"); if (v) v.textContent = "物件總覽 · 更新日 " + APP_VERSION; })();
 // 開機還原上次畫面:上次在列表 → 直接回到該分類的列表(分類已被刪除則回「全部」);上次在封面 → 維持預設
 (function(){
