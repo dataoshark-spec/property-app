@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261109B">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261109B">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261109D">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261109D">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261109B"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261109B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261109D"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261109D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -309,6 +309,9 @@
   .cover-gear:hover{background:rgba(255,255,255,.16);color:#fff;}
   .cover-gear svg{width:20px;height:20px;}
   .cover-gear:active{transform:scale(.93) rotate(30deg);}
+  #listGear{display:none;position:relative;width:36px;height:36px;padding:0;}
+  #app.table-mode #listGear{display:inline-flex;}
+  @media(pointer:coarse){#listGear::after{content:"";position:absolute;inset:-4px;border-radius:50%;}}
   .cover-actions{display:flex;flex-direction:row-reverse;align-items:center;gap:8px;}   /* 齒輪+同步燈成一組,兩圈間距 8px */
   .cover-top .cover-led{flex:none;width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
     background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);cursor:pointer;padding:0;transition:background .15s ease;}
@@ -407,19 +410,21 @@
 
   /* list-count:start — fixed header position; only the count contents slide */
   #list .topbar .ttl{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  #list .topbar .ct{position:relative;display:flex;align-items:stretch;width:max-content;height:34px;flex:0 0 auto;max-width:calc(100% - 162px);padding:0;}
-  .list-count-toggle{appearance:none;position:relative;min-width:0;flex:1;border:0;border-radius:999px;background:transparent;color:inherit;font:inherit;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;}
+  .list-count-space{display:flex;align-items:center;justify-content:flex-end;flex:1 0 0;min-width:min(136px,45%);}
+  #list .topbar .ct{position:relative;display:flex;align-items:stretch;width:max-content;height:34px;flex:0 1 auto;max-width:100%;padding:0;}
+  .list-count-toggle{appearance:none;position:relative;min-width:0;flex:1;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;font:inherit;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;}
   .list-count-toggle::after{content:"";position:absolute;inset:-5px 0;}
   .list-count-window{display:block;overflow:hidden;}
   #listCountTotal{display:flex;align-items:baseline;justify-content:center;gap:4px;padding:0 12px;white-space:nowrap;}
   #listCountTotal b{font-size:.82rem;font-weight:700;color:var(--accent-deep);}
   #listCountTotal small{font-size:.7rem;}
-  .list-count-size{visibility:hidden;white-space:nowrap;}
-  #listCount:not(.count-expanded) .list-count-window{position:absolute;inset:0;}
-  .list-count-track{display:flex;transform:translateX(calc(var(--count-index,0) * -100%));transition:transform .16s ease;}
+  .list-count-measure{position:absolute;inset:0;display:flex;align-items:flex-start;visibility:hidden;overflow:hidden;pointer-events:none;}
+  .list-count-track{display:flex;transition:transform .16s ease;}
+  .list-count-page{display:flex;align-items:center;justify-content:center;flex:0 0 100%;min-width:0;overflow:hidden;}
   .list-count-toggle.dragging .list-count-track{transition:none;}
-  .list-count-part{position:relative;display:flex;align-items:center;justify-content:center;gap:5px;flex:0 0 100%;min-width:0;height:32px;padding:0 4px;}
-  .list-count-name{min-width:0;max-width:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .list-count-part{position:relative;display:flex;align-items:center;justify-content:center;gap:5px;flex:none;min-width:0;height:32px;padding:0 9px;}
+  .list-count-page .list-count-part:only-child{max-width:100%;}
+  .list-count-name{min-width:0;max-width:76px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .list-count-value{display:inline-flex;align-items:baseline;gap:3px;flex:none;font-variant-numeric:tabular-nums;}
   .list-count-value b{font-size:.82rem;font-weight:700;color:var(--accent-deep);}
   .list-count-value small{font-size:.7rem;}
@@ -430,17 +435,20 @@
   .list-count-prev svg,.list-count-next svg{width:12px;height:12px;}
   .list-count-prev:disabled,.list-count-next:disabled{opacity:.3;cursor:default;}
   #list .topbar .ct.count-expanded{border-radius:12px;}
-  .count-expanded .list-count-toggle{border-radius:12px;touch-action:auto;}
+  .count-expanded .list-count-toggle{border-radius:12px;}
   .count-expanded .list-count-window{border-radius:12px;}
-  .count-expanded .list-count-track{display:flex;transition:none;}
-  .count-expanded .list-count-part{flex:0 1 auto;padding:0 9px;}
   .count-expanded .list-count-part+.list-count-part::before{content:"";position:absolute;left:0;top:7px;bottom:7px;border-left:1px solid var(--line);}
-  .count-expanded .list-count-name{max-width:76px;}
   #listCount [hidden]{display:none!important;}
   #listCount:focus-within{border-color:var(--accent);}
   .list-count-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
   @media(max-width:440px){#list .topbar{gap:7px;padding-left:12px;padding-right:12px;}}
-  @media(max-width:360px){#list .topbar{gap:5px;padding-left:9px;padding-right:9px;}.list-count-name{max-width:30px;}}
+  @media(max-width:360px){#list .topbar{gap:5px;padding-left:9px;padding-right:9px;}}
+  @media(max-width:360px){
+    #app.table-mode #list .topbar{padding-inline:6px;}
+    #app.table-mode .list-count-space{min-width:min(100px,42%);}
+    #app.table-mode .list-count-part{padding-inline:2px;gap:2px;}
+    #app.table-mode .list-count-prev,#app.table-mode .list-count-next{width:20px;flex-basis:20px;}
+  }
   @media(prefers-reduced-motion:reduce){.list-count-track{transition:none;}}
   /* list-count:end */
 
@@ -1232,7 +1240,8 @@
   @media (hover:hover){ .dtl-copy:hover{box-shadow:inset 0 0 0 100px rgba(15,122,95,.07);} }
   .dtl-copy.copied{animation:cardCopiedFlash .7s ease;}
   .dtl-body .needexp-ed{min-height:auto;}
-  .dtl-links{display:flex;flex-wrap:wrap;gap:8px;}
+  .dtl-links{display:grid;gap:8px;min-width:0;}
+  .dtl-link-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;min-width:0;}
   .dtl-tel{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--accent-deep);background:var(--accent-tint);border:1px solid var(--accent-tint-bd);border-radius:9px;padding:9px 14px;font-weight:700;font-size:.95rem;}
   .dtl-tel svg{width:15px;height:15px;flex:none;}
   .dtl-tellink{color:var(--accent-deep);text-decoration:none;font-variant-numeric:tabular-nums;}   /* 承辦區格內電話:綠色可撥號連結 */
@@ -1420,7 +1429,7 @@
   .tchips{--table-chip-width:30px;gap:3px;align-items:center;}
   .tchip.property-link{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;flex:0 0 var(--table-chip-width,30px);width:var(--table-chip-width,30px);height:26px;padding:0 2px;font-size:11.5px;font-weight:600;line-height:1.2;border-radius:7px;}
   .ptable.ro .tchip.property-link:not(.on){opacity:1;color:var(--text-faint);background:var(--surface-1);border-color:var(--line);}
-  .links,.dtl-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0;}
+  .links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0;}
   .card .price-value{flex:0 0 auto;}
   .card .price .links{flex:0 1 58%;max-width:240px;}
   .links .property-link,.dtl-links .property-link{min-width:0;justify-content:center;}
@@ -1464,7 +1473,11 @@
   .link-action[hidden],#linkDeletePicker[hidden],#linkSettingsRows[hidden]{display:none;}
   .link-action:disabled{opacity:.3;cursor:default;}
   .link-action.add{background:var(--accent-tint);border-color:var(--accent-tint-bd);color:var(--accent-deep);}
-  .link-action.symbol{font-size:19px;line-height:1;}
+  .link-settings-actions .link-action.symbol{display:grid;place-items:center;width:28px;height:28px;min-width:28px;min-height:28px;padding:0;border:0;background:transparent;}
+  .link-settings-actions svg{box-sizing:border-box;width:28px;height:28px;padding:6px;border:1px solid var(--line);border-radius:7px;background:var(--card);}
+  .link-settings-actions .add svg{background:var(--accent-tint);border-color:var(--accent-tint-bd);}
+  .link-settings-actions .symbol .cancel-label,.link-settings-actions .link-action:not(.symbol) svg{display:none;}
+  .link-settings-actions .link-action[hidden]{display:none;}
   .link-action.choose{border-color:var(--danger-tint-bd);color:var(--danger);}
   #linkDeleteChoices{display:grid;gap:8px;margin-top:10px;}
   .link-choice{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:6px;align-items:center;}
@@ -1479,6 +1492,7 @@
   .link-delete-actions{justify-content:flex-end;margin-top:16px;}
   .link-delete-actions button{min-height:40px;padding:6px 14px;}
   @media(pointer:coarse){.link-settings-actions .link-action,.link-choice .link-action,.link-delete-actions button{min-height:44px;min-width:44px;}}
+  @media(max-width:600px),(pointer:coarse){.link-settings-actions .link-action.symbol{width:44px;height:44px;}}
   .link-setting-row{display:grid;grid-template-columns:24px minmax(0,1fr) 36px 64px 66px;align-items:center;gap:6px;}
   .link-position{color:var(--ink-soft);font-variant-numeric:tabular-nums;text-align:center;}
   .link-setting-name{min-width:0;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card);color:var(--ink);font:inherit;}
@@ -1577,12 +1591,13 @@
       <header class="topbar">
         <button class="back" id="backBtn" aria-label="返回">←</button>
         <span class="ttl" id="listTitle">全部物件</span>
-        <span class="ct" id="listCount">
+        <span class="list-count-space" id="listCountSpace"><span class="ct" id="listCount">
           <button type="button" class="list-count-prev" id="listCountPrev" aria-label="查看上一個連結筆數" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
-          <button type="button" class="list-count-toggle" id="listCountToggle" aria-label="切換筆數顯示" aria-pressed="false"><span id="listCountTotal">欄位 <b>0</b> <small>筆</small></span><span class="list-count-part list-count-size" id="listCountSizer" aria-hidden="true" hidden></span><span class="list-count-window" id="listCountWindow" hidden><span class="list-count-track" id="listCountTrack" aria-hidden="true"></span></span></button>
+          <button type="button" class="list-count-toggle" id="listCountToggle" aria-label="切換筆數顯示" aria-pressed="false"><span id="listCountTotal">欄位 <b>0</b> <small>筆</small></span><span class="list-count-window" id="listCountWindow" hidden><span class="list-count-track" id="listCountTrack" aria-hidden="true"></span></span></button>
+          <span class="list-count-measure" id="listCountSizer" aria-hidden="true"></span>
           <button type="button" class="list-count-next" id="listCountNext" aria-label="查看下一個連結筆數" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
           <span class="list-count-status" id="listCountStatus" role="status" aria-live="polite"></span>
-        </span>
+        </span></span>
         <button class="sync-led" id="listLed" type="button" aria-label="同步" title="點一下立即同步・長按進入設定"><span class="led"></span></button>
       </header>
       <div class="tabs-row">
@@ -1701,8 +1716,8 @@
       <div class="set-card" id="linkSettingsCard">
         <div class="link-settings-head"><div class="set-card-title">連結名稱與顏色</div>
           <div class="link-settings-actions">
-            <button class="link-action symbol" type="button" id="linkRemoveSlot" aria-label="選擇要刪除的連結欄位" aria-expanded="false" aria-controls="linkDeletePicker">−</button>
-            <button class="link-action symbol add" type="button" id="linkAddSlot" aria-label="新增連結欄位">＋</button>
+            <button class="link-action symbol" type="button" id="linkRemoveSlot" aria-label="選擇要刪除的連結欄位" aria-expanded="false" aria-controls="linkDeletePicker"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 8h12"/></svg><span class="cancel-label">取消</span></button>
+            <button class="link-action symbol add" type="button" id="linkAddSlot" aria-label="新增連結欄位"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 8h12 M8 2v12"/></svg></button>
           </div>
         </div>
         <div id="linkSettingsRows"></div>
@@ -2503,7 +2518,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.09B";
+const APP_VERSION = "2026.11.09D";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2590,6 +2605,17 @@ function propertyLinksHTML(d,compact=false){
   const chips=visible.map(slot=>linkChip(d,slot)).join("");
   if(!overflow)return chips;
   return chips+moreLinksButtonHTML(slots.length-visible.length);
+}
+function detailLinkRowsHTML(d,slots){
+  const rows=[];
+  let start=0;
+  for(let left=Math.ceil(slots.length/4);left>0;left--){
+    const size=Math.ceil((slots.length-start)/left);
+    const chips=slots.slice(start,start+size).map(slot=>linkChip(d,slot)).join("");
+    rows.push(`<div class="dtl-link-row">${chips}</div>`);
+    start+=size;
+  }
+  return rows.join("");
 }
 
 // 到期提醒固定 7 天:不提供設定,也不納入雲端同步,避免跨裝置同步時提醒門檻被改掉
@@ -3019,52 +3045,97 @@ const searchEl = document.getElementById("search");
 // list-count:start — local view preference; never writes property/settings/sync data.
 const listCounter=(()=>{
   const KEY="property_app_countmode_v1";
-  const button=document.getElementById("listCountToggle"),total=document.getElementById("listCountTotal"),sizer=document.getElementById("listCountSizer"),viewport=document.getElementById("listCountWindow"),track=document.getElementById("listCountTrack"),prev=document.getElementById("listCountPrev"),next=document.getElementById("listCountNext"),status=document.getElementById("listCountStatus");
-  const desktop=window.matchMedia("(min-width:820px)");
-  const expanded=()=>viewMode==="table"&&desktop.matches;
-  let mode="total",index=0,stats={total:0,counts:{}},signature="",gesture=null,ignoreClick=false,wheelAt=0;
+  const button=document.getElementById("listCountToggle"),total=document.getElementById("listCountTotal");
+  const space=document.getElementById("listCountSpace"),measure=document.getElementById("listCountSizer");
+  const viewport=document.getElementById("listCountWindow"),track=document.getElementById("listCountTrack");
+  const prev=document.getElementById("listCountPrev"),next=document.getElementById("listCountNext"),status=document.getElementById("listCountStatus");
+  let mode="total",recordCount=0,entries=[],widths=[],pages=[],page=0;
+  let dataKey="",renderKey="",gesture=null,ignoreClick=false,wheelAt=0;
   try{if(storageOK&&localStorage.getItem(KEY)==="links")mode="links";}catch(e){}
-  function summarize(list){
-    const slots=linkSlotIds(),counts=Object.fromEntries(slots.map(slot=>[slot,0]));
-    for(const item of list)for(const slot of slots)if(linkState(item,slot)==="has")counts[slot]++;
-    return {total:list.length,counts};
+  function partHTML(entry){
+    return '<span class="list-count-part"><span class="list-count-name">'+esc(entry.name)+'</span><span class="list-count-value"><b>'+entry.count+'</b><small>筆</small></span></span>';
   }
-  function paint(offset=0){
-    const slots=linkSlotIds(),detailed=mode==="links"&&slots.length>0,all=detailed&&expanded();
-    index=Math.max(0,Math.min(index,slots.length-1));
-    if(all)index-=index%4;
-    const visible=all?slots.slice(index,index+4):slots,slot=slots[index],name=linkDefaultName(slot);
-    total.innerHTML=`欄位 <b>${stats.total}</b> <small>筆</small>`;
-    sizer.hidden=!detailed||all;
-    if(detailed&&!all)sizer.innerHTML=`<span class="list-count-name">${esc(name)}</span><span class="list-count-value"><b>${stats.counts[slot]||0}</b><small>筆</small></span>`;
+  function position(offset=0){
+    track.style.transform="translateX(calc("+(-page*100)+"% + "+offset+"px))";
+  }
+  function paintPage(){
+    const group=pages[page];
+    const text=entries.slice(group.start,group.end).map(e=>e.name+" "+e.count+" 筆").join("，");
+    countEl.style.width=group.width+"px";
+    prev.disabled=page===0;next.disabled=page===pages.length-1;
+    const hint=pages.length>1?"，第 "+(page+1)+" 頁，共 "+pages.length+" 頁，可左右切換":"";
+    button.setAttribute("aria-label",text+hint+"。點一下切換欄位總筆數");
+    button.title=text+hint+"。點一下切換欄位總筆數";
+    if(status.textContent!==text)status.textContent=text;
+    position();
+  }
+  function layout(){
+    const detailed=mode==="links"&&entries.length>0;
+    button.setAttribute("aria-pressed",String(detailed));button.disabled=!entries.length;
     total.hidden=detailed;viewport.hidden=!detailed;
-    prev.hidden=next.hidden=!detailed||slots.length<=(all?4:1);
-    prev.disabled=index===0;next.disabled=index+(all?4:1)>=slots.length;
-    button.disabled=!slots.length;
-    countEl.classList.toggle("count-expanded",all);
-    button.setAttribute("aria-pressed",String(detailed));
-    const label=all?visible.map(s=>`${linkDefaultName(s)} ${stats.counts[s]||0} 筆`).join("，"):detailed?`${name} ${stats.counts[slot]||0} 筆`:`欄位 ${stats.total} 筆`;
-    button.setAttribute("aria-label",!slots.length?label:all?`${label}。點擊切換為欄位總筆數`:detailed?`${label}，第 ${index+1} 格，共 ${slots.length} 格。左右滑動或方向鍵查看`:`${label}。點擊切換為連結筆數`);
-    button.title=detailed?`${label}・${all?"":"左右滑動查看・"}點一下切換欄位筆數`:"點一下切換連結筆數";
-    const key=JSON.stringify(visible.map(s=>[s,linkDefaultName(s),stats.counts[s]||0]));
-    if(key!==signature){
-      signature=key;
-      track.innerHTML=visible.map(s=>`<span class="list-count-part"><span class="list-count-name">${esc(linkDefaultName(s))}</span><span class="list-count-value"><b>${stats.counts[s]||0}</b><small>筆</small></span></span>`).join("");
+    if(!detailed){
+      pages=[];page=0;countEl.style.removeProperty("width");countEl.classList.remove("count-expanded");
+      prev.hidden=next.hidden=true;
+      const label="欄位 "+recordCount+" 筆";
+      button.title=label+(entries.length?"。點一下切換連結筆數":"");button.setAttribute("aria-label",button.title);
+      if(status.textContent!==label)status.textContent=label;
+      return;
     }
-    track.style.transform=all?"none":`translateX(calc(${-index*100}% + ${offset}px))`;
-    if(status.textContent!==label)status.textContent=label;
+    const available=space.getBoundingClientRect().width;
+    if(available<=0)return; // Opening the list triggers the space observer after it becomes visible.
+    if(!widths.length){
+      measure.innerHTML=entries.map(partHTML).join("");
+      widths=Array.from(measure.children,el=>el.getBoundingClientRect().width);
+    }
+    const edges=getComputedStyle(countEl);
+    const border=parseFloat(edges.borderLeftWidth)+parseFloat(edges.borderRightWidth);
+    const contentWidth=available-border,sum=widths.reduce((a,b)=>a+b,0);
+    const paged=entries.length>1&&sum>contentWidth;
+    prev.hidden=next.hidden=!paged;
+    const arrows=paged?prev.getBoundingClientRect().width+next.getBoundingClientRect().width:0;
+    const budget=Math.max(0,contentWidth-arrows),startIndex=pages[page]?.start||0;
+    pages=[];
+    let start=0,used=0;
+    for(let i=0;i<widths.length;i++){
+      if(i>start&&used+widths[i]>budget){
+        pages.push({start,end:i,width:Math.min(available,Math.ceil(used+arrows+border))});
+        start=i;used=0;
+      }
+      used+=widths[i];
+    }
+    pages.push({start,end:widths.length,width:Math.min(available,Math.ceil(used+arrows+border))});
+    page=pages.findIndex(group=>group.end>startIndex);if(page<0)page=pages.length-1;
+    const key=dataKey+":"+pages.map(g=>g.end).join(",");
+    if(key!==renderKey){
+      track.innerHTML=pages.map(g=>'<span class="list-count-page">'+entries.slice(g.start,g.end).map(partHTML).join("")+'</span>').join("");
+      renderKey=key;
+    }
+    countEl.classList.toggle("count-expanded",pages.some(g=>g.end-g.start>1));
+    paintPage();
   }
-  function refresh(list){stats=summarize(list);paint();}
-  function move(delta){index=Math.max(0,Math.min(linkPreferences.linkSlots.length-1,index+delta*(expanded()?4:1)));paint();}
+  function refresh(list){
+    const slots=linkSlotIds(),counts=slots.map(()=>0);
+    for(const item of list)slots.forEach((slot,i)=>{if(linkState(item,slot)==="has")counts[i]++;});
+    entries=slots.map((id,i)=>({id,name:linkDefaultName(id),count:counts[i]}));
+    const key=JSON.stringify(entries);
+    if(key!==dataKey){widths=[];dataKey=key;}
+    recordCount=list.length;
+    total.innerHTML="欄位 <b>"+recordCount+"</b> <small>筆</small>";
+    layout();
+  }
+  function move(delta){
+    if(!pages.length)return;
+    page=Math.max(0,Math.min(pages.length-1,page+delta));paintPage();
+  }
   button.addEventListener("click",e=>{
     if(ignoreClick&&e.detail!==0){ignoreClick=false;return;}
-    ignoreClick=false;mode=mode==="links"?"total":"links";index=0;
+    ignoreClick=false;mode=mode==="links"?"total":"links";pages=[];page=0;
     try{if(storageOK)localStorage.setItem(KEY,mode);}catch(err){}
-    refresh(getFilteredItems());
+    layout();
   });
   button.addEventListener("pointerdown",e=>{
     ignoreClick=false;
-    if(e.button!==0||!e.isPrimary||mode!=="links"||expanded())return;
+    if(e.button!==0||!e.isPrimary||pages.length<=1)return;
     gesture={id:e.pointerId,x:e.clientX,y:e.clientY,dx:0,dy:0,width:button.clientWidth};
     button.setPointerCapture(e.pointerId);
   });
@@ -3073,8 +3144,8 @@ const listCounter=(()=>{
     gesture.dx=e.clientX-gesture.x;gesture.dy=e.clientY-gesture.y;
     if(Math.abs(gesture.dx)>8&&Math.abs(gesture.dx)>Math.abs(gesture.dy)*1.2){
       button.classList.add("dragging");
-      const edge=(index===0&&gesture.dx>0)||(index===linkPreferences.linkSlots.length-1&&gesture.dx<0),limit=gesture.width*.8;
-      paint(Math.max(-limit,Math.min(limit,gesture.dx))*(edge?.18:1));
+      const edge=(page===0&&gesture.dx>0)||(page===pages.length-1&&gesture.dx<0),limit=gesture.width*.8;
+      position(Math.max(-limit,Math.min(limit,gesture.dx))*(edge?.18:1));
     }
   });
   function endGesture(e,cancel){
@@ -3086,15 +3157,18 @@ const listCounter=(()=>{
   button.addEventListener("pointerup",e=>endGesture(e,false));
   button.addEventListener("pointercancel",e=>endGesture(e,true));
   button.addEventListener("lostpointercapture",e=>endGesture(e,true));
-  button.addEventListener("keydown",e=>{if(mode==="links"&&["ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();move(e.key==="ArrowRight"?1:-1);}});
+  button.addEventListener("keydown",e=>{if(pages.length>1&&["ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();move(e.key==="ArrowRight"?1:-1);}});
   button.addEventListener("wheel",e=>{
-    if(mode!=="links"||expanded()||Math.abs(e.deltaX)<=Math.abs(e.deltaY))return;
+    if(pages.length<=1||Math.abs(e.deltaX)<=Math.abs(e.deltaY))return;
     e.preventDefault();const now=Date.now();if(now-wheelAt<250)return;wheelAt=now;move(e.deltaX>0?1:-1);
   },{passive:false});
-  prev.addEventListener("click",()=>move(-1));
-  next.addEventListener("click",()=>move(1));
-  desktop.addEventListener("change",()=>{ignoreClick=ignoreClick||!!gesture;gesture=null;button.classList.remove("dragging");paint();});
-  return {refresh};
+  prev.addEventListener("click",()=>move(-1));next.addEventListener("click",()=>move(1));
+  if(window.ResizeObserver)new ResizeObserver(layout).observe(space);else window.addEventListener("resize",layout);
+  if(document.fonts){
+    const refreshMetrics=()=>{widths=[];layout();};
+    document.fonts.ready.then(refreshMetrics);document.fonts.addEventListener("loadingdone",refreshMetrics);
+  }
+  return {refresh,firstPage(){page=0;}};
 })();
 // list-count:end
 
@@ -4822,8 +4896,8 @@ function applyFilter(){
   let list = getFilteredItems();
   const fca = document.getElementById("fltClearAll"); if (fca) fca.classList.toggle("on", anyColFilter());   // 有篩選才顯示漏斗清除鈕
   list = sortList(list);
-  listCounter.refresh(list);
   titleEl.textContent = currentCat ? currentCat + "物件" : "全部物件";
+  listCounter.refresh(list);
   document.querySelectorAll(".tab").forEach(t =>
     t.classList.toggle("active", t.dataset.cat === currentCat));
   if (viewMode === "table"){
@@ -4849,6 +4923,7 @@ function updateLH(){
 }
 window.addEventListener("resize", function(){ requestAnimationFrame(updateLH); });
 function openList(cat){
+  listCounter.firstPage();
   /* search-help:start */ closeSearchHelp(); /* search-help:end */
   exitSelectMode();
   editMode = false; saveEditMode();     // 進入列表一律預設「正常」模式;要編輯需先選檢視再點編輯
@@ -4951,7 +5026,7 @@ document.getElementById("backBtn").addEventListener("click", showCover);
     lpTimer = setTimeout(function(){
       longFired = true;
       if (navigator.vibrate){ try { navigator.vibrate(15); } catch(e){} }
-      openSettings();
+      openSettings(led);
     }, 500);
   }
   function cancelLP(){ clearTimeout(lpTimer); }
@@ -5149,6 +5224,8 @@ function tabTrapTarget(){
   const flt = document.getElementById("fltBg");
   if (flt && flt.classList.contains("open")) return flt.querySelector(".fpanel");
   if (linkFilterBg.classList.contains("open")) return linkFilterBg.querySelector(".fpanel");
+  if(tableMoreAnchor)return tableMorePanel;
+  if(lpTableTarget&&lpop.classList.contains("show"))return lpop;
   if (typeof palettePop !== "undefined" && palettePop.classList.contains("open") && palettePop.classList.contains("link-palette")) return palettePop;
   const cat = document.getElementById("catBg");
   if (cat && cat.classList.contains("open")) return cat.querySelector(".modal");
@@ -5537,10 +5614,11 @@ function openDetail(id){
     <div class="dtl-h">${IC_INFO}基本資料</div>
     <div class="dtl-card3">${cellC("售價", _price)}${cellC("格局", d.layout)}${cellC("樓層", d.floor)}${cellC("地址", d.addr, "dtl-addr")}</div>
   </div>`;
-  const _hasLink = linkSlotIds().some(slot=>safeUrl(d[linkUrlField(slot)])||linkIsNone(d,slot));
+  const detailSlots=linkSlotIds();
+  const _hasLink = detailSlots.some(slot=>safeUrl(d[linkUrlField(slot)])||linkIsNone(d,slot));
   const links = _hasLink ? `<div class="dtl-sec">
     <div class="dtl-h">${IC_LINK}連結</div>
-    <div class="dtl-links">${propertyLinksHTML(d)}</div>
+    <div class="dtl-links">${detailLinkRowsHTML(d,detailSlots)}</div>
   </div>` : "";
   // 承辦:承辦人|電話 一排(電話可撥號),門市獨立一排
   const _telCell = d.tel
@@ -8151,29 +8229,65 @@ document.getElementById("resetBtn").addEventListener("click",()=>{
 
 // ---- Settings page ----
 const settingsView = document.getElementById("settings");
+const listGear=document.getElementById("coverGear").cloneNode(true);
+listGear.id="listGear";
+listGear.type="button";
+document.getElementById("listLed").before(listGear);
+let settingsTableReturn=null;
 
-function openSettings(){
+function openSettings(trigger){
+  if(settingsView.classList.contains("active"))return;
+  const fromTable=viewMode==="table"&&listView.classList.contains("active");
+  if(fromTable){
+    const body=tableWrap.querySelector(".tbody-wrap");
+    settingsTableReturn={top:body?.scrollTop||0,left:body?.scrollLeft||0,tabsLeft:document.getElementById("tabs").scrollLeft,trigger};
+    flushEditing();
+    closeOtherOverlays("");
+  }else{
+    settingsTableReturn=null;
+    if (typeof closeColFlt === "function") closeColFlt();
+    if (typeof closeNeedExp === "function") closeNeedExp();
+  }
   exitSelectMode();
-  if (typeof closeColFlt === "function") closeColFlt();
-  if (typeof closeNeedExp === "function") closeNeedExp();
   settingsView.classList.add("active");
   cover.style.display = "none";
   listView.classList.remove("active");
   syncTableMode();   // 離開表格頁就取消寬版,設定頁維持一般寬度
   saveNav("settings", currentCat);
   window.scrollTo(0,0);
+  if(fromTable)document.getElementById("setBack").focus({preventScroll:true});
 }
 function closeSettings(){
   if (typeof palettePop !== "undefined" && palettePop.classList.contains("link-palette")) closePalette();
   if(linkDeleteUI.picker.hidden===false)setLinkDeleteMode(false);
-  saveNav("cover");   // 記住:回到封面
   settingsView.classList.remove("active");
+  if(settingsTableReturn){
+    const position=settingsTableReturn;
+    settingsTableReturn=null;
+    listView.classList.add("active");
+    syncTableMode();
+    updateLH();
+    syncTableChrome();
+    const body=tableWrap.querySelector(".tbody-wrap"),head=tableWrap.querySelector(".thead-wrap");
+    if(body){
+      body.scrollTop=position.top;
+      body.scrollLeft=position.left;
+      if(head)head.scrollLeft=body.scrollLeft;
+    }
+    document.getElementById("tabs").scrollLeft=position.tabsLeft;
+    saveNav("list",currentCat);
+    (position.trigger||listGear).focus({preventScroll:true});
+    return;
+  }
+  saveNav("cover");
   cover.style.display = "flex";
   renderCover();
   syncTableMode();   // 回首頁也維持一般寬度
   window.scrollTo(0,0);
 }
-document.getElementById("coverGear").addEventListener("click", e => { e.stopPropagation(); openSettings(); });
+for(const gear of [document.getElementById("coverGear"),listGear]){
+  gear.addEventListener("click",e=>{e.stopPropagation();openSettings(gear);});
+}
 document.getElementById("setBack").addEventListener("click", closeSettings);
 (function(){ const v = document.getElementById("verLine"); if (v) v.textContent = "物件總覽 · 更新日 " + APP_VERSION; })();
 // 開機還原上次畫面:上次在列表 → 直接回到該分類的列表(分類已被刪除則回「全部」);上次在封面 → 維持預設
@@ -8221,7 +8335,6 @@ function saveLinkPreferences(){
 function setLinkDeleteMode(on){
   linkDeleteUI.picker.hidden=!on;
   linkDeleteUI.add.hidden=on;
-  linkDeleteUI.remove.textContent=on?"取消":"−";
   linkDeleteUI.remove.classList.toggle("symbol",!on);
   linkDeleteUI.remove.setAttribute("aria-expanded",String(on));
   linkDeleteUI.remove.setAttribute("aria-label",on?"取消選擇欄位":"選擇要刪除的連結欄位");
