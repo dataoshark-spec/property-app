@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261107C">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261107C">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261109B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261109B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261107C"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261107C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261109B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261109B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1300,6 +1300,14 @@
   /* ===== link paste popover ===== */
   .linkpop{position:fixed;z-index:200;display:none;width:340px;max-width:calc(100vw - 24px);background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:0 16px 40px rgba(22,34,42,.22);padding:13px;}
   .linkpop.show{display:block;}
+  .table-more-links{position:fixed;z-index:199;display:grid;gap:3px;padding:6px;min-width:124px;width:max-content;max-width:min(264px,calc(100vw - 16px));max-height:min(320px,calc(100dvh - 16px));overflow:auto;overscroll-behavior:contain;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 26px rgba(22,34,42,.16);}
+  .table-more-links[hidden]{display:none;}
+  .table-more-links button{display:flex;align-items:center;gap:8px;min-width:0;min-height:34px;border:0;padding:5px 8px;border-radius:7px;background:transparent;color:var(--ink);font:inherit;font-size:.83rem;text-align:left;cursor:pointer;}
+  .table-more-links button:hover,.table-more-links button:focus-visible{background:var(--surface-1);}
+  .table-more-links .platform-dot{width:9px;height:9px;flex:none;border-radius:50%;background:var(--link-color);}
+  .table-more-links .platform-name{flex:1;overflow-wrap:anywhere;}
+  .table-more-links small{margin-left:6px;white-space:nowrap;color:var(--ink-soft);}
+  @media(pointer:coarse){.table-more-links button{min-height:44px;}}
   .lp-head{display:flex;align-items:center;gap:8px;font-size:15px;line-height:20px;font-weight:700;color:var(--ink);margin-bottom:9px;}
   .lp-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:none;border-radius:6px;background:var(--accent-tint);color:var(--accent-deep);}
   .lp-icon svg{width:14px;height:14px;}
@@ -1409,8 +1417,8 @@
   .property-link .link-text{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .property-link.on,.property-link.on:hover,.property-link.on:active{background:var(--link-color);border-color:var(--link-color);color:var(--link-ink);}
   .ptable tbody td.tlinks{padding:0 8px;}
-  .tchips{gap:3px;align-items:center;}
-  .tchip.property-link{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;flex:0 0 30px;width:30px;height:26px;padding:0 2px;font-size:11.5px;font-weight:600;line-height:1.2;border-radius:7px;}
+  .tchips{--table-chip-width:30px;gap:3px;align-items:center;}
+  .tchip.property-link{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;flex:0 0 var(--table-chip-width,30px);width:var(--table-chip-width,30px);height:26px;padding:0 2px;font-size:11.5px;font-weight:600;line-height:1.2;border-radius:7px;}
   .ptable.ro .tchip.property-link:not(.on){opacity:1;color:var(--text-faint);background:var(--surface-1);border-color:var(--line);}
   .links,.dtl-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0;}
   .card .price-value{flex:0 0 auto;}
@@ -1428,6 +1436,18 @@
   .card .price .links .property-link .ext{display:none;}
   @media (max-width:600px),(pointer:coarse){.card .price .links .property-link{height:44px;}}
   /* End 2026.11.06B card compact links. */
+  .more-links{min-width:0;height:26px;width:30px;padding:0 1px;border:1px solid var(--line);border-radius:7px;background:var(--surface-1);color:var(--accent-deep);font-family:inherit;font-size:11.5px;line-height:1.2;font-weight:600;cursor:pointer;}
+  .more-links[aria-expanded="true"]{border-color:var(--accent);}
+  .card .price .links{grid-template-columns:repeat(var(--visible-links,4),minmax(0,1fr));width:calc(var(--visible-links,4)*54px - 6px);flex-basis:auto;}
+  .card .price .links:empty{display:none;}
+  .card .more-links{position:relative;isolation:isolate;height:28px;width:100%;border:0;border-radius:9px;background:transparent;}
+  .card .more-links::before{content:"";position:absolute;inset:50% 0 auto;height:28px;transform:translateY(-50%);box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--surface-1);z-index:-1;}
+  .card .more-links[aria-expanded="true"]::before{border-color:var(--accent);}
+  .tchips>.more-links{box-sizing:border-box;flex:none;width:calc(var(--table-chip-width) + var(--extra-digits,0px));max-width:100%;overflow:hidden;white-space:nowrap;}
+  .table-wrap.tsel-on .more-links{pointer-events:none;}
+  .link-filter-panel{max-height:calc(100dvh - 32px);overflow:auto;}
+  #linkFilterBtn[hidden]{display:none;}
+  @media(max-width:600px),(pointer:coarse){.card .more-links{height:44px;}}
   .link-group.collapsed .link-fields{grid-template-columns:repeat(2,minmax(0,1fr));}
   .link-f{min-width:0;display:flex;flex-direction:column;gap:7px;}
   .modal .link-f .link-name-input{width:100%;min-width:0;padding:5px 8px;height:30px;border:1px solid var(--line);border-left:3px solid var(--link-color);border-radius:7px;background:var(--surface-1);font-size:.8rem;font-weight:600;color:var(--ink);text-align:center;text-overflow:ellipsis;}
@@ -1437,6 +1457,28 @@
   .lp-name-edit{min-width:0;max-width:180px;flex:1;padding:4px 6px;border:1px solid var(--accent);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;}
   .lp-name[hidden],.lp-name-edit[hidden]{display:none;}
   #linkSettingsRows{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .link-settings-head,.link-settings-actions,.link-delete-actions{display:flex;align-items:center;gap:6px;}
+  .link-settings-head{justify-content:space-between;}
+  .link-settings-head .set-card-title{margin:0;}
+  .link-action{background:var(--card);color:var(--ink-soft);border:1px solid var(--line);border-radius:9px;font:inherit;min-height:34px;min-width:34px;padding:3px 9px;cursor:pointer;}
+  .link-action[hidden],#linkDeletePicker[hidden],#linkSettingsRows[hidden]{display:none;}
+  .link-action:disabled{opacity:.3;cursor:default;}
+  .link-action.add{background:var(--accent-tint);border-color:var(--accent-tint-bd);color:var(--accent-deep);}
+  .link-action.symbol{font-size:19px;line-height:1;}
+  .link-action.choose{border-color:var(--danger-tint-bd);color:var(--danger);}
+  #linkDeleteChoices{display:grid;gap:8px;margin-top:10px;}
+  .link-choice{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:6px;align-items:center;}
+  .link-choice-name,#linkDeleteTitle{overflow-wrap:anywhere;}
+  #linkDeleteDialog{color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;width:min(355px,calc(100% - 28px));max-height:calc(100dvh - 28px);overflow:auto;margin:auto;box-shadow:0 12px 38px #182e293d;}
+  #linkDeleteDialog::backdrop{background:rgba(15,31,34,.46);}
+  #linkDeleteDialog h3{font-size:1.05rem;margin:0;}
+  #linkDeleteImpact{margin:12px 0;padding:9px 12px;border-radius:8px;background:var(--surface-1);}
+  #linkDeleteDetail,#linkDeleteWarning,#linkDeleteNotice{color:var(--ink-soft);font-size:.86rem;line-height:1.65;}
+  #linkDeleteWarning,#linkDeleteNotice{margin:8px 0;}
+  #linkDeleteNotice{color:var(--danger);}
+  .link-delete-actions{justify-content:flex-end;margin-top:16px;}
+  .link-delete-actions button{min-height:40px;padding:6px 14px;}
+  @media(pointer:coarse){.link-settings-actions .link-action,.link-choice .link-action,.link-delete-actions button{min-height:44px;min-width:44px;}}
   .link-setting-row{display:grid;grid-template-columns:24px minmax(0,1fr) 36px 64px 66px;align-items:center;gap:6px;}
   .link-position{color:var(--ink-soft);font-variant-numeric:tabular-nums;text-align:center;}
   .link-setting-name{min-width:0;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card);color:var(--ink);font:inherit;}
@@ -1657,9 +1699,21 @@
       </div>
 
       <div class="set-card" id="linkSettingsCard">
-        <div class="set-card-title">連結名稱與顏色</div>
+        <div class="link-settings-head"><div class="set-card-title">連結名稱與顏色</div>
+          <div class="link-settings-actions">
+            <button class="link-action symbol" type="button" id="linkRemoveSlot" aria-label="選擇要刪除的連結欄位" aria-expanded="false" aria-controls="linkDeletePicker">−</button>
+            <button class="link-action symbol add" type="button" id="linkAddSlot" aria-label="新增連結欄位">＋</button>
+          </div>
+        </div>
         <div id="linkSettingsRows"></div>
+        <div id="linkDeletePicker" hidden><p class="set-card-desc">選擇要刪除的欄位，下一步會顯示影響筆數。</p><div id="linkDeleteChoices"></div></div>
       </div>
+      <dialog id="linkDeleteDialog" aria-labelledby="linkDeleteTitle" aria-describedby="linkDeleteImpact linkDeleteWarning">
+        <h3 id="linkDeleteTitle"></h3>
+        <div id="linkDeleteImpact"><strong id="linkDeleteTotal"></strong><div id="linkDeleteDetail"></div></div>
+        <p id="linkDeleteWarning"></p><p id="linkDeleteNotice" role="status" hidden></p>
+        <div class="link-delete-actions"><button type="button" class="link-action" id="linkDeleteCancel" autofocus>取消</button><button type="button" class="btn-danger" id="linkDeleteConfirm">永久刪除</button></div>
+      </dialog>
       <div class="ver-line" id="verLine"></div>
     </div>
   </section>
@@ -1703,12 +1757,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </button>
           </div>
-          <div class="link-fields">
-            <div class="link-f" data-link-slot="1"><input class="link-lab link-name-input" id="f_linkname1" aria-label="連結 1 名稱" maxlength="20"><input id="f_591" aria-label="連結 1 網址" placeholder="591 連結"></div>
-            <div class="link-f" data-link-slot="2"><input class="link-lab link-name-input" id="f_linkname2" aria-label="連結 2 名稱" maxlength="20"><input id="f_leju" aria-label="連結 2 網址" placeholder="樂居 連結"></div>
-            <div class="link-f" data-link-slot="3"><input class="link-lab link-name-input" id="f_linkname3" aria-label="連結 3 名稱" maxlength="20"><input id="f_i" aria-label="連結 3 網址" placeholder="永慶 連結"></div>
-            <div class="link-f" data-link-slot="4"><input class="link-lab link-name-input" id="f_linkname4" aria-label="連結 4 名稱" maxlength="20"><input id="f_4" aria-label="連結 4 網址" placeholder="其他 連結"></div>
-          </div>
+          <div class="link-fields"></div>
         </div>
         <div class="f-need3">
           <div class="fneed-seg" data-need-font-seg="1"><div class="nseg-head fneed-head"><input class="fneed-t" id="f_t1" placeholder="標題"><span class="nseg-btns"></span></div><div class="fneed-c fneed-ed" id="f_note" contenteditable="true" spellcheck="false"></div></div>
@@ -1828,6 +1877,7 @@
   </div>
 </div>
 <!-- link-filter:end -->
+<div id="tableMoreLinks" class="table-more-links" role="dialog" aria-label="其他連結" hidden></div>
 <div class="linkpop" id="linkpop">
   <div class="lp-head"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span><button type="button" class="lp-name" id="lpLabel" aria-label="變更此物件的連結名稱">連結</button><input id="lpNameEdit" class="lp-name-edit" aria-label="此物件的連結名稱" maxlength="20" hidden><span class="lp-kind" id="lpKind" hidden>連結</span></div>
   <input class="lp-input" id="lpInput" type="url" placeholder="貼上網址（Ctrl+V）…" spellcheck="false" autocomplete="off">
@@ -1852,6 +1902,19 @@
 const KEY = "property_app_state_v5";
 const FIELDS = ["name","cat","layout","floor","price","addr","due","agent","tel","store","url591","urlLeju","urlI","url4","linkNone1","linkNone2","linkNone3","linkNone4","linkBaseName1","linkBaseName2","linkBaseName3","linkBaseName4","linkName1","linkName2","linkName3","linkName4","note","note2","note3","t1","t2","t3","noteFont1","noteFont2","noteFont3","noteOrder"];
 const own = (o,k) => Object.prototype.hasOwnProperty.call(o,k);
+const validSlotId = id => Number.isSafeInteger(id) && id>0 && id!==591;
+const legacyUrls = ["url591","urlLeju","urlI","url4"];
+const baseFields = new Set(FIELDS);
+function customLinkFieldId(field){
+ const match=/^(?:url|linkName|linkBaseName|linkNone)([1-9]\d{0,15})$/.exec(field);
+ const id=match?Number(match[1]):0;
+ return id>4 && validSlotId(id) && String(id)===match[1] ? id : 0;
+}
+function recordFields(...rows){
+ const custom=new Set();
+ for(const row of rows) if(row)for(const key of Object.keys(row))if(!baseFields.has(key)&&customLinkFieldId(key))custom.add(key);
+ return custom.size ? FIELDS.concat([...custom].sort()) : FIELDS;
+}
 const clone = x => JSON.parse(JSON.stringify(x));
 const obj = x => !!x && typeof x === "object" && !Array.isArray(x);
 const safeId = x => typeof x === "string" && /^[A-Za-z0-9_-]{1,160}$/.test(x);
@@ -1891,22 +1954,22 @@ function linkNone(value){
 function text(v,k){
  if(v == null) return "";
  if(typeof v !== "string") fail(k+" 必須是文字");
- if(v.length > (/^link(?:Base)?Name[1-4]$/.test(k) ? 20 : k.startsWith("note") ? 50000 : 5000)) fail(k+" 內容過長");
+ if(v.length > (/^link(?:Base)?Name\d+$/.test(k) ? 20 : k.startsWith("note") ? 50000 : 5000)) fail(k+" 內容過長");
  return v;
 }
 function draftValues(value){
  if(!obj(value)) fail("草稿格式不正確");
  const out={};
- for(const f of FIELDS){
+ for(const f of recordFields(value)){
   if(!own(value,f)) continue;
-  out[f]=f==="noteOrder"?noteOrder(value[f]):/^linkNone[1-4]$/.test(f)?linkNone(value[f]):f.startsWith("noteFont")?fontSize(value[f]):text(value[f],f);
+  out[f]=f==="noteOrder"?noteOrder(value[f]):f.startsWith("linkNone")?linkNone(value[f]):f.startsWith("noteFont")?fontSize(value[f]):text(value[f],f);
  }
  return out;
 }
 function mergeDraft(base,values,current){
  if(!obj(base)||!obj(values)||!obj(current)) fail("草稿格式不正確");
  const out=clone(current);
- for(const f of FIELDS) if(own(values,f)&&!same(values[f],base[f]))out[f]=clone(values[f]);
+ for(const f of recordFields(values)) if(own(values,f)&&!same(values[f],base[f]))out[f]=clone(values[f]);
  return out;
 }
 function deleteStamp(updatedAt,prior,now){
@@ -1919,7 +1982,8 @@ function record(r,index){
  const d={};
  d.id = r.id || ("import-"+(root.crypto && root.crypto.randomUUID ? root.crypto.randomUUID() : Date.now().toString(36)+"-"+index+"-"+Math.random().toString(36).slice(2)));
  if(!safeId(d.id)) fail("第 "+(index+1)+" 筆物件識別碼不合法");
- for(const f of FIELDS) d[f]= f==="noteOrder" ? noteOrder(r[f]) : /^linkNone[1-4]$/.test(f) ? linkNone(r[f]) : f==="price" ? price(r[f]) : f.startsWith("noteFont") ? fontSize(r[f]) : text(r[f],f);
+ const fields=recordFields(r);
+ for(const f of fields) d[f]= f==="noteOrder" ? noteOrder(r[f]) : f.startsWith("linkNone") ? linkNone(r[f]) : f==="price" ? price(r[f]) : f.startsWith("noteFont") ? fontSize(r[f]) : text(r[f],f);
  if(d.due){
   const s=d.due.replace(/\D/g,""), yr=Number(s.slice(0,-4)), mo=Number(s.slice(-4,-2)), day=Number(s.slice(-2));
   const date=new Date(yr+1911,mo-1,day);
@@ -1930,7 +1994,7 @@ function record(r,index){
  d.updatedAt=r.updatedAt || 1700000000000;
  d._fieldUpdatedAt={};
  const validMeta = obj(r._fieldUpdatedAt) && r._metaAt === d.updatedAt;
- for(const f of FIELDS) d._fieldUpdatedAt[f]=(f==="noteOrder"||f.startsWith("noteFont")||f==="url4"||/^link(?:Base)?Name[1-4]$/.test(f)||/^linkNone[1-4]$/.test(f)) && !own(r,f) ? 0 : validMeta && stamp(r._fieldUpdatedAt[f]) ? r._fieldUpdatedAt[f] : d.updatedAt;
+ for(const f of fields) d._fieldUpdatedAt[f]=(f==="noteOrder"||f.startsWith("noteFont")||f==="url4"||f.startsWith("link")) && !own(r,f) ? 0 : validMeta && stamp(r._fieldUpdatedAt[f]) ? r._fieldUpdatedAt[f] : d.updatedAt;
  d._metaAt=d.updatedAt;
  return d;
 }
@@ -1954,6 +2018,51 @@ function deletions(value){
  const out=Object.create(null);
  for(const k of Object.keys(value)){if(!safeId(k)||!stamp(value[k])) fail("刪除記錄不正確");out[k]=value[k];}
  return out;
+}
+const legacyNames=["591","樂居","永慶","其他"];
+const legacyColors=["#2c6fb0","#c6553f","#0c7d64","#e9b62d"];
+const slotKeys=["name","color","ink"];
+const slotMap=slots=>new Map(slots.map(s=>[s.id,s]));
+function slotOrderChanged(before,after){
+ const oldIds=new Set(before.map(s=>s.id)),newIds=new Set(after.map(s=>s.id));
+ return !same(before.filter(s=>newIds.has(s.id)).map(s=>s.id),after.filter(s=>oldIds.has(s.id)).map(s=>s.id));
+}
+function linkSlots(value={}){
+ const removed=new Set(value.deletedLinkSlots||[]);
+ const slots=value.linkSlots ?? (value.linkOrder||[1,2,3,4]).map(id=>({
+  id,name:(value.defaultLinkNames||legacyNames)[id-1],color:(value.linkColors||legacyColors)[id-1],
+  ink:value.linkTextColors?.[id-1]||"auto"
+ }));
+ return slots.filter(slot=>!removed.has(slot.id)).map(slot=>({...slot}));
+}
+function rebaseLinkSlots(before,after,durable){
+ const current=linkSlots(durable),currentById=slotMap(current),oldById=slotMap(before),edits=slotMap(after);
+ const removed=new Set(durable.deletedLinkSlots||[]),result=new Map();
+ for(const slot of current){
+  if(oldById.has(slot.id)&&!edits.has(slot.id))continue;
+  result.set(slot.id,{...slot});
+ }
+ for(const edit of after){
+  if(removed.has(edit.id))continue;
+  const old=oldById.get(edit.id),slot=result.get(edit.id);
+  if(!old){if(!currentById.has(edit.id))result.set(edit.id,{...edit});continue;}
+  if(slot)for(const key of slotKeys)if(edit[key]!==old[key])slot[key]=edit[key];
+ }
+ if(!slotOrderChanged(before,after))return Array.from(result.values());
+ const ordered=[];
+ for(const edit of after)if(result.has(edit.id)){ordered.push(result.get(edit.id));result.delete(edit.id);}
+ return ordered.concat([...result.values()]);
+}
+function slotClock(settings,id,fallback){
+ return settings.linkSlotMeta?.fields[id]||[fallback,fallback,fallback];
+}
+function trackSlotSettings(next,previous,previousTime,now){
+ const before=linkSlots(previous),byId=slotMap(before),fields={};
+ for(const slot of next.linkSlots){
+  const old=byId.get(slot.id),clock=slotClock(previous,slot.id,previousTime);
+  fields[slot.id]=slotKeys.map((key,i)=>old?.[key]===slot[key]?clock[i]:now);
+ }
+ next.linkSlotMeta={order:slotOrderChanged(before,next.linkSlots)?now:(previous.linkSlotMeta?.order??previousTime),fields};
 }
 function settings(value){
  if(!obj(value)) fail("設定格式不正確");
@@ -2006,8 +2115,49 @@ function settings(value){
   if(!["auto","white","black"].includes(value.renamedLinkTextColor))fail("改名連結文字顏色不正確");
   s.renamedLinkTextColor=value.renamedLinkTextColor;
  }
+ if(value.deletedLinkSlots!=null){
+  if(!Array.isArray(value.deletedLinkSlots)||!value.deletedLinkSlots.every(validSlotId)) fail("已刪除連結欄位識別碼不正確");
+  s.deletedLinkSlots=[...new Set(value.deletedLinkSlots)].sort((a,b)=>a-b);
+ }
+ if(value.linkSlots!=null){
+  if(!Array.isArray(value.linkSlots)) fail("連結欄位格式不正確");
+  const seen=new Set(),removed=new Set(s.deletedLinkSlots||[]);
+  s.linkSlots=[];
+  for(const slot of value.linkSlots){
+   if(!obj(slot)||!validSlotId(slot.id)||seen.has(slot.id)) fail("連結欄位識別碼不正確或重複");
+   if(typeof slot.name!=="string"||!slot.name.trim()||slot.name.length>20)fail("預設連結名稱不正確");
+   if(typeof slot.color!=="string"||!/^#[0-9a-f]{6}$/i.test(slot.color))fail("連結顏色不正確");
+   if(!["auto","white","black"].includes(slot.ink))fail("連結文字顏色不正確");
+   seen.add(slot.id);
+   if(!removed.has(slot.id))s.linkSlots.push({id:slot.id,name:slot.name.trim(),color:slot.color,ink:slot.ink});
+  }
+  // The old arrays are inputs to migration; updated states have one authoritative slot list.
+  for(const key of ["linkOrder","defaultLinkNames","linkColors","linkTextColors"])delete s[key];
+  if(value.linkSlotMeta!=null){
+   const meta=value.linkSlotMeta;
+   if(!obj(meta)||!stamp(meta.order)||!obj(meta.fields))fail("連結欄位設定時間不正確");
+   const fields={};
+   for(const slot of s.linkSlots){
+    const clock=meta.fields[slot.id];if(clock==null)continue;
+    if(!Array.isArray(clock)||clock.length!==3||!clock.every(stamp))fail("連結欄位設定時間不正確");
+    fields[slot.id]=clock.slice();
+   }
+   s.linkSlotMeta={order:meta.order,fields};
+  }
+ }
  if(value._updatedAt!=null){if(!stamp(value._updatedAt)) fail("設定時間不正確");s._updatedAt=value._updatedAt;}
  return s;
+}
+function clearDeletedLinkData(items,ids){
+ if(!ids?.length)return;
+ const removed=new Set(ids);
+ const legacyFields=ids.filter(id=>id<=4).flatMap(id=>[legacyUrls[id-1],"linkNone"+id,"linkBaseName"+id,"linkName"+id]);
+ for(const row of items){
+  for(const f of legacyFields){row[f]=f.startsWith("linkNone")?false:"";row._fieldUpdatedAt[f]=0;}
+  for(const f of Object.keys(row)){
+   if(!baseFields.has(f)&&removed.has(customLinkFieldId(f))){delete row[f];delete row._fieldUpdatedAt[f];}
+  }
+ }
 }
 function validateState(s){
  if(!obj(s)) fail("資料格式不正確");
@@ -2016,6 +2166,7 @@ function validateState(s){
   settings:settings(s.settings||{}),resetAt:s.resetAt||0,catsTs:s.catsTs||0,settingsTs:s.settingsTs||0,revision:s.revision||0};
  for(const f of ["resetAt","catsTs","settingsTs","revision"]) if(!stamp(out[f])) fail("資料版本時間不正確");
  out.items=out.items.filter(r=>!(out.deleted[r.id]>=r.updatedAt));
+ clearDeletedLinkData(out.items,out.settings.deletedLinkSlots);
  return out;
 }
 function backup(value){
@@ -2038,8 +2189,8 @@ function backup(value){
 function fieldMerge(a,b){
  a=record(a,0); b=record(b,0);
  const out={id:a.id,_fieldUpdatedAt:{},updatedAt:Math.max(a.updatedAt,b.updatedAt)};
- for(const f of FIELDS){
-  const at=a._fieldUpdatedAt[f],bt=b._fieldUpdatedAt[f];
+ for(const f of recordFields(a,b)){
+  const at=a._fieldUpdatedAt[f]??-1,bt=b._fieldUpdatedAt[f]??-1;
   const chosen=at>bt?a:bt>at?b:JSON.stringify(a[f])>=JSON.stringify(b[f])?a:b;
   out[f]=chosen[f];out._fieldUpdatedAt[f]=Math.max(at,bt);
  }
@@ -2050,10 +2201,12 @@ function track(items,base,now){
  return records(items).map(r=>{
   const prev=old.get(r.id);
   const ts=Math.max(now,prev?prev.updatedAt+1:now);
-  if(!prev){r.updatedAt=ts;for(const f of FIELDS) r._fieldUpdatedAt[f]=ts;}
+  if(!prev){r.updatedAt=ts;for(const f of recordFields(r)) r._fieldUpdatedAt[f]=ts;}
   else {
    let changed=false;
-   for(const f of FIELDS){
+   for(const f of recordFields(r,prev)){
+    // Omitting a newer-version field is not an edit. Clearing a URL uses an explicit empty value.
+    if(!own(r,f)){r[f]=prev[f];r._fieldUpdatedAt[f]=prev._fieldUpdatedAt[f];continue;}
     if(!same(r[f],prev[f])) {r._fieldUpdatedAt[f]=ts;changed=true;}
     else r._fieldUpdatedAt[f]=prev._fieldUpdatedAt[f];
    }
@@ -2072,6 +2225,34 @@ function stateFromMain(m){
   catsTs:m.cats?m.cats._updatedAt||0:0,settings:m.settings||{},settingsTs:m.settings?m.settings._updatedAt||0:0,
   deleted:m.deleted||{},resetAt:m.resetAt||0});
 }
+function mergeLinkSettings(preferred,other,preferredTime,otherTime){
+ if(!preferred.linkSlots&&!other.linkSlots&&!preferred.deletedLinkSlots&&!other.deletedLinkSlots)return preferred;
+ const removed=[...new Set([...(preferred.deletedLinkSlots||[]),...(other.deletedLinkSlots||[])])].sort((a,b)=>a-b);
+ // A legacy client cannot express a slot removal. Only explicit tombstones remove IDs.
+ if(!preferred.linkSlots||!other.linkSlots){
+  const modern=preferred.linkSlots?preferred:other.linkSlots?other:preferred;
+  return settings({...preferred,linkSlots:linkSlots(modern),linkSlotMeta:modern.linkSlotMeta,deletedLinkSlots:removed});
+ }
+ const a=preferred.linkSlots,b=other.linkSlots,am=slotMap(a),bm=slotMap(b);
+ const at=preferred.linkSlotMeta?.order??preferredTime,bt=other.linkSlotMeta?.order??otherTime;
+ const aFirst=at!==bt?at>bt:JSON.stringify(a.map(s=>s.id))>=JSON.stringify(b.map(s=>s.id));
+ const first=aFirst?a:b,second=aFirst?b:a,firstMap=aFirst?am:bm;
+ const ordered=first.concat(second.filter(s=>!firstMap.has(s.id)));
+ const fields={},slots=[],skip=new Set(removed);
+ for(const slot of ordered){
+  const id=slot.id;if(skip.has(id))continue;
+  const left=am.get(id),right=bm.get(id),merged={id};
+  const ac=slotClock(preferred,id,preferredTime),bc=slotClock(other,id,otherTime);
+  fields[id]=slotKeys.map((key,i)=>{
+   if(!right){merged[key]=left[key];return ac[i];}
+   if(!left){merged[key]=right[key];return bc[i];}
+   const takeLeft=ac[i]!==bc[i]?ac[i]>bc[i]:left[key]>=right[key];
+   merged[key]=takeLeft?left[key]:right[key];return Math.max(ac[i],bc[i]);
+  });
+  slots.push(merged);
+ }
+ return settings({...preferred,linkSlots:slots,linkSlotMeta:{order:Math.max(at,bt),fields},deletedLinkSlots:removed});
+}
 function merge(local,remote){
  const l=stateFromMain(local);
  if(!remote) return mainFrom(l);
@@ -2082,15 +2263,23 @@ function merge(local,remote){
  for(const row of r.items) map.set(row.id,map.has(row.id)?fieldMerge(map.get(row.id),row):row);
  const list=Array.from(map.values()).filter(x=>!(del[x.id]>=x.updatedAt));
  const pick=(a,b,at,bt)=>at>bt?a:bt>at?b:JSON.stringify(a)>=JSON.stringify(b)?a:b;
+ const preferred=pick(l.settings,r.settings,l.settingsTs,r.settingsTs);
+ const left=preferred===l.settings;
+ const mergedSettings=mergeLinkSettings(preferred,left?r.settings:l.settings,left?l.settingsTs:r.settingsTs,left?r.settingsTs:l.settingsTs);
+ clearDeletedLinkData(list,mergedSettings.deletedLinkSlots);
  return mainFrom({items:list,deleted:del,cats:pick(l.cats,r.cats,l.catsTs,r.catsTs),
-  settings:pick(l.settings,r.settings,l.settingsTs,r.settingsTs),catsTs:Math.max(l.catsTs,r.catsTs),
+  settings:mergedSettings,catsTs:Math.max(l.catsTs,r.catsTs),
   settingsTs:Math.max(l.settingsTs,r.settingsTs),resetAt:l.resetAt});
 }
 function restore(old,imported,now){
  const next=backup(imported);
  const ts=Math.max(now,old.resetAt+1,...old.items.map(x=>x.updatedAt+1));
  next.resetAt=ts;next.deleted={};next.catsTs=ts;next.settingsTs=ts;
- next.items=next.items.map(r=>{r.updatedAt=ts;r._metaAt=ts;for(const f of FIELDS) r._fieldUpdatedAt[f]=ts;return r});
+ if(next.settings.linkSlots){
+  const fields=Object.fromEntries(next.settings.linkSlots.map(s=>[s.id,[ts,ts,ts]]));
+  next.settings.linkSlotMeta={order:ts,fields};
+ }
+ next.items=next.items.map(r=>{r.updatedAt=ts;r._metaAt=ts;for(const f of recordFields(r)) r._fieldUpdatedAt[f]=ts;return r});
  return next;
 }
 function createStore(storage){
@@ -2099,7 +2288,7 @@ function createStore(storage){
  const stable=v=>JSON.stringify((function order(x){if(Array.isArray(x))return x.map(order);if(x&&typeof x==="object"){const y={};for(const k of Object.keys(x).sort())y[k]=order(x[k]);return y;}return x})(v));
  const prefValue=s=>{const v=clone(s);delete v._updatedAt;return v};
  const content=s=>{const v=validateState(s);delete v.revision;v.settings=prefValue(v.settings);v.items.sort((a,b)=>String(a.id).localeCompare(String(b.id)));return stable(v)};
- const fieldValues=r=>Object.fromEntries(FIELDS.map(f=>[f,r[f]]));
+ const fieldValues=r=>Object.fromEntries(recordFields(r).map(f=>[f,r[f]]));
  const intent=s=>stable({items:s.items.map(r=>({id:r.id,...fieldValues(r)})).sort((a,b)=>String(a.id).localeCompare(String(b.id))),cats:s.cats,settings:prefValue(s.settings),deleted:s.deleted,resetAt:s.resetAt});
  function join(a,b){
   if(!a)return clone(b);if(!b)return clone(a);
@@ -2205,7 +2394,10 @@ function createStore(storage){
   if(opts.track!==false){
    next.items=track(next.items,base?base.items:[],Date.now());
    if(!base||stable(next.cats)!==stable(base.cats))next.catsTs=Math.max(Date.now(),(base?base.catsTs:0)+1,(latest?latest.catsTs:0)+1);
-   if(!base||stable(prefValue(next.settings))!==stable(prefValue(base.settings)))next.settingsTs=Math.max(Date.now(),(base?base.settingsTs:0)+1,(latest?latest.settingsTs:0)+1);
+   if(!base||stable(prefValue(next.settings))!==stable(prefValue(base.settings))){
+    next.settingsTs=Math.max(Date.now(),(base?base.settingsTs:0)+1,(latest?latest.settingsTs:0)+1);
+    if(next.settings.linkSlots)trackSlotSettings(next.settings,base?.settings||{},base?.settingsTs||0,next.settingsTs);
+   }
   }
   if(opts.recover){
    const before=latest||base||{items:[],resetAt:0};
@@ -2240,7 +2432,7 @@ function createStore(storage){
  return {load,commit,readLatest,acknowledge,compact,rawBackup,get current(){return current?clone(current):null},get blocked(){return blocked}};
 }
 
-const api={KEY,FIELDS,price,fontSize,noteOrder,draftValues,mergeDraft,deleteStamp,record,records,categories,settings,validateState,backup,fieldMerge,track,merge,restore,mainFrom,stateFromMain,createStore,clone,defaults,ready:false};
+const api={KEY,FIELDS,recordFields,linkSlots,rebaseLinkSlots,price,fontSize,noteOrder,draftValues,mergeDraft,deleteStamp,record,records,categories,settings,validateState,backup,fieldMerge,track,merge,restore,mainFrom,stateFromMain,createStore,clone,defaults,ready:false};
 if(typeof module==="object"&&module.exports) module.exports=api;
 root.PropertyCore=api;
 if(!root.document) return;
@@ -2311,7 +2503,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.07C";
+const APP_VERSION = "2026.11.09B";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2352,15 +2544,18 @@ const safeUrl = u => {
 };
 const openExtUrl = u => { const href = safeUrl(u); if (href) window.open(href, "_blank", "noopener"); };
 const normUrl = u => safeUrl(u);
-// 四格以固定槽位識別；名稱與排列不參與網址欄位的判定。
+// 欄位識別碼不隨名稱或順序改變。舊欄位沿用原本儲存的網址名稱。
 const LINK_FIELDS=["url591","urlLeju","urlI","url4"];
+function linkUrlField(slot){return LINK_FIELDS[slot-1]||"url"+slot;}
 function linkIsNone(d,slot){return d?.["linkNone"+slot]===true;}
-function linkState(d,slot){return linkIsNone(d,slot)?"none":String(d?.[LINK_FIELDS[slot-1]]??"").trim()?"has":"empty";}
+function linkState(d,slot){return linkIsNone(d,slot)?"none":String(d?.[linkUrlField(slot)]??"").trim()?"has":"empty";}
 const LINK_NAMES=["591","樂居","永慶","其他"];
 const LINK_COLORS=["#2c6fb0","#c6553f","#0c7d64","#e9b62d"];
-let linkPreferences={defaultLinkNames:LINK_NAMES.slice(),linkOrder:[1,2,3,4],linkColors:LINK_COLORS.slice(),renamedLinkColor:"#687f95",linkTextColors:["auto","auto","auto","auto"],renamedLinkTextColor:"auto"};
-function linkBaseName(d,slot){return d?.["linkBaseName"+slot]||LINK_NAMES[slot-1];}
-function linkDefaultName(slot){return linkPreferences.defaultLinkNames[slot-1]||LINK_NAMES[slot-1];}
+let linkPreferences={linkSlots:PropertyCore.linkSlots({}),deletedLinkSlots:[],renamedLinkColor:"#687f95",renamedLinkTextColor:"auto"};
+function linkSlotIds(){return linkPreferences.linkSlots.map(slot=>slot.id);}
+function linkSlotById(id){return linkPreferences.linkSlots.find(slot=>slot.id===id);}
+function linkDefaultName(slot){return linkSlotById(slot)?.name||"";}
+function linkBaseName(d,slot){return d?.["linkBaseName"+slot]||LINK_NAMES[slot-1]||linkDefaultName(slot);}
 function linkName(d,slot){return linkIsRenamed(d,slot)?d["linkName"+slot]:linkDefaultName(slot);}
 function linkIsRenamed(d,slot){return !!d?.["linkName"+slot]&&d["linkName"+slot]!==linkBaseName(d,slot);}
 function linkNameEditValues(d,slot,value,initialLabel){
@@ -2370,26 +2565,32 @@ function linkNameEditValues(d,slot,value,initialLabel){
   const base=linkDefaultName(slot),name=label||base;
   return {[baseField]:base,[nameField]:name===base?"":name};
 }
-function newLinkNames(){return Object.fromEntries([1,2,3,4].flatMap(slot=>[["linkBaseName"+slot,linkPreferences.defaultLinkNames[slot-1]],["linkName"+slot,""]]));}
+function newLinkNames(){return Object.fromEntries(linkPreferences.linkSlots.flatMap(({id,name})=>[["linkBaseName"+id,name],["linkName"+id,""]]));}
 function linkInk(hex){
   if(["#2c6fb0","#c6553f","#0c7d64","#687f95"].includes(hex.toLowerCase()))return "#ffffff";
   const c=hex.slice(1).match(/../g).map(v=>{const n=parseInt(v,16)/255;return n<=.04045?n/12.92:Math.pow((n+.055)/1.055,2.4)});
   return .2126*c[0]+.7152*c[1]+.0722*c[2]>.179?"#17232b":"#ffffff";
 }
-function linkColor(d,slot){return linkIsRenamed(d,slot)?linkPreferences.renamedLinkColor:linkPreferences.linkColors[slot-1];}
+function linkColor(d,slot){return linkIsRenamed(d,slot)?linkPreferences.renamedLinkColor:linkSlotById(slot)?.color||"#687f95";}
 function linkTextInk(mode,color){return mode==="white"?"#ffffff":mode==="black"?"#17232b":linkInk(color);}
 function propertyLinkInk(d,slot){
-  const mode=linkIsRenamed(d,slot)?linkPreferences.renamedLinkTextColor:linkPreferences.linkTextColors?.[slot-1];
+  const mode=linkIsRenamed(d,slot)?linkPreferences.renamedLinkTextColor:linkSlotById(slot)?.ink;
   return linkTextInk(mode,linkColor(d,slot));
 }
 function linkStyle(d,slot){const color=linkColor(d,slot);return `--link-color:${color};--link-ink:${propertyLinkInk(d,slot)}`;}
 function linkChip(d,slot){
-  const none=linkIsNone(d,slot),href=none?"":safeUrl(d[LINK_FIELDS[slot-1]]),label=linkName(d,slot),attrs=`data-slot="${slot}" style="${linkStyle(d,slot)}" title="${esc(label+(none?"：無連結":""))}"`;
+  const none=linkIsNone(d,slot),href=none?"":safeUrl(d[linkUrlField(slot)]),label=linkName(d,slot),attrs=`data-slot="${slot}" style="${linkStyle(d,slot)}" title="${esc(label+(none?"：無連結":""))}"`;
   return href
     ? `<a class="chip on property-link" ${attrs} href="${esc(href)}" target="_blank" rel="noopener"><span class="link-text">${esc(label)}</span><span class="ext">↗</span></a>`
     : `<span class="chip off property-link${none?' link-none':''}" ${attrs}><span class="link-text">${none?'無':esc(label)}</span></span>`;
 }
-function propertyLinksHTML(d){return linkPreferences.linkOrder.map(slot=>linkChip(d,slot)).join("");}
+function propertyLinksHTML(d,compact=false){
+  const slots=linkSlotIds(),overflow=compact&&slots.length>4;
+  const visible=overflow?slots.slice(0,3):slots;
+  const chips=visible.map(slot=>linkChip(d,slot)).join("");
+  if(!overflow)return chips;
+  return chips+moreLinksButtonHTML(slots.length-visible.length);
+}
 
 // 到期提醒固定 7 天:不提供設定,也不納入雲端同步,避免跨裝置同步時提醒門檻被改掉
 const dueSoonDays = 7;
@@ -2508,7 +2709,7 @@ function cardHTML(d){
       <div class="addr"><span class="cv" data-copy="${esc(d.addr)}">${esc(d.addr)}</span></div>
       <div class="price">
         ${d.price ? `<span class="price-value" data-copy="${esc(d.price)}"><span class="num">${money(d.price)}</span><span class="unit">萬</span></span>` : `<span class="price-value"></span>`}
-        <div class="links">${propertyLinksHTML(d)}</div>
+        <div class="links" style="--visible-links:${Math.min(4,linkPreferences.linkSlots.length)}">${propertyLinksHTML(d,true)}</div>
       </div>
       <div class="meta">
         <span data-copy="${esc(d.layout)}"><i class="ml">格局</i> ${esc(d.layout)}</span>
@@ -2563,6 +2764,9 @@ function persistLocal(opts){
     const effective={...previous.settings};
     for(const [key,value] of Object.entries(shown)){
       if(!visiblePreferences || JSON.stringify(value)!==JSON.stringify(visiblePreferences[key]))effective[key]=value;
+    }
+    if(visiblePreferences && effective.linkSlots===shown.linkSlots){
+      effective.linkSlots=PropertyCore.rebaseLinkSlots(visiblePreferences.linkSlots,shown.linkSlots,previous.settings);
     }
     const state=PropertyCore.local().commit({
       items,cats,deleted,settings:effective,resetAt:window._resetAt||0,
@@ -2806,6 +3010,8 @@ function sortList(list){
 }
 const cardsEl  = document.getElementById("cards");
 const tableWrap = document.getElementById("tableWrap");
+const tableMorePanel = document.getElementById("tableMoreLinks");
+let tableMoreAnchor=null,moreAnchorRect=null;
 const countEl  = document.getElementById("listCount");
 const titleEl  = document.getElementById("listTitle");
 const searchEl = document.getElementById("search");
@@ -2816,34 +3022,40 @@ const listCounter=(()=>{
   const button=document.getElementById("listCountToggle"),total=document.getElementById("listCountTotal"),sizer=document.getElementById("listCountSizer"),viewport=document.getElementById("listCountWindow"),track=document.getElementById("listCountTrack"),prev=document.getElementById("listCountPrev"),next=document.getElementById("listCountNext"),status=document.getElementById("listCountStatus");
   const desktop=window.matchMedia("(min-width:820px)");
   const expanded=()=>viewMode==="table"&&desktop.matches;
-  let mode="total",index=0,stats={total:0,counts:[0,0,0,0]},signature="",gesture=null,ignoreClick=false,wheelAt=0;
+  let mode="total",index=0,stats={total:0,counts:{}},signature="",gesture=null,ignoreClick=false,wheelAt=0;
   try{if(storageOK&&localStorage.getItem(KEY)==="links")mode="links";}catch(e){}
   function summarize(list){
-    const counts=[0,0,0,0];
-    for(const item of list)for(let i=0;i<4;i++)if(linkState(item,i+1)==="has")counts[i]++;
+    const slots=linkSlotIds(),counts=Object.fromEntries(slots.map(slot=>[slot,0]));
+    for(const item of list)for(const slot of slots)if(linkState(item,slot)==="has")counts[slot]++;
     return {total:list.length,counts};
   }
   function paint(offset=0){
-    const detailed=mode==="links",all=detailed&&expanded(),slot=linkPreferences.linkOrder[index],name=linkDefaultName(slot);
+    const slots=linkSlotIds(),detailed=mode==="links"&&slots.length>0,all=detailed&&expanded();
+    index=Math.max(0,Math.min(index,slots.length-1));
+    if(all)index-=index%4;
+    const visible=all?slots.slice(index,index+4):slots,slot=slots[index],name=linkDefaultName(slot);
     total.innerHTML=`欄位 <b>${stats.total}</b> <small>筆</small>`;
     sizer.hidden=!detailed||all;
-    if(detailed&&!all)sizer.innerHTML=`<span class="list-count-name">${esc(name)}</span><span class="list-count-value"><b>${stats.counts[slot-1]}</b><small>筆</small></span>`;
-    total.hidden=detailed;viewport.hidden=!detailed;prev.hidden=next.hidden=!detailed||all;prev.disabled=index===0;next.disabled=index===3;
+    if(detailed&&!all)sizer.innerHTML=`<span class="list-count-name">${esc(name)}</span><span class="list-count-value"><b>${stats.counts[slot]||0}</b><small>筆</small></span>`;
+    total.hidden=detailed;viewport.hidden=!detailed;
+    prev.hidden=next.hidden=!detailed||slots.length<=(all?4:1);
+    prev.disabled=index===0;next.disabled=index+(all?4:1)>=slots.length;
+    button.disabled=!slots.length;
     countEl.classList.toggle("count-expanded",all);
     button.setAttribute("aria-pressed",String(detailed));
-    const label=all?linkPreferences.linkOrder.map(s=>`${linkDefaultName(s)} ${stats.counts[s-1]} 筆`).join("，"):detailed?`${name} ${stats.counts[slot-1]} 筆`:`欄位 ${stats.total} 筆`;
-    button.setAttribute("aria-label",all?`${label}。點擊切換為欄位總筆數`:detailed?`${label}，第 ${index+1} 格，共四格。左右滑動或方向鍵查看；點擊切換為欄位總筆數`:`${label}。點擊切換為連結筆數`);
+    const label=all?visible.map(s=>`${linkDefaultName(s)} ${stats.counts[s]||0} 筆`).join("，"):detailed?`${name} ${stats.counts[slot]||0} 筆`:`欄位 ${stats.total} 筆`;
+    button.setAttribute("aria-label",!slots.length?label:all?`${label}。點擊切換為欄位總筆數`:detailed?`${label}，第 ${index+1} 格，共 ${slots.length} 格。左右滑動或方向鍵查看`:`${label}。點擊切換為連結筆數`);
     button.title=detailed?`${label}・${all?"":"左右滑動查看・"}點一下切換欄位筆數`:"點一下切換連結筆數";
-    const key=JSON.stringify([linkPreferences.linkOrder,linkPreferences.defaultLinkNames,stats.counts]);
+    const key=JSON.stringify(visible.map(s=>[s,linkDefaultName(s),stats.counts[s]||0]));
     if(key!==signature){
       signature=key;
-      track.innerHTML=linkPreferences.linkOrder.map(s=>`<span class="list-count-part"><span class="list-count-name">${esc(linkDefaultName(s))}</span><span class="list-count-value"><b>${stats.counts[s-1]}</b><small>筆</small></span></span>`).join("");
+      track.innerHTML=visible.map(s=>`<span class="list-count-part"><span class="list-count-name">${esc(linkDefaultName(s))}</span><span class="list-count-value"><b>${stats.counts[s]||0}</b><small>筆</small></span></span>`).join("");
     }
     track.style.transform=all?"none":`translateX(calc(${-index*100}% + ${offset}px))`;
     if(status.textContent!==label)status.textContent=label;
   }
   function refresh(list){stats=summarize(list);paint();}
-  function move(delta){index=Math.max(0,Math.min(3,index+delta));paint();}
+  function move(delta){index=Math.max(0,Math.min(linkPreferences.linkSlots.length-1,index+delta*(expanded()?4:1)));paint();}
   button.addEventListener("click",e=>{
     if(ignoreClick&&e.detail!==0){ignoreClick=false;return;}
     ignoreClick=false;mode=mode==="links"?"total":"links";index=0;
@@ -2861,7 +3073,7 @@ const listCounter=(()=>{
     gesture.dx=e.clientX-gesture.x;gesture.dy=e.clientY-gesture.y;
     if(Math.abs(gesture.dx)>8&&Math.abs(gesture.dx)>Math.abs(gesture.dy)*1.2){
       button.classList.add("dragging");
-      const edge=(index===0&&gesture.dx>0)||(index===3&&gesture.dx<0),limit=gesture.width*.8;
+      const edge=(index===0&&gesture.dx>0)||(index===linkPreferences.linkSlots.length-1&&gesture.dx<0),limit=gesture.width*.8;
       paint(Math.max(-limit,Math.min(limit,gesture.dx))*(edge?.18:1));
     }
   });
@@ -2874,7 +3086,7 @@ const listCounter=(()=>{
   button.addEventListener("pointerup",e=>endGesture(e,false));
   button.addEventListener("pointercancel",e=>endGesture(e,true));
   button.addEventListener("lostpointercapture",e=>endGesture(e,true));
-  button.addEventListener("keydown",e=>{if(mode==="links"&&!expanded()&&["ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();move(e.key==="ArrowRight"?1:-1);}});
+  button.addEventListener("keydown",e=>{if(mode==="links"&&["ArrowLeft","ArrowRight"].includes(e.key)){e.preventDefault();move(e.key==="ArrowRight"?1:-1);}});
   button.addEventListener("wheel",e=>{
     if(mode!=="links"||expanded()||Math.abs(e.deltaX)<=Math.abs(e.deltaY))return;
     e.preventDefault();const now=Date.now();if(now-wheelAt<250)return;wheelAt=now;move(e.deltaX>0?1:-1);
@@ -2902,17 +3114,22 @@ const numOrNull = v => { try { const n = PropertyCore.price(v); return n === "" 
 const LINK_FILTER_KEY = "property_app_linkfilters_v1";
 const LINK_FILTER_VALUES = ["has","empty","none"];
 const LINK_FILTER_LABELS = ["已填入","尚未填","已勾無"];
-function normalizeLinkFilters(value){ return [0,1,2,3].map(i => Array.isArray(value) && LINK_FILTER_VALUES.includes(value[i]) ? value[i] : "all"); }
+function normalizeLinkFilters(value){
+  const pairs=Array.isArray(value)?value.slice(0,4).map((state,i)=>[i+1,state]):Object.entries(value||{});
+  return Object.fromEntries(pairs.filter(([id,state])=>Number.isSafeInteger(Number(id))&&Number(id)>0&&LINK_FILTER_VALUES.includes(state)));
+}
 let linkFilterState = normalizeLinkFilters(null), linkFilterDraft = null;
 if (storageOK){ try { linkFilterState = normalizeLinkFilters(JSON.parse(localStorage.getItem(LINK_FILTER_KEY) || "null")); } catch(_){} }
-function anyLinkFilter(){ return linkFilterState.some(value => value !== "all"); }
+function anyLinkFilter(){ return linkSlotIds().some(slot=>!!linkFilterState[slot]); }
 function saveLinkFilterState(){ if (storageOK){ try { localStorage.setItem(LINK_FILTER_KEY, JSON.stringify(linkFilterState)); } catch(_){} } }
 function clearLinkFilters(){ linkFilterState = normalizeLinkFilters(null); saveLinkFilterState(); }
 function applyLinkFilters(list, selections = linkFilterState){
-  return list.filter(d => selections.every((value,i) => value === "all" || linkState(d,i + 1) === value));
+  const conditions=linkSlotIds().filter(slot=>selections[slot]);
+  return conditions.length?list.filter(d=>conditions.every(slot=>linkState(d,slot)===selections[slot])):list;
 }
 const linkFilterBg = document.getElementById("linkFilterBg");
 function syncLinkFilterTriggers(){
+  document.getElementById("linkFilterBtn").hidden=!linkPreferences.linkSlots.length;
   document.querySelectorAll('#linkFilterBtn, .th-flt[data-flt="links"]').forEach(button => {
     button.classList.toggle("on", anyLinkFilter());
     button.setAttribute("aria-expanded", String(linkFilterBg.classList.contains("open")));
@@ -2922,9 +3139,9 @@ function syncLinkFilterTriggers(){
 }
 function renderLinkFilter(){
   if (!linkFilterDraft) return;
-  document.getElementById("linkFilterRows").innerHTML = linkPreferences.linkOrder.map(slot => {
+  document.getElementById("linkFilterRows").innerHTML = linkSlotIds().map(slot => {
     const name = linkDefaultName(slot);
-    return `<div class="link-filter-row"><span class="link-filter-name" title="${esc(name)}">${esc(name)}</span><div class="link-filter-options" role="group" aria-label="${esc(name)}連結狀態">${LINK_FILTER_VALUES.map((value,i) => `<button type="button" class="link-filter-option" data-link-filter-slot="${slot}" data-value="${value}" aria-pressed="${linkFilterDraft[slot-1] === value}">${LINK_FILTER_LABELS[i]}</button>`).join("")}</div></div>`;
+    return `<div class="link-filter-row"><span class="link-filter-name" title="${esc(name)}">${esc(name)}</span><div class="link-filter-options" role="group" aria-label="${esc(name)}連結狀態">${LINK_FILTER_VALUES.map((value,i) => `<button type="button" class="link-filter-option" data-link-filter-slot="${slot}" data-value="${value}" aria-pressed="${linkFilterDraft[slot] === value}">${LINK_FILTER_LABELS[i]}</button>`).join("")}</div></div>`;
   }).join("");
   document.getElementById("linkFilterApply").textContent = `套用（${getFilteredItems(linkFilterDraft).length} 筆）`;
 }
@@ -2933,7 +3150,7 @@ function openLinkFilter(trigger){
   flushEditing();
   closeOtherOverlays("linkfilter");
   tableWrap.classList.remove("gen-open");
-  linkFilterDraft = linkFilterState.slice();
+  linkFilterDraft = {...linkFilterState};
   renderLinkFilter();
   linkFilterBg.classList.add("open");
   lockOverlay(trigger);
@@ -2955,14 +3172,15 @@ document.getElementById("linkFilterRows").addEventListener("click", e => {
   const button = e.target.closest("[data-link-filter-slot]");
   if (!button || !linkFilterDraft) return;
   const slot = Number(button.dataset.linkFilterSlot), value = button.dataset.value;
-  if (slot < 1 || slot > 4 || !LINK_FILTER_VALUES.includes(value)) return;
-  linkFilterDraft[slot-1] = linkFilterDraft[slot-1] === value ? "all" : value;
+  if (!linkSlotById(slot) || !LINK_FILTER_VALUES.includes(value)) return;
+  if(linkFilterDraft[slot]===value)delete linkFilterDraft[slot];
+  else linkFilterDraft[slot]=value;
   renderLinkFilter();
   document.querySelector(`#linkFilterRows [data-link-filter-slot="${slot}"][data-value="${value}"]`)?.focus({preventScroll:true});
 });
 document.getElementById("linkFilterApply").addEventListener("click", () => {
   if (!linkFilterDraft) return;
-  linkFilterState = linkFilterDraft.slice();
+  linkFilterState = {...linkFilterDraft};
   saveLinkFilterState();
   closeLinkFilter();
   applyFilter();
@@ -2973,6 +3191,18 @@ document.getElementById("linkFilterClear").addEventListener("click", () => {
   applyFilter();
 });
 // link-filter:end
+function refreshLinkSlotConsumers(){
+  const removed=linkPreferences.deletedLinkSlots||[];
+  let changed=false;
+  for(const slot of removed){
+    if(Object.hasOwn(linkFilterState,slot)){delete linkFilterState[slot];changed=true;}
+    if(linkFilterDraft)delete linkFilterDraft[slot];
+  }
+  if(changed)saveLinkFilterState();
+  if(linkFilterDraft)renderLinkFilter();
+  refreshOpenFormLinks();
+  syncLinkFilterTriggers();
+}
 function anyColFilter(){
   if (fltP.lo != null || fltP.hi != null || anyLinkFilter()) return true;
   return Object.keys(colFilter).some(k => colFilter[k] && colFilter[k].size);
@@ -3251,6 +3481,7 @@ function setViewMode(vm){
 const T_COLS = ["到期","類別","格局","案名","地址","樓層","售價","連結","承辦","電話","門市","註"];
 // ---- 表格欄寬調整(拖曳 + 雙擊自適應 + 記憶/同步)。備註(note,最後一欄)為彈性欄:不放把手、不給固定寬,自動吸收剩餘空間;其餘欄(含門市)皆可調右緣拉桿 ----
 const T_FIELDS = ["due","cat","layout","name","addr","floor","price","links","agent","tel","store","note"];
+function tableFields(){return linkPreferences.linkSlots.length?T_FIELDS:T_FIELDS.filter(field=>field!=="links");}
 const FLEX_FIELD = "note";   // 備註=彈性欄(最後一欄,無拉桿,自動吸收剩餘寬度),與客戶總覽「客戶需求」欄一致。其餘欄固定可調(右緣拉桿),表格 width:100% 撐滿
 const DEFAULT_COLW = {due:78,cat:80,layout:64,name:150,addr:200,floor:68,price:76,links:146,agent:78,tel:112,store:150};   // 各固定欄(可調);note(備註)為彈性欄不列(與客戶總覽 need 一致)
 const COLW_MIN = 48, COLW_MAX = 640, FLEX_MIN_FALLBACK = 36, DEL_W = 40;   // 彈性欄(備註)最小寬改為「剛好容納欄名」動態量測;量不到時用此保底
@@ -3261,7 +3492,7 @@ let colW = loadColW();
 // 彈性欄(備註)的最小寬 = 剛好容納欄名「備註」(不再固定 240,讓備註能縮到最小)。量不到欄名時用保底值。
 function flexMinWidth(){
   if (!FLEX_FIELD) return 0;
-  const idx = T_FIELDS.indexOf(FLEX_FIELD);
+  const idx = tableFields().indexOf(FLEX_FIELD);
   if (idx < 0) return FLEX_MIN_FALLBACK;
   const tbl = tableWrap.querySelector(".thead-wrap .ptable");
   const th = tbl && tbl.querySelectorAll("thead th")[idx];
@@ -3273,10 +3504,10 @@ function flexMinWidth(){
   if (lw <= 0) return FLEX_MIN_FALLBACK;   // 尚未排版(初次渲染)→ 保底
   return Math.max(FLEX_MIN_FALLBACK, Math.ceil(lw + pad + 6));
 }
-function colSumMinWidth(){ let s = 0; for (const f in DEFAULT_COLW) s += (colW[f] || DEFAULT_COLW[f]); return s + flexMinWidth() + DEL_W; }   // 固定欄總和 + 彈性欄最小寬 + 刪除欄(永遠存在,切換模式寬度不變)
+function colSumMinWidth(){ let s = 0; for (const f of tableFields()) if(f!==FLEX_FIELD)s += (colW[f] || DEFAULT_COLW[f]); return s + flexMinWidth() + DEL_W; }   // 固定欄總和 + 彈性欄最小寬 + 刪除欄(永遠存在,切換模式寬度不變)
 // 產生 colgroup:固定欄用 colW(px)、彈性欄不給寬、編輯模式尾端加刪除欄
 function colGroupHTML(){
-  return T_FIELDS.map(f => f === FLEX_FIELD
+  return tableFields().map(f => f === FLEX_FIELD
     ? `<col data-field="${f}">`
     : `<col data-field="${f}" style="width:${colW[f] || DEFAULT_COLW[f]}px">`
   ).join("") + `<col data-field="_del" style="width:${DEL_W}px">`;   // 刪除欄永遠存在(仿客戶總覽):切換模式欄寬不變,只換內容
@@ -3286,6 +3517,7 @@ const FILTERABLE = { cat:1, layout:1, floor:1, price:1, links:1, agent:1, store:
 function tHeadHTML(){
   return T_COLS.map((h,i) => {
     const f = T_FIELDS[i];
+    if(f==="links"&&!linkPreferences.linkSlots.length)return "";
     const rz = (f && f !== FLEX_FIELD) ? `<span class="col-resize" data-field="${f}"></span>` : "";
     const mark = (f === "due") ? '<span class="gen-caret" aria-hidden="true">▾</span>' : "";   // 手機:點到期日表頭開/關生成面板的提示
     const lab = (f && FILTERABLE[f])
@@ -3300,6 +3532,7 @@ function setColWidth(field, w){
   const mw = colSumMinWidth() + "px";
   tableWrap.querySelectorAll(".ptable").forEach(t => t.style.minWidth = mw);
   queueTableDueFit();
+  if(!tableLinkObserver)queueTableLinkFit();
 }
 // Only the visible date changes. Full ROC date remains available for copy/edit/sort.
 let tableDueFitFrame = 0, tableDueForceFit = false, tableDueLayout = null;
@@ -3379,11 +3612,80 @@ if (document.fonts){
   if (document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", refreshDueFonts);
 }
 function tchip(d,slot,tab){
-  const url=d[LINK_FIELDS[slot-1]]||"",label=linkName(d,slot),none=linkIsNone(d,slot),on=!none&&!!safeUrl(url);
+  const url=d[linkUrlField(slot)]||"",label=linkName(d,slot),none=linkIsNone(d,slot),on=!none&&!!safeUrl(url);
   const tip=label+(none?"：無連結":on?"："+url:"：尚未加入連結");
-  const tabAttr=tab?' tabindex="0"':"";
+  const tabAttr=tab?' role="button" tabindex="0"':on?' role="link" tabindex="0"':"";
   return `<span class="tchip property-link ${on?'on':''}${none?' link-none':''}"${tabAttr} style="${linkStyle(d,slot)}" title="${esc(tip)}" data-slot="${slot}" data-label="${esc(label)}" data-none="${none}" data-url="${esc(url)}"><span class="link-text">${none?'無':esc(label)}</span></span>`;
 }
+// All rows share a fixed-layout column. Observe one group's content width and only
+// update the other rows when a button actually fits or stops fitting.
+const tableLinkLayout={width:129,chip:30,gap:3};
+const tableMoreExtraWidth=count=>Math.max(0,String(count).length-2)*8;
+function linkTableVisibleCount(total=linkPreferences.linkSlots.length){
+  const {width,chip,gap}=tableLinkLayout,step=chip+gap;
+  const capacity=Math.floor((width+gap)/step);
+  if(total<=capacity)return total;
+  let count=Math.max(0,capacity-1);
+  while(count>0&&count*step+chip+tableMoreExtraWidth(total-count)>width)count--;
+  return count;
+}
+function moreLinksButtonHTML(remaining){
+  return `<button type="button" class="more-links" style="--extra-digits:${tableMoreExtraWidth(remaining)}px" aria-label="其他 ${remaining} 個連結" aria-haspopup="dialog" aria-expanded="false" aria-controls="tableMoreLinks">＋${remaining}</button>`;
+}
+function tableLinksHTML(d){
+  const ids=linkSlotIds(),count=linkTableVisibleCount(ids.length);
+  const chips=ids.slice(0,count).map(slot=>tchip(d,slot,editMode)).join("");
+  return count===ids.length?chips:chips+moreLinksButtonHTML(ids.length-count);
+}
+let observedLinkGroup=null,linkFitFrame=0;
+function fitTableLinks(group,width){
+  if(group!==observedLinkGroup||!group.isConnected||width<=0)return;
+  const before=linkTableVisibleCount(),ids=linkSlotIds();
+  const styles=getComputedStyle(group);
+  tableLinkLayout.width=width;
+  tableLinkLayout.chip=parseFloat(styles.getPropertyValue("--table-chip-width"));
+  tableLinkLayout.gap=parseFloat(styles.columnGap);
+  const count=linkTableVisibleCount(ids.length);
+  if(count===before)return;
+  closeTableMoreLinks();
+  const rows=new Map(items.map(d=>[d.id,d]));
+  for(const group of tableWrap.querySelectorAll(".tchips")){
+    const item=rows.get(group.closest("tr").dataset.id);if(!item)continue;
+    const chips=Array.from(group.querySelectorAll(".tchip"));
+    const more=group.querySelector(".more-links"),focused=document.activeElement;
+    const lostFocus=chips.slice(count).includes(focused)||(more===focused&&count===ids.length);
+    for(const chip of chips.slice(count))chip.remove();
+    if(count>chips.length){
+      const added=ids.slice(chips.length,count).map(id=>tchip(item,id,editMode)).join("");
+      if(more)more.insertAdjacentHTML("beforebegin",added);else group.insertAdjacentHTML("beforeend",added);
+    }
+    const remaining=ids.length-count;
+    if(!remaining)more?.remove();
+    else if(!more)group.insertAdjacentHTML("beforeend",moreLinksButtonHTML(remaining));
+    else {
+      more.textContent="＋"+remaining;more.setAttribute("aria-label","其他 "+remaining+" 個連結");
+      more.style.setProperty("--extra-digits",tableMoreExtraWidth(remaining)+"px");
+    }
+    if(lostFocus)(group.querySelector(".more-links")||group.querySelector(".tchip[tabindex]"))?.focus({preventScroll:true});
+  }
+}
+const tableLinkObserver=window.ResizeObserver?new ResizeObserver(entries=>{
+  for(const entry of entries)fitTableLinks(entry.target,entry.contentRect.width);
+}):null;
+function queueTableLinkFit(){
+  if(linkFitFrame||!observedLinkGroup)return;
+  linkFitFrame=requestAnimationFrame(()=>{
+    linkFitFrame=0;
+    const group=observedLinkGroup;
+    if(group)fitTableLinks(group,group.getBoundingClientRect().width);
+  });
+}
+function observeTableLinks(){
+  tableLinkObserver?.disconnect();
+  observedLinkGroup=tableWrap.querySelector(".tchips");
+  if(observedLinkGroup){tableLinkObserver?.observe(observedLinkGroup);queueTableLinkFit();}
+}
+if(!tableLinkObserver)window.addEventListener("resize",queueTableLinkFit);
 function trowHTML(d){
   const color = catColor(d.cat);
   const ce = "false";
@@ -3408,9 +3710,7 @@ function trowHTML(d){
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="addr" title="${esc(d.addr)}">${esc(d.addr)}</div></td>`+
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="floor" title="${esc(d.floor)}">${esc(d.floor)}</div></td>`+
     `<td><div class="tcell tnum" contenteditable="${ce}"${tTab} data-field="price" title="${esc(d.price)}">${esc(d.price)}</div></td>`+
-    `<td class="tlinks"><span class="tchips">`+
-      linkPreferences.linkOrder.map(slot=>tchip(d,slot,editMode)).join("")+
-    `</span></td>`+
+    (linkPreferences.linkSlots.length?`<td class="tlinks"><span class="tchips">${tableLinksHTML(d)}</span></td>`:"")+
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="agent" title="${esc(d.agent)}">${esc(d.agent)}</div></td>`+
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="tel" title="${esc(d.tel)}">${esc(d.tel)}</div></td>`+
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="store" title="${esc(d.store)}">${esc(d.store)}</div></td>`+
@@ -3425,7 +3725,7 @@ function renderTable(list){
   const cols = colGroupHTML();
   const mw = colSumMinWidth();
   const rows = list.length ? list.map(trowHTML).join("")
-    : `<tr><td colspan="${T_FIELDS.length + 1}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，點右上「＋ 新增物件」開始建立。"}</td></tr>`;
+    : `<tr><td colspan="${tableFields().length + 1}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，點右上「＋ 新增物件」開始建立。"}</td></tr>`;
   const cls = editMode ? "" : "ro";
   // 表頭與表身分成上下兩層:表頭獨立固定(天生填滿到圓角),捲軸只長在表身層(只在資料列出現)。兩表共用同一份 colgroup 與 min-width,欄位才對齊
   tableWrap.innerHTML =
@@ -3441,10 +3741,8 @@ function renderTable(list){
     const otr = tableWrap.querySelector(`tr[data-id="${openNeedId}"]`);
     if (otr) openNeedExp(otr, false); else openNeedId = null;
   }
-  // 連結欄寬度校正:若使用者曾把它拉到低於三顆膠囊寬(舊記憶或跨裝置),重繪後夾回下限
+  observeTableLinks();
   requestAnimationFrame(() => {
-    const hardMin = colContentHardMin("links");
-    if (hardMin > 0 && (colW.links || DEFAULT_COLW.links) < hardMin){ colW.links = hardMin; setColWidth("links", hardMin); saveColW(); }
     // 表頭排版後,彈性欄(備註)的欄名寬才量得到 → 重算並更新兩表 min-width,
     // 讓備註能縮到「剛好容納欄名」(先前渲染時 flexMinWidth 只拿得到保底值)
     const mw2 = colSumMinWidth() + "px";
@@ -3481,39 +3779,26 @@ function colHeaderMin(idx){
   const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
   const lw = label ? label.getBoundingClientRect().width : 0;   // 量 .th-label 內容寬,不受欄寬影響
   const base = Math.max(COLW_MIN, Math.ceil(lw + pad + 6));
-  return Math.max(base, colContentHardMin(T_FIELDS[idx]));   // 內容硬下限(如連結欄的三顆膠囊)
+  return base;
 }
-// 內容硬下限:某些欄的內容不可壓縮(連結欄的 591/樂居/永慶 三顆膠囊是固定寬,
-// 欄寬低於三顆總寬時膠囊會溢出疊到隔壁欄)→ 量出實際膠囊列寬當下限
-function colContentHardMin(field){
-  if (field !== "links") return 0;
-  const FALLBACK = 146;   // 保底:三顆膠囊(591/樂居/永慶)估計最小寬,量測不到時採用
-  const bodyTbl = tableWrap.querySelector(".tbody-wrap .ptable");
-  const chips = bodyTbl && bodyTbl.querySelector(".tchips");
-  if (!chips) return FALLBACK;
-  // 量「膠囊本身」的寬度總和(每顆是內容決定的固定寬,不受欄寬影響)。
-  // 注意:不可用 .tchips 的 scrollWidth——它是 width:100% 容器,scrollWidth 會等於當前欄寬,
-  // 導致下限被鎖在當前寬度、拉不回來(這正是先前的 bug)。
-  const kids = [...chips.querySelectorAll(".tchip")];
-  if (!kids.length) return 0;
-  let sum = 0;
-  kids.forEach(c => { sum += c.getBoundingClientRect().width; });
-  if (sum <= 0) return FALLBACK;   // 無排版環境(如測試)量不到 → 用保底
-  const ccs = getComputedStyle(chips);
-  const gap = parseFloat(ccs.columnGap || ccs.gap) || 0;
-  sum += gap * (kids.length - 1);   // 膠囊間距
-  const td = chips.closest("td");
-  let pad = 0;
-  if (td){ const cs = getComputedStyle(td); pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0); }
-  return Math.ceil(sum + pad + 1);
+function naturalLinkColumnWidth(bodyTable){
+  const cell=bodyTable.querySelector("td.tlinks");
+  const css=cell&&getComputedStyle(cell);
+  const inset=css?parseFloat(css.paddingLeft)+parseFloat(css.paddingRight)+parseFloat(css.borderRightWidth):17;
+  const count=linkPreferences.linkSlots.length;
+  return Math.ceil(inset+count*tableLinkLayout.chip+Math.max(0,count-1)*tableLinkLayout.gap);
 }
 // 雙擊自適應:量「欄名 + 最長內容」的實際文字寬(用隱藏元素量,不可用 scrollWidth)
 function autoFitColumn(field){
   if (field === FLEX_FIELD) return;                 // 彈性欄不自適應
-  const idx = T_FIELDS.indexOf(field); if (idx < 0) return;
+  const idx = tableFields().indexOf(field); if (idx < 0) return;
   const headTbl = tableWrap.querySelector(".thead-wrap .ptable");
   const bodyTbl = tableWrap.querySelector(".tbody-wrap .ptable");
   if (!headTbl || !bodyTbl) return;
+  if(field==="links"){
+    const w=Math.min(COLW_MAX,Math.max(colHeaderMin(idx),naturalLinkColumnWidth(bodyTbl)));
+    colW.links=w;setColWidth("links",w);saveColW();onLocalChange("settings");return;
+  }
   let maxW = 0;
   const th = headTbl.querySelectorAll("thead th")[idx];
   const label = th && th.querySelector(".th-label");
@@ -3552,7 +3837,7 @@ tableWrap.addEventListener("pointerdown", e => {
   const field = h.dataset.field, now = Date.now();
   if (field === _lastRzField && (now - _lastRzTime) < 500){ _lastRzTime = 0; _lastRzField = null; autoFitColumn(field); return; }  // 350ms 內同欄再按=雙擊自適應
   _lastRzField = field; _lastRzTime = now;
-  const th = h.closest("th"), idx = T_FIELDS.indexOf(field);
+  const th = h.closest("th"), idx = tableFields().indexOf(field);
   _rz = { field, startX: e.clientX, startW: th.offsetWidth, hMin: colHeaderMin(idx), h, moved: false };
   h.classList.add("dragging"); document.body.classList.add("col-resizing");
 });
@@ -3818,11 +4103,11 @@ function tNavGrid(fromEl, dRow, dCol){
   const field = tNavFieldFromEl(fromEl);
   const tr = fromEl.closest("tr[data-id]");
   if (!field || !tr) return false;
-  let fi = T_FIELDS.indexOf(field);
+  let fi = tableFields().indexOf(field);
   if (fi < 0) return false;
   if (dCol){
     const ni = fi + dCol;
-    if (ni < 0 || ni >= T_FIELDS.length) return false;
+    if (ni < 0 || ni >= tableFields().length) return false;
     fi = ni;
   }
   let nrow = tr;
@@ -3831,7 +4116,7 @@ function tNavGrid(fromEl, dRow, dCol){
     if (!nr) return false;
     nrow = nr;
   }
-  const target = tGetFieldEl(nrow, T_FIELDS[fi]);
+  const target = tGetFieldEl(nrow, tableFields()[fi]);
   if (!target) return false;
   tCommitIfCell(fromEl);
   return tFocusFieldEl(target);
@@ -3843,6 +4128,7 @@ function tNavGrid(fromEl, dRow, dCol){
 function flushEditing(){
   try {
     if (modalBg.classList.contains("open")){ commitFormIfOpen(); return; }
+    if(lpTableTarget){commitLink();return;}
     const el = document.activeElement;
     if (!el || !el.classList) return;
     if (el.classList.contains("tcell") && tCellIsEditing(el)){
@@ -3962,6 +4248,11 @@ tableWrap.addEventListener("keydown", e => {
   e.preventDefault();
   openCatMenu(trig);
 }, true);
+tableWrap.addEventListener("keydown",e=>{
+  const chip=e.target.closest(".tchip[tabindex]");
+  if(!chip||tselMode||e.isComposing||e.repeat||(e.key!=="Enter"&&e.key!==" "))return;
+  e.preventDefault();chip.click();
+});
 // 貼上時只保留純文字,剝掉來源的顏色/字體/樣式,避免欄位變形(多行/定位點轉空白)
 // 選取狀態(contenteditable=false)也支援 Ctrl+V 覆寫整格並進入編輯(類 Excel)
 tableWrap.addEventListener("paste", e => {
@@ -4061,6 +4352,12 @@ tableWrap.addEventListener("input", e => {
 });
 tableWrap.addEventListener("click", e=>{
   // 備註展開中:點空白區收合;同列上的按鈕/欄位/連結仍可操作
+  const more=e.target.closest(".more-links");
+  if(more){
+    e.stopPropagation();
+    openMoreLinks(more);
+    return;
+  }
   const openTr = e.target.closest("tr.exp-open");
   if (openTr){
     if (e.target.closest(".gen-btn, .tdue-btn, .tchip, .tcell, .tcat-trigger, [data-act='del'], .tneed[data-need]")){ /* 交給下方各 handler */ }
@@ -4097,12 +4394,7 @@ tableWrap.addEventListener("click", e=>{
   const chip = e.target.closest(".tchip");
   if (chip){
     if (editMode){ e.stopPropagation(); openLinkPop(chip); }
-    else {
-      const u = (chip.dataset.url || "").trim();
-      if (chip.dataset.none==="true") toast(chip.dataset.label + " 已標記無連結");
-      else if (u) openExtUrl(normUrl(u));
-      else toast(chip.dataset.label + " 尚未設定連結");
-    }
+    else visitPropertyLink(tFindItem(chip),Number(chip.dataset.slot));
     return;
   }
   // 備註:點欄位往下展開三段(正常/編輯皆可)
@@ -4172,7 +4464,8 @@ function copyFieldText(el){
 function setEditMode(on){
   editMode = !!on; saveEditMode();
   if (!editMode) exitSelectMode();       // 離開編輯模式時取消卡片多選
-  closeCatMenu(); closeLinkPop();        // 收合表格的類別/連結浮層
+  closeCatMenu();closeTableMoreLinks();
+  if(lpTableTarget)commitLink(false);else closeLinkPop();
   applyFilter();                          // 重繪當前檢視並更新切換鈕狀態
 }
 
@@ -4253,6 +4546,87 @@ function addTableRow(){
   if (filtersCleared) toast("已清除欄位篩選，請填寫新增物件");
 }
 
+// Cards and table rows share an anchored overflow chooser.
+function tableLinkRow(itemId){return tableWrap.querySelector(`tr[data-id="${CSS.escape(itemId)}"]`);}
+function closeTableMoreLinks(restoreFocus=false){
+  if(!tableMoreAnchor)return;
+  const anchor=tableMoreAnchor;
+  tableMoreAnchor=null;
+  moreAnchorRect=null;
+  tableMorePanel.hidden=true;
+  tableMorePanel.replaceChildren();
+  anchor.setAttribute("aria-expanded","false");
+  if(restoreFocus&&anchor.isConnected)anchor.focus({preventScroll:true});
+}
+function positionTableLinkPanel(panel,anchor){
+  const r=anchor.getBoundingClientRect(),vv=window.visualViewport;
+  const left=vv?.offsetLeft||0,top=vv?.offsetTop||0;
+  const right=left+(vv?.width||document.documentElement.clientWidth);
+  const bottom=top+(vv?.height||document.documentElement.clientHeight);
+  const y=r.bottom+6+panel.offsetHeight<=bottom-8?r.bottom+6:r.top-6-panel.offsetHeight;
+  panel.style.left=Math.max(left+8,Math.min(r.left,right-8-panel.offsetWidth))+"px";
+  panel.style.top=Math.max(top+8,Math.min(y,bottom-8-panel.offsetHeight))+"px";
+}
+function visitPropertyLink(item,slot){
+  if(!item||!linkSlotById(slot))return;
+  const name=linkName(item,slot),url=String(item[linkUrlField(slot)]||"").trim();
+  if(linkIsNone(item,slot))toast(name+" 已標記無連結");
+  else if(url)openExtUrl(normUrl(url));
+  else toast(name+" 尚未設定連結");
+}
+function openMoreLinks(button){
+  const table=tableWrap.contains(button);
+  if(table?tselMode:selectMode)return;
+  if(button===tableMoreAnchor){closeTableMoreLinks(true);return;}
+  const itemId=button.closest("[data-id]")?.dataset.id;
+  if(!itemId)return;
+  closeTableMoreLinks();
+  if(lpTableTarget||lpNeed)commitLink();
+  const record=table?tableLinkRow(itemId):cardsEl.querySelector(`.card[data-id="${CSS.escape(itemId)}"]`);
+  const anchor=record?.querySelector(".more-links"),item=items.find(d=>d.id===itemId);
+  if(!anchor||!item)return;
+  const visible=anchor.parentElement.querySelectorAll(":scope > [data-slot]").length;
+  const slots=linkSlotIds().slice(visible);
+  if(!slots.length)return;
+  tableMorePanel.innerHTML=slots.map(slot=>{
+    const state=linkState(item,slot),hint=state==="none"?"已勾無":state==="empty"?"尚未填":"";
+    return `<button type="button" data-slot="${slot}" data-none="${state==="none"}" class="${state}" style="${linkStyle(item,slot)}"><span aria-hidden="true" class="platform-dot"></span><span class="platform-name">${esc(linkName(item,slot))}</span>${hint?`<small>${hint}</small>`:""}</button>`;
+  }).join("");
+  tableMoreAnchor=anchor;
+  moreAnchorRect=anchor.getBoundingClientRect();
+  anchor.setAttribute("aria-expanded","true");
+  tableMorePanel.hidden=false;
+  tableMorePanel.scrollTop=0;
+  positionTableLinkPanel(tableMorePanel,anchor);
+  tableMorePanel.querySelector("button").focus({preventScroll:true});
+}
+tableMorePanel.addEventListener("click",e=>{
+  const choice=e.target.closest("button[data-slot]"),anchor=tableMoreAnchor;
+  if(!choice||!anchor)return;
+  const item=items.find(d=>d.id===anchor.closest("[data-id]")?.dataset.id),slot=Number(choice.dataset.slot),table=tableWrap.contains(anchor);
+  closeTableMoreLinks(true);
+  if(!item||!linkSlotById(slot)||(table?tselMode:selectMode))return;
+  if(table&&editMode)openLinkPop(anchor,slot);
+  else visitPropertyLink(item,slot);
+});
+tableMorePanel.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){e.preventDefault();e.stopPropagation();closeTableMoreLinks(true);}
+  if(e.key!=="ArrowDown"&&e.key!=="ArrowUp")return;
+  const buttons=[...tableMorePanel.querySelectorAll("button")],i=buttons.indexOf(e.target);
+  if(i<0)return;
+  e.preventDefault();buttons[(i+(e.key==="ArrowDown"?1:-1)+buttons.length)%buttons.length].focus();
+});
+function dismissTableMoreOutside(e){
+  if(tableMoreAnchor&&!tableMorePanel.contains(e.target)&&!tableMoreAnchor.contains(e.target))closeTableMoreLinks();
+}
+document.addEventListener("pointerdown",dismissTableMoreOutside,true);
+document.addEventListener("focusin",dismissTableMoreOutside);
+window.addEventListener("scroll",e=>{
+  if(!tableMoreAnchor||(e.target instanceof Node&&tableMorePanel.contains(e.target)))return;
+  const rect=tableMoreAnchor.getBoundingClientRect();
+  if(!tableMoreAnchor.isConnected||Math.abs(rect.left-moreAnchorRect.left)>1||Math.abs(rect.top-moreAnchorRect.top)>1)closeTableMoreLinks();
+},true);
+window.addEventListener("resize",()=>closeTableMoreLinks());
 // ---- link paste popover ----
 const lpop = document.getElementById("linkpop");
 const lpInput = document.getElementById("lpInput");
@@ -4265,45 +4639,42 @@ const lpLabel = document.getElementById("lpLabel");
 const lpKind = document.getElementById("lpKind");
 const lpNameEdit=document.getElementById("lpNameEdit");
 function setLinkTitle(name){ lpLabel.textContent=name||"連結";lpKind.hidden=!name;lpLabel.disabled=!name;lpLabel.hidden=false;lpNameEdit.hidden=true;lpNameEdit.value=name||""; }
-lpLabel.addEventListener("click",()=>{if(!lpChip)return;lpLabel.hidden=true;lpNameEdit.hidden=false;lpNameEdit.focus();lpNameEdit.select();});
-lpNameEdit.addEventListener("keydown",e=>{if(e.isComposing)return;if(e.key==="Enter"){e.preventDefault();commitLink();}else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();closeLinkPop();}});
+lpLabel.addEventListener("click",()=>{if(!lpTableTarget)return;lpLabel.hidden=true;lpNameEdit.hidden=false;lpNameEdit.focus();lpNameEdit.select();});
+lpNameEdit.addEventListener("keydown",e=>{if(e.isComposing)return;if(e.key==="Enter"){e.preventDefault();finishLinkEditor(true);}else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();finishLinkEditor(false);}});
 const lpCaseName = document.getElementById("lpCaseName");
 function setLinkCaseName(name){ const text = (name || "").trim() || "未填案名"; lpCaseName.textContent = text; lpCaseName.title = text; }
 const lpOpenBtn = document.getElementById("lpOpen");
 const lpCopyBtn = document.getElementById("lpCopy");
-let lpChip = null, lpNeed = null, lpSession = 0;   // lpNeed:備註欄「連結」標籤的編輯目標 {chip, ed}
+let lpTableTarget = null, lpNeed = null, lpSession = 0;   // Table links retain the record and slot IDs independently of row layout.
 function lpRefresh(){
-  const none=!!lpChip&&lpNone.checked,empty=none||!lpInput.value.trim();
+  const none=!!lpTableTarget&&lpNone.checked,empty=none||!lpInput.value.trim();
   lpInput.disabled=none;lpOpenBtn.classList.toggle("disabled",empty);lpOpenBtn.disabled=empty;lpCopyBtn.disabled=empty;
   document.getElementById("lpPaste").disabled=none;document.getElementById("lpClear").disabled=none;
 }
 lpNone.addEventListener("change",()=>{lpSession++;lpRefresh();});
-function openLinkPop(chip){
-  const targetId=tFindItem(chip)?.id,targetSlot=Number(chip.dataset.slot);
-  if (lpNeed || (lpChip && lpChip !== chip)) commitLink();
-  // 提交前一列後，篩選可能重繪表格；改用新列上的同一格。
-  if(!chip.isConnected){
-    const row=[...tableWrap.querySelectorAll("tr[data-id]")].find(el=>el.dataset.id===targetId);
-    chip=row?.querySelector(`.tchip[data-slot="${targetSlot}"]`);
-    if(!chip)return;
-  }
+function openLinkPop(source,slot=Number(source.dataset.slot)){
+  const itemId=source.closest("tr[data-id]")?.dataset.id;
+  if(!itemId)return;
+  if(lpTableTarget?.itemId===itemId&&lpTableTarget.slot===slot)return;
+  if(lpNeed||lpTableTarget)commitLink();
+  const row=tableLinkRow(itemId),item=items.find(d=>d.id===itemId);
+  if(!row||!item||!linkSlotById(slot))return;
+  const anchor=row.querySelector(`.tchip[data-slot="${slot}"]`)||row.querySelector(".more-links");
+  if(!anchor)return;
+  closeTableMoreLinks();
+  const label=linkName(item,slot);
   lpSession++;
   lpNeed = null;
-  lpChip = chip;
-  lpNoneWrap.hidden=false;lpNone.checked=linkIsNone(tFindItem(chip),Number(chip.dataset.slot));
-  const label = chip.dataset.label, url = chip.dataset.url || "";
+  lpTableTarget={itemId,slot,initialLabel:label};
+  lpNoneWrap.hidden=false;lpNone.checked=linkIsNone(item,slot);
   setLinkTitle(label);
-  setLinkCaseName(tFindItem(chip)?.name);
-  lpInput.value = url;
-  const r = chip.getBoundingClientRect();
+  setLinkCaseName(item.name);
+  lpInput.value = item[linkUrlField(slot)]||"";
   lpop.classList.add("show");
   if (window.refreshLed) window.refreshLed();
-  const w = lpop.offsetWidth;
-  let left = Math.min(r.left, window.innerWidth - w - 12); left = Math.max(12, left);
-  let top = r.bottom + 6; if (top + lpop.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - lpop.offsetHeight - 6);
-  lpop.style.left = left + "px"; lpop.style.top = top + "px";
+  positionTableLinkPanel(lpop,anchor);
   lpRefresh(); if(lpInput.disabled)lpNone.focus();else{lpInput.focus();lpInput.select();}
-  setTimeout(()=>document.addEventListener("click", lpOutside), 0);
+  setTimeout(()=>{if(lpop.classList.contains("show"))document.addEventListener("click",lpOutside);},0);
 }
 function lpOutside(e){ if (e.target.closest("#linkpop") || e.target.closest(".tchip") || e.target.closest(".need-link-chip")) return; commitLink(); }
 // 備註欄「連結」標籤(need-link-chip)的編輯面板:貼上/清除/開啟/完成。與表格膠囊 openLinkPop 共用同一個浮層,但寫回路徑不同(靠 commitNeedSeg 重新序列化該段,而非寫 item 欄位)
@@ -4311,7 +4682,7 @@ function openLinkPopNeed(chip){
   const priorEd=chip.closest(".needexp-ed, .fneed-ed"),priorRow=priorEd?.closest(".needexp");
   const priorId=priorRow?.dataset.for,priorSeg=priorEd?.dataset.seg,priorUrl=chip.getAttribute("data-url");
   const priorIndex=priorEd?[...priorEd.querySelectorAll(".need-link-chip")].indexOf(chip):-1;
-  if (lpChip || (lpNeed && lpNeed.chip !== chip)) commitLink();
+  if (lpTableTarget || (lpNeed && lpNeed.chip !== chip)) commitLink();
   if(!chip.isConnected){
     const row=[...tableWrap.querySelectorAll(".needexp")].find(el=>el.dataset.for===priorId);
     const ed=[...(row?.querySelectorAll(".needexp-ed")||[])].find(el=>el.dataset.seg===priorSeg);
@@ -4321,7 +4692,7 @@ function openLinkPopNeed(chip){
   }
   lpSession++;
   const ed = chip.closest(".needexp-ed, .fneed-ed");
-  lpChip = null;
+  lpTableTarget = null;
   lpNeed = { chip, ed };
   lpNoneWrap.hidden=true;lpNone.checked=false;
   const row = ed?.closest(".needexp");
@@ -4353,33 +4724,43 @@ function commitLink(refreshTable=true){
     }
     closeLinkPop(); return;
   }
-  if (!lpChip){ closeLinkPop(); return; }
+  if (!lpTableTarget){ closeLinkPop(); return; }
   const url = lpInput.value.trim();
-  const chip=lpChip,it=tFindItem(chip),slot=Number(chip.dataset.slot),field=LINK_FIELDS[slot-1];
+  const {itemId,slot,initialLabel}=lpTableTarget,it=items.find(d=>d.id===itemId),field=linkUrlField(slot);
+  if(!linkSlotById(slot)){closeLinkPop();return;}
   if(it&&field){
-    const names=linkNameEditValues(it,slot,lpNameEdit.value,chip.dataset.label);
+    const names=linkNameEditValues(it,slot,lpNameEdit.value,initialLabel);
     if((it[field]||"")!==url||linkIsNone(it,slot)!==lpNone.checked||Object.entries(names).some(([key,value])=>(it[key]||"")!==value)){
       it[field]=url||null;it["linkNone"+slot]=lpNone.checked;Object.assign(it,names);it.updatedAt=Date.now();
       saveItems();onLocalChange("data");
     }
-    const rendered=document.createElement("span");rendered.innerHTML=tchip(it,slot,editMode);
-    chip.replaceWith(rendered.firstElementChild);
+    const chip=tableLinkRow(itemId)?.querySelector(`.tchip[data-slot="${slot}"]`);
+    if(chip){const rendered=document.createElement("span");rendered.innerHTML=tchip(it,slot,editMode);chip.replaceWith(rendered.firstElementChild);}
   }
   closeLinkPop();
   if(refreshTable!==false&&it&&!getFilteredItems().some(d=>d.id===it.id)){applyFilter();return;}
   listCounter.refresh(getFilteredItems());
 }
-function closeLinkPop(){ lpSession++; document.removeEventListener("click", lpOutside); lpop.classList.remove("show"); lpChip = null; lpNeed = null; if (window.refreshLed) window.refreshLed(); }
+function closeLinkPop(){ lpSession++; document.removeEventListener("click", lpOutside); lpop.classList.remove("show"); lpTableTarget = null; lpNeed = null; if (window.refreshLed) window.refreshLed(); }
+function finishLinkEditor(save){
+  const target=lpTableTarget;
+  if(save)commitLink();else closeLinkPop();
+  if(target){
+    const row=tableLinkRow(target.itemId);
+    const anchor=row?.querySelector(`.tchip[data-slot="${target.slot}"]`)||row?.querySelector(".more-links");
+    anchor?.focus({preventScroll:true});
+  }
+}
 lpInput.addEventListener("input", ()=>{ lpSession++; lpRefresh(); });
 lpInput.addEventListener("keydown", e=>{
   if(e.isComposing)return;
-  if (e.key==="Enter"){ e.preventDefault(); commitLink(); }
+  if (e.key==="Enter"){ e.preventDefault(); finishLinkEditor(true); }
   else if (e.key==="Escape"){
     e.preventDefault(); e.stopPropagation();   // 必須擋冒泡:否則 document Esc 會接著 closeNeedExp 把展開整列收掉
-    closeLinkPop();
+    finishLinkEditor(false);
   }
 });
-document.getElementById("lpDone").addEventListener("click", commitLink);
+document.getElementById("lpDone").addEventListener("click",()=>finishLinkEditor(true));
 document.getElementById("lpClear").addEventListener("click", ()=>{ lpSession++; lpInput.value=""; lpRefresh(); lpInput.focus(); });
 document.getElementById("lpPaste").addEventListener("click", ()=>{
   const session = ++lpSession, before = lpInput.value;
@@ -4431,8 +4812,9 @@ function getFilteredItems(linkSelections = linkFilterState){
   return applyLinkFilters(applyColFilters(list), linkSelections);   // 連結條件與其他欄位、關鍵字篩選一起符合
 }
 function applyFilter(){
+  closeTableMoreLinks();
   // 先提交連結，再算結果；避免分類/搜尋切換用到提交前的篩選清單。
-  if ((lpChip && tableWrap.contains(lpChip)) || (lpNeed && tableWrap.contains(lpNeed.ed))) commitLink(false);
+  if (lpTableTarget || (lpNeed && tableWrap.contains(lpNeed.ed))) commitLink(false);
   syncToggleUI();
   syncLinkFilterTriggers();
   { const sc = document.getElementById("searchClear"); if (sc) sc.classList.toggle("show", !!searchEl.value); }   // 清除鈕:有字才顯示
@@ -4483,6 +4865,7 @@ function openList(cat){
   requestAnimationFrame(updateLH);
 }
 function showCover(){
+  closeTableMoreLinks();
   /* search-help:start */ closeSearchHelp(); /* search-help:end */
   closeLinkFilter();
   exitSelectMode();
@@ -4759,6 +5142,7 @@ function trapFocusKey(e, container){
   try { nodes[j].focus(); } catch(err){}
 }
 function tabTrapTarget(){
+  const linkDialog=document.getElementById("linkDeleteDialog");if(linkDialog.open)return linkDialog;
   if (confirmBg && confirmBg.classList.contains("open")) return confirmBg.querySelector(".confirm");
   const calOpen = document.getElementById("calBg");
   if (calOpen && calOpen.classList.contains("open")) return calOpen.querySelector(".cal");
@@ -4811,7 +5195,7 @@ function tabModeToggleAllowed(){
   if (document.body.classList.contains("picker-open")) return false;       // 任何鎖定畫面的浮層
   if (on("calBg","open") || on("fltBg","open") || on("confirmBg","open") ||
       on("catBg","open") || on("modalBg","open") || on("detailBg","open")) return false;
-  if (on("catmenu","show") || on("linkpop","show")) return false;
+  if (tableMoreAnchor || on("catmenu","show") || on("linkpop","show")) return false;
   if (on("sortSel","open") || on("catSel","open")) return false;
   if (palettePop && palettePop.classList.contains("open")) return false;
   return true;
@@ -4841,7 +5225,7 @@ document.addEventListener("keydown", e => {
   if (isOn("linkFilterBg","open")){ e.preventDefault(); closeLinkFilter(); return; }
   if (isOn("confirmBg","open")){ closeConfirm(); return; }                            // 確認框
   if (isOn("catmenu","show")){ closeCatMenu(); return; }                              // 表格類別選單
-  if (isOn("linkpop","show")){ e.preventDefault(); closeLinkPop(); return; }          // 連結編輯框(只關面板,不收合備註展開)
+  if (isOn("linkpop","show")){ e.preventDefault(); finishLinkEditor(false); return; }          // 連結編輯框(只關面板,不收合備註展開)
   /* search-help:start */ if (!searchHelpPop.hidden){ e.preventDefault(); closeSearchHelp(); searchHelpBtn.focus(); return; } /* search-help:end */
   if (palettePop && palettePop.classList.contains("open")){ if (typeof closePalette === "function") closePalette(); return; }
   if (typeof tselMode !== "undefined" && tselMode){ exitTselMode(); return; }         // 表格批次選取(Esc=取消)
@@ -4852,6 +5236,7 @@ document.addEventListener("keydown", e => {
   if (isOn("catBg","open")){ closeCatManager(); return; }                             // 管理類別
   if (isOn("detailBg","open")){ closeDetail(); return; }                             // 物件明細(唯讀)
   if (isOn("modalBg","open")){ closeForm(); return; }                                 // 編輯/新增表單
+  if(!linkDeleteUI.picker.hidden){e.preventDefault();setLinkDeleteMode(false);linkDeleteUI.remove.focus();return;}
   // 無浮層時:設定頁 Esc→關設定;列表(卡片/表格) Esc→回封面(與 ← 相同)
   if (typeof settingsView !== "undefined" && settingsView && settingsView.classList.contains("active")){ closeSettings(); return; }
   const ae = document.activeElement;
@@ -4867,48 +5252,81 @@ const F = {
   price:document.getElementById("f_price"), addr:document.getElementById("f_addr"),
   due:document.getElementById("f_due"), agent:document.getElementById("f_agent"),
   tel:document.getElementById("f_tel"), store:document.getElementById("f_store"),
-  u591:document.getElementById("f_591"), uleju:document.getElementById("f_leju"), ui:document.getElementById("f_i"), u4:document.getElementById("f_4"),
   note:document.getElementById("f_note"), note2:document.getElementById("f_note2"), note3:document.getElementById("f_note3"),
   t1:document.getElementById("f_t1"), t2:document.getElementById("f_t2"), t3:document.getElementById("f_t3"),
 };
 
-let formLinkBases={},formLinkOverrides={},formLinkLabels={};
-function formLinkValues(){
+const formLinkRows=new Map();
+const formLinkGroup=document.getElementById("linkGroup");
+const formLinkFields=formLinkGroup.querySelector(".link-fields");
+function formLinkRowValues(slot,row,normalizeUrl=false){
+  const values=linkNameEditValues(row.original,slot,row.name.value,row.initialLabel);
+  values["linkNone"+slot]=row.none.checked;
+  values[linkUrlField(slot)]=normalizeUrl?(safeUrl(row.url.value.trim())||null):row.url.value;
+  return values;
+}
+function formLinkValues(normalizeUrl=false){
   const out={};
-  [1,2,3,4].forEach(slot=>{
-    const original={["linkBaseName"+slot]:formLinkBases[slot]||"",["linkName"+slot]:formLinkOverrides[slot]||""};
-    Object.assign(out,linkNameEditValues(original,slot,document.getElementById("f_linkname"+slot).value,formLinkLabels[slot]));
-    out["linkNone"+slot]=document.getElementById("f_linknone"+slot).checked;
-  });
+  for(const [slot,row] of formLinkRows)Object.assign(out,formLinkRowValues(slot,row,normalizeUrl));
   return out;
 }
-function refreshFormLinks(){
-  const values=formLinkValues(),inputs=[F.u591,F.uleju,F.ui,F.u4],fields=modalBg.querySelector(".link-fields");
-  linkPreferences.linkOrder.forEach((slot,index)=>{
-    const block=modalBg.querySelector(`[data-link-slot="${slot}"]`),label=document.getElementById("f_linkname"+slot),color=linkColor(values,slot);
-    if(fields.children[index]!==block)fields.insertBefore(block,fields.children[index]||null);
-    label.style.setProperty("--link-color",color);label.style.setProperty("--link-ink",propertyLinkInk(values,slot));
-    inputs[slot-1].placeholder=linkName(values,slot)+" 連結";
-    inputs[slot-1].disabled=linkIsNone(values,slot);
+function paintFormLinkRow(slot,row){
+  const values=formLinkRowValues(slot,row);
+  row.name.style.setProperty("--link-color",linkColor(values,slot));
+  row.name.style.setProperty("--link-ink",propertyLinkInk(values,slot));
+  row.url.placeholder=linkName(values,slot)+" 連結";
+  row.url.disabled=row.none.checked;
+}
+function createFormLinkRow(slot,record){
+  const block=document.createElement("div"),head=document.createElement("div"),label=document.createElement("label");
+  block.className="link-f";block.dataset.linkSlot=slot;head.className="form-link-head";label.className="link-none-check";
+  const name=document.createElement("input"),url=document.createElement("input"),none=document.createElement("input");
+  name.id="f_linkname"+slot;name.className="link-lab link-name-input";name.maxLength=20;
+  url.id=({1:"f_591",2:"f_leju",3:"f_i",4:"f_4"})[slot]||"f_url"+slot;
+  none.type="checkbox";none.id="f_linknone"+slot;
+  label.append(none,document.createTextNode("無"));head.append(name,label);block.append(head,url);
+  const initialLabel=linkName(record,slot);
+  const original={["linkName"+slot]:record["linkName"+slot]||"",["linkBaseName"+slot]:record["linkBaseName"+slot]||""};
+  const row={block,name,url,none,initialLabel,original};
+  name.value=initialLabel;url.value=record[linkUrlField(slot)]||"";none.checked=linkIsNone(record,slot);
+  name.addEventListener("input",()=>paintFormLinkRow(slot,row));
+  none.addEventListener("change",()=>{paintFormLinkRow(slot,row);saveFormDraft();});
+  return row;
+}
+function reconcileFormLinks(record,updatingOpenForm){
+  const order=linkSlotIds(),active=new Set(order);
+  formLinkGroup.hidden=!order.length;
+  for(const [slot,row] of formLinkRows){
+    if(active.has(slot))continue;
+    row.block.remove();formLinkRows.delete(slot);
+    if(updatingOpenForm && formBaseRec){
+      for(const key of [linkUrlField(slot),"linkName"+slot,"linkBaseName"+slot,"linkNone"+slot])delete formBaseRec[key];
+    }
+  }
+  order.forEach((slot,index)=>{
+    let row=formLinkRows.get(slot);
+    if(!row){
+      row=createFormLinkRow(slot,record);formLinkRows.set(slot,row);
+      if(updatingOpenForm && formBaseRec)Object.assign(formBaseRec,formLinkRowValues(slot,row));
+    }else{
+      const currentLabel=linkName(row.original,slot);
+      if(row.name.value===row.initialLabel)row.name.value=currentLabel;
+      row.initialLabel=currentLabel;
+    }
+    if(formLinkFields.children[index]!==row.block)formLinkFields.insertBefore(row.block,formLinkFields.children[index]||null);
+    row.name.setAttribute("aria-label","連結 "+(index+1)+" 名稱");
+    row.url.setAttribute("aria-label",linkDefaultName(slot)+" 網址");
+    row.none.setAttribute("aria-label",linkDefaultName(slot)+" 無連結");
+    paintFormLinkRow(slot,row);
   });
+}
+function refreshOpenFormLinks(){
+  if(modalBg.classList.contains("open"))reconcileFormLinks(items.find(d=>d.id===editingId)||{},true);
 }
 function loadFormLinks(d){
-  const record=d||newLinkNames();
-  [1,2,3,4].forEach(slot=>{
-    formLinkBases[slot]=record["linkBaseName"+slot]||"";formLinkOverrides[slot]=record["linkName"+slot]||"";
-    formLinkLabels[slot]=linkName(record,slot);document.getElementById("f_linkname"+slot).value=formLinkLabels[slot];
-    document.getElementById("f_linknone"+slot).checked=linkIsNone(record,slot);
-  });
-  F.u4.value=d?.url4||"";refreshFormLinks();
+  formLinkFields.replaceChildren();formLinkRows.clear();
+  reconcileFormLinks(d||newLinkNames(),false);
 }
-[1,2,3,4].forEach(slot=>{
-  const name=document.getElementById("f_linkname"+slot),head=document.createElement("div");head.className="form-link-head";
-  name.before(head);head.append(name);
-  const label=document.createElement("label");label.className="link-none-check";
-  label.innerHTML=`<input type="checkbox" id="f_linknone${slot}" aria-label="連結 ${slot} 無連結"><span>無</span>`;head.append(label);
-  label.firstElementChild.addEventListener("change",()=>{refreshFormLinks();saveFormDraft();});
-  name.addEventListener("input",refreshFormLinks);
-});
 
 // ---- 到期日:自製日曆選擇(民國年顯示 + 西元/民國轉換;與客戶總覽同一套) ----
 function todayROC(){
@@ -5059,9 +5477,6 @@ function openForm(id){
   F.agent.value  = d ? d.agent||""   : "";
   F.tel.value    = d ? d.tel||""     : "";
   F.store.value  = d ? d.store||""   : "";
-  F.u591.value   = d ? d.url591||""  : "";
-  F.uleju.value  = d ? d.urlLeju||"" : "";
-  F.ui.value     = d ? d.urlI||""   : "";
   loadFormLinks(d);
   F.note.innerHTML  = (d && d.note)  ? needToFormHTML(d.note)  : "<div><br></div>";
   F.note2.innerHTML = (d && d.note2) ? needToFormHTML(d.note2) : "<div><br></div>";
@@ -5070,7 +5485,7 @@ function openForm(id){
   F.t2.value = d ? needTitle(d, 2) : "注意";
   F.t3.value = d ? needTitle(d, 3) : "其它";
   setupFormNeedFonts(d);
-  { const lg = document.getElementById("linkGroup"), lt = document.getElementById("linkToggle");   // 每次打開表單:連結群組一律預設收合(一排三欄)
+  { const lg = document.getElementById("linkGroup"), lt = document.getElementById("linkToggle");   // 每次打開表單時恢復緊湊排列
     if (lg){ lg.classList.add("collapsed"); if (lt){ lt.setAttribute("aria-expanded","false"); lt.setAttribute("aria-label","展開連結欄位"); } } }
   formBaseRec=readDraftRec();formBaseResetAt=window._resetAt||0;formConflict=false;
   modalBg.classList.add("open");
@@ -5122,8 +5537,7 @@ function openDetail(id){
     <div class="dtl-h">${IC_INFO}基本資料</div>
     <div class="dtl-card3">${cellC("售價", _price)}${cellC("格局", d.layout)}${cellC("樓層", d.floor)}${cellC("地址", d.addr, "dtl-addr")}</div>
   </div>`;
-  // 連結:591/樂居/永慶(可開)
-  const _hasLink = LINK_FIELDS.some((field,index)=>safeUrl(d[field])||linkIsNone(d,index+1));
+  const _hasLink = linkSlotIds().some(slot=>safeUrl(d[linkUrlField(slot)])||linkIsNone(d,slot));
   const links = _hasLink ? `<div class="dtl-sec">
     <div class="dtl-h">${IC_LINK}連結</div>
     <div class="dtl-links">${propertyLinksHTML(d)}</div>
@@ -5178,16 +5592,13 @@ document.getElementById("detailBody").addEventListener("click", e => {
 });
 
 function buildFormRec(){
-  const u591 = safeUrl(F.u591.value.trim());
-  const uLeju = safeUrl(F.uleju.value.trim());
-  const uI = safeUrl(F.ui.value.trim());
   return {
     name: normalizeName(F.name.value.trim()), cat: formCat,
     layout: F.layout.value.trim(), floor: F.floor.value.trim(),
     price: PropertyCore.price(F.price.value),
     addr: F.addr.value.trim(), due: F.due.value.trim(),
     agent: F.agent.value.trim(), tel: F.tel.value.trim(), store: F.store.value.trim(),
-    url591: u591 || null, urlLeju: uLeju || null, urlI: uI || null, url4:safeUrl(F.u4.value.trim())||null, ...formLinkValues(),
+    ...formLinkValues(true),
     note: normalizeNeedStorage(editToNeed(F.note)), note2: normalizeNeedStorage(editToNeed(F.note2)), note3: normalizeNeedStorage(editToNeed(F.note3)),
     t1: F.t1.value.trim(), t2: F.t2.value.trim(), t3: F.t3.value.trim(),
     ...formNeedFontSizes, noteOrder:formNeedOrder.slice(),
@@ -5215,7 +5626,7 @@ function legacyDraftKey(){return LEGACY_FORM_DRAFT_KEY+":"+(editingId||"new")}
 function readDraftRec(){
  const r={cat:formCat,...formNeedFontSizes,noteOrder:formNeedOrder.slice()};
  for(const k of ["name","layout","floor","price","addr","due","agent","tel","store","t1","t2","t3"])r[k]=F[k].value;
- r.url591=F.u591.value;r.urlLeju=F.uleju.value;r.urlI=F.ui.value;r.url4=F.u4.value;Object.assign(r,formLinkValues());
+ Object.assign(r,formLinkValues());
  r.note=editToNeed(F.note);r.note2=editToNeed(F.note2);r.note3=editToNeed(F.note3);
  return r;
 }
@@ -5295,9 +5706,6 @@ function applyFormDraft(d){
   F.agent.value = d.agent || "";
   F.tel.value = d.tel || "";
   F.store.value = d.store || "";
-  F.u591.value = d.url591 || "";
-  F.uleju.value = d.urlLeju || "";
-  F.ui.value = d.urlI || "";
   loadFormLinks(d);
   F.note.innerHTML = d.note ? needToFormHTML(d.note) : "<div><br></div>";
   F.note2.innerHTML = d.note2 ? needToFormHTML(d.note2) : "<div><br></div>";
@@ -5331,7 +5739,7 @@ function saveForm(){
     const i=items.findIndex(x=>x.id===editingId);
     if(i<0){toast("此物件已不存在，無法儲存");return;}
     const raw=readDraftRec(),next={...items[i]};
-    for(const key of PropertyCore.FIELDS){
+    for(const key of PropertyCore.recordFields(rec)){
       if(Object.prototype.hasOwnProperty.call(rec,key)&&JSON.stringify(raw[key])!==JSON.stringify((formBaseRec||{})[key]))next[key]=rec[key];
     }
     items[i]={...next,updatedAt:Date.now()};
@@ -5371,13 +5779,14 @@ const selDelete = document.getElementById("selDelete");
 const selCancel = document.getElementById("selCancel");
 let pressTimer = null, pressX = 0, pressY = 0, longPressed = false, pressId = null, pressCard = null;
 let suppressClick = false; // set by swipe-back to swallow the trailing ghost click
-const isLink = t => t.closest("a, .chip, .tel");
+const isLink = t => t.closest("a, .chip, .more-links, .tel");
 
 function updateSelbar(){
   selCount.textContent = `已選 ${selected.size} 筆`;
   selDelete.disabled = selected.size === 0;
 }
 function enterSelectMode(){
+  closeTableMoreLinks();
   selectMode = true;
   selected.clear();
   cardsEl.classList.add("selecting");
@@ -5658,6 +6067,7 @@ document.addEventListener("pointercancel", _tselDragEnd);
 // ═══════════════════════════════════════════════════════════════════
 // 關閉其他浮層(展開備註/觸發懸浮前呼叫),只保留指定的一種。集中呼叫我方既有的各關閉函式。
 function closeOtherOverlays(keep){
+  closeTableMoreLinks();
   if (keep !== "linkfilter" && typeof closeLinkFilter === "function") closeLinkFilter();
   /* search-help:start */ if (keep !== "search-help") closeSearchHelp(); /* search-help:end */
   if (keep !== "cat" && typeof closeCatMenu === "function") closeCatMenu();
@@ -5959,7 +6369,7 @@ function openNeedExp(tr, doFocus){
     ex.remove();
   });
   const it = items.find(x => x.id === id); if (!it) return;
-  const nCols = T_FIELDS.length + 1;   // 刪除欄永遠存在(仿客戶總覽)
+  const nCols = tableFields().length + 1;   // 刪除欄永遠存在(仿客戶總覽)
   const exp = document.createElement("tr");
   exp.className = editMode ? "needexp editing" : "needexp"; exp.dataset.for = id;
   const head = (sg) => {
@@ -7560,6 +7970,8 @@ cardsEl.addEventListener("click", e => {
     toggleSelect(id);
     return;
   }
+  const more=e.target.closest(".more-links");
+  if(more){e.stopPropagation();openMoreLinks(more);return;}
   if (isLink(e.target)) return;   // 電話撥號 / 連結開啟:兩模式皆維持原生動作
   if (editMode){
     openForm(id);                 // 編輯模式:點卡片進編輯表單
@@ -7753,6 +8165,7 @@ function openSettings(){
 }
 function closeSettings(){
   if (typeof palettePop !== "undefined" && palettePop.classList.contains("link-palette")) closePalette();
+  if(linkDeleteUI.picker.hidden===false)setLinkDeleteMode(false);
   saveNav("cover");   // 記住:回到封面
   settingsView.classList.remove("active");
   cover.style.display = "flex";
@@ -7792,15 +8205,129 @@ document.getElementById("themePicker").addEventListener("click", e=>{
   onLocalChange("settings");   // 改主題也即時同步到雲端
 });
 
+const linkDeleteUI={
+  picker:document.getElementById("linkDeletePicker"), choices:document.getElementById("linkDeleteChoices"),
+  remove:document.getElementById("linkRemoveSlot"), add:document.getElementById("linkAddSlot"),
+  dialog:document.getElementById("linkDeleteDialog"), cancel:document.getElementById("linkDeleteCancel"),
+  notice:document.getElementById("linkDeleteNotice")
+};
+let pendingLinkDelete=null;
 function saveLinkPreferences(){
-  onLocalChange("settings");renderLinkSettings();applyFilter();
+  if(!persistLocal())return false;
+  window.scheduleSync?.();
+  renderLinkSettings();refreshLinkSlotConsumers();applyFilter();
+  return true;
 }
+function setLinkDeleteMode(on){
+  linkDeleteUI.picker.hidden=!on;
+  linkDeleteUI.add.hidden=on;
+  linkDeleteUI.remove.textContent=on?"取消":"−";
+  linkDeleteUI.remove.classList.toggle("symbol",!on);
+  linkDeleteUI.remove.setAttribute("aria-expanded",String(on));
+  linkDeleteUI.remove.setAttribute("aria-label",on?"取消選擇欄位":"選擇要刪除的連結欄位");
+  document.getElementById("linkSettingsRows").hidden=on;
+  renderLinkSettings();
+}
+function renderLinkDeleteChoices(){
+  const choices=linkDeleteUI.choices,options=linkPreferences.linkSlots;
+  const signature=JSON.stringify(options.map(s=>[s.id,s.name]));
+  if(choices.dataset.options===signature)return;
+  choices.dataset.options=signature;choices.replaceChildren();
+  options.forEach((slot,index)=>{
+    const row=document.createElement("div");row.className="link-choice";
+    const pos=document.createElement("span");pos.className="link-position";pos.textContent=index+1;
+    const label=document.createElement("span");label.className="link-choice-name";label.textContent=slot.name;
+    const pick=document.createElement("button");pick.type="button";pick.className="link-action choose";
+    pick.dataset.deleteSlot=slot.id;pick.textContent="選擇";pick.setAttribute("aria-label","選擇刪除"+slot.name);
+    row.append(pos,label,pick);choices.append(row);
+  });
+}
+function linkDeleteImpact(slot){
+  const affected=[];
+  let urls=0,none=0,renamed=0;
+  for(const r of items){
+    const url=String(r[linkUrlField(slot.id)]||"").trim(),marked=linkIsNone(r,slot.id),alias=linkIsRenamed(r,slot.id)?r["linkName"+slot.id]:"";
+    if(!url&&!marked&&!alias)continue;
+    if(url)urls++;if(marked)none++;if(alias)renamed++;
+    affected.push([r.id,url,marked,alias]);
+  }
+  affected.sort((a,b)=>a[0].localeCompare(b[0]));
+  return {id:slot.id,name:slot.name,urls,none,renamed,count:affected.length,signature:JSON.stringify([slot.name,affected])};
+}
+function showLinkDeleteImpact(impact,changed=false){
+  pendingLinkDelete=impact;
+  document.getElementById("linkDeleteTitle").textContent="永久刪除「"+impact.name+"」欄位？";
+  document.getElementById("linkDeleteTotal").textContent=impact.count?"有 "+impact.count+" 筆物件使用這個欄位":"目前沒有物件使用這個欄位";
+  document.getElementById("linkDeleteDetail").textContent=impact.count?"有網址 "+impact.urls+" 筆 · 已勾無 "+impact.none+" 筆 · 單獨改名 "+impact.renamed+" 筆":"";
+  document.getElementById("linkDeleteWarning").textContent=impact.count?"所有物件在這一欄的網址、單獨設定的名稱和「無」標記都會刪除，無法復原。物件本身會保留。":"這個欄位會從所有物件移除。刪除後無法復原。";
+  linkDeleteUI.notice.hidden=!changed;linkDeleteUI.notice.textContent=changed?"欄位資料剛有更新，請重新確認。":"";
+  if(!linkDeleteUI.dialog.open)linkDeleteUI.dialog.showModal();
+  linkDeleteUI.cancel.focus();
+}
+function closeLinkDeleteConfirmation(){
+  const id=pendingLinkDelete?.id;pendingLinkDelete=null;
+  if(linkDeleteUI.dialog.open)linkDeleteUI.dialog.close();
+  (linkDeleteUI.choices.querySelector('[data-delete-slot="'+id+'"]')||linkDeleteUI.remove).focus({preventScroll:true});
+}
+function newLinkSlotId(){
+  const used=new Set([...linkSlotIds(),...linkPreferences.deletedLinkSlots]);
+  let id;
+  do{const bits=crypto.getRandomValues(new Uint32Array(2));id=(bits[0]&0xfffff)*4294967296+bits[1];}
+  while(id<1000||used.has(id));
+  return id;
+}
+linkDeleteUI.add.addEventListener("click",()=>{
+  if(window._saveBlocked)return;
+  window.applyPropertyRefresh?.(true);
+  if(window._saveBlocked)return;
+  const id=newLinkSlotId(),slots=linkPreferences.linkSlots,names=new Set(slots.map(s=>s.name));
+  let suffix=slots.length+1;while(names.has("連結 "+suffix))suffix++;
+  const colors=["#735b99","#4d785b","#368f99","#bc7541"];
+  const slot={id,name:"連結 "+suffix,color:colors[Math.max(0,slots.length-4)%colors.length],ink:"auto"};
+  linkPreferences.linkSlots=[...slots,slot];
+  if(!saveLinkPreferences()){linkPreferences.linkSlots=slots;renderLinkSettings();return;}
+  const name=document.querySelector('#linkSettingsRows [data-link-slot="'+id+'"] .link-setting-name');
+  name?.focus();name?.select();
+});
+linkDeleteUI.remove.addEventListener("click",()=>setLinkDeleteMode(linkDeleteUI.picker.hidden));
+linkDeleteUI.choices.addEventListener("click",e=>{
+  const choice=e.target.closest("[data-delete-slot]");if(!choice)return;
+  window.applyPropertyRefresh?.(true);
+  const slot=linkSlotById(Number(choice.dataset.deleteSlot));if(!slot||window._saveBlocked)return;
+  showLinkDeleteImpact(linkDeleteImpact(slot));
+});
+linkDeleteUI.cancel.addEventListener("click",closeLinkDeleteConfirmation);
+linkDeleteUI.dialog.addEventListener("cancel",e=>{e.preventDefault();closeLinkDeleteConfirmation();});
+linkDeleteUI.dialog.addEventListener("keydown",e=>{if(e.key==="Escape")e.stopPropagation();});
+linkDeleteUI.picker.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){e.preventDefault();e.stopPropagation();setLinkDeleteMode(false);linkDeleteUI.remove.focus();}
+});
+document.getElementById("linkDeleteConfirm").addEventListener("click",()=>{
+  if(!pendingLinkDelete||!linkDeleteUI.dialog.open)return;
+  window.applyPropertyRefresh?.(true);
+  if(window._saveBlocked){closeLinkDeleteConfirmation();return;}
+  const slot=pendingLinkDelete&&linkSlotById(pendingLinkDelete.id);
+  if(!slot){closeLinkDeleteConfirmation();return;}
+  const impact=linkDeleteImpact(slot);
+  if(impact.signature!==pendingLinkDelete.signature){showLinkDeleteImpact(impact,true);return;}
+  const previous=linkPreferences;
+  linkPreferences={...previous,linkSlots:previous.linkSlots.filter(s=>s.id!==slot.id),deletedLinkSlots:[...previous.deletedLinkSlots,slot.id]};
+  closeLinkDeleteConfirmation();
+  // Validation purges the tombstoned fields in the same local commit as the settings.
+  if(!saveLinkPreferences()){
+    linkPreferences=previous;renderLinkSettings();
+    document.querySelector("#dataSafetyPanel p")?.append(" 這次刪除尚未執行，儲存恢復後請再選擇欄位。");
+    return;
+  }
+  setLinkDeleteMode(false);
+  (linkSlotIds().length?linkDeleteUI.remove:linkDeleteUI.add).focus({preventScroll:true});
+});
 function makeLinkTextColorSelect(slot){
   const select=document.createElement("select");select.className="link-text-color";select.dataset.linkTextSlot=String(slot);
   [["auto","自動"],["white","白字"],["black","黑字"]].forEach(([value,text])=>{const option=document.createElement("option");option.value=value;option.textContent=text;select.appendChild(option);});
   select.addEventListener("change",()=>{
     if(slot==="renamed")linkPreferences.renamedLinkTextColor=select.value;
-    else linkPreferences.linkTextColors[slot-1]=select.value;
+    else if(linkSlotById(slot))linkSlotById(slot).ink=select.value;else return;
     saveLinkPreferences();
   });
   return select;
@@ -7810,30 +8337,34 @@ function renderLinkSettings(){
   const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
   if(!host.dataset.bound){host.dataset.bound="1";host.addEventListener("focusout",()=>requestAnimationFrame(renderLinkSettings));}
   // Keep the focused editor and its unsaved text intact when background preferences arrive.
-  const active=document.activeElement,editing=host.contains(active)&&active.matches("input,select"),existing=[...host.querySelectorAll("[data-link-slot]")].map(r=>Number(r.dataset.linkSlot));
-  const order=editing&&existing.length===4?existing:linkPreferences.linkOrder;
+  const active=document.activeElement,order=linkSlotIds(),valid=new Set(order);
+  for(const row of host.querySelectorAll("[data-link-slot]"))if(!valid.has(Number(row.dataset.linkSlot)))row.remove();
+  linkDeleteUI.remove.disabled=!order.length;
+  if(!linkDeleteUI.picker.hidden)renderLinkDeleteChoices();
+  if(pendingLinkDelete&&!valid.has(pendingLinkDelete.id))closeLinkDeleteConfirmation();
+  if(!order.length&&!linkDeleteUI.picker.hidden){setLinkDeleteMode(false);return;}
   order.forEach((slot,index)=>{
     let row=host.querySelector(`[data-link-slot="${slot}"]`);
     if(!row){
       row=make("div","link-setting-row");row.dataset.linkSlot=slot;
       const position=make("span","link-position"),name=make("input","link-setting-name"),color=make("button","link-setting-color"),controls=make("span","link-order-buttons");
       name.maxLength=20;
-      name.addEventListener("change",()=>{const value=name.value.trim();if(!value){name.value=linkPreferences.defaultLinkNames[slot-1];toast("請填寫連結名稱");return;}linkPreferences.defaultLinkNames[slot-1]=value;saveLinkPreferences();});
+      name.addEventListener("change",()=>{const config=linkSlotById(slot);if(!config)return;const value=name.value.trim();if(!value){name.value=config.name;toast("請填寫連結名稱");return;}config.name=value;saveLinkPreferences();});
       color.type="button";color.dataset.linkColorSlot=String(slot);color.setAttribute("aria-haspopup","dialog");color.setAttribute("aria-expanded","false");color.addEventListener("click",()=>openPalette(color));
-      [-1,1].forEach(delta=>{const b=make("button");b.type="button";b.dataset.delta=delta;b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${delta<0?'M12 19V5m-6 6 6-6 6 6':'M12 5v14m-6-6 6 6 6-6'}"/></svg>`;b.onclick=()=>{const order=linkPreferences.linkOrder,i=order.indexOf(slot);if(i+delta<0||i+delta>3)return;[order[i],order[i+delta]]=[order[i+delta],order[i]];saveLinkPreferences();};controls.append(b);});
+      [-1,1].forEach(delta=>{const b=make("button");b.type="button";b.dataset.delta=delta;b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${delta<0?'M12 19V5m-6 6 6-6 6 6':'M12 5v14m-6-6 6 6 6-6'}"/></svg>`;b.onclick=()=>{const order=linkPreferences.linkSlots,i=order.findIndex(s=>s.id===slot);if(i<0||i+delta<0||i+delta>=order.length)return;[order[i],order[i+delta]]=[order[i+delta],order[i]];saveLinkPreferences();};controls.append(b);});
       row.append(position,name,color,makeLinkTextColorSelect(slot),controls);
     }
     if(host.children[index]!==row)host.insertBefore(row,host.children[index]||null);
     const name=row.querySelector(".link-setting-name"),color=row.querySelector(".link-setting-color");
     row.querySelector(".link-position").textContent=String(index+1);
-    if(active!==name)name.value=linkPreferences.defaultLinkNames[slot-1];
-    color.dataset.color=linkPreferences.linkColors[slot-1];color.style.setProperty("--selected-color",color.dataset.color);
-    const textColor=row.querySelector(".link-text-color"),textMode=linkPreferences.linkTextColors[slot-1];
+    if(active!==name)name.value=linkSlotById(slot).name;
+    color.dataset.color=linkSlotById(slot).color;color.style.setProperty("--selected-color",color.dataset.color);
+    const textColor=row.querySelector(".link-text-color"),textMode=linkSlotById(slot).ink;
     if(active!==textColor)textColor.value=textMode;
     textColor.setAttribute("aria-label",`順序 ${index+1} 連結文字顏色`);
     color.style.setProperty("--selected-ink",linkTextInk(textMode,color.dataset.color));
     name.setAttribute("aria-label",`順序 ${index+1} 預設連結名稱`);color.setAttribute("aria-label",`順序 ${index+1} 連結顏色`);
-    row.querySelectorAll(".link-order-buttons button").forEach(b=>{const delta=Number(b.dataset.delta);b.disabled=index+delta<0||index+delta>3;b.setAttribute("aria-label",`將 ${linkPreferences.defaultLinkNames[slot-1]} ${delta<0?'往前':'往後'}移`);});
+    row.querySelectorAll(".link-order-buttons button").forEach(b=>{const delta=Number(b.dataset.delta);b.disabled=index+delta<0||index+delta>=order.length;b.setAttribute("aria-label",`將 ${linkSlotById(slot).name} ${delta<0?'往前':'往後'}移`);});
   });
   let renamed=host.querySelector(".link-renamed-row");
   if(!renamed){renamed=make("div","link-setting-row link-renamed-row");const color=make("button","link-setting-color");color.type="button";color.dataset.linkColorSlot="renamed";color.setAttribute("aria-label","單獨改名連結的共同顏色");color.setAttribute("aria-haspopup","dialog");color.setAttribute("aria-expanded","false");color.onclick=()=>openPalette(color);const textColor=makeLinkTextColorSelect("renamed");textColor.setAttribute("aria-label","單獨改名連結的文字顏色");renamed.append(make("span","","單獨改名顏色"),color,textColor);host.append(renamed);}
@@ -7850,8 +8381,9 @@ function collectSettings(){
 function applySettings(s){
   if (!s || typeof s !== "object") return;
   s=PropertyCore.settings(s);
-  linkPreferences={defaultLinkNames:(s.defaultLinkNames||LINK_NAMES).slice(),linkOrder:(s.linkOrder||[1,2,3,4]).slice(),linkColors:(s.linkColors||LINK_COLORS).slice(),renamedLinkColor:s.renamedLinkColor||"#687f95",linkTextColors:(s.linkTextColors||["auto","auto","auto","auto"]).slice(),renamedLinkTextColor:s.renamedLinkTextColor||"auto"};
+  linkPreferences={linkSlots:PropertyCore.linkSlots(s),deletedLinkSlots:(s.deletedLinkSlots||[]).slice(),renamedLinkColor:s.renamedLinkColor||"#687f95",renamedLinkTextColor:s.renamedLinkTextColor||"auto"};
   renderLinkSettings();
+  refreshLinkSlotConsumers();
   if (s.density === "compact" || s.density === "normal"){
     density = s.density; saveDensity();
     if (cardsEl) cardsEl.classList.toggle("compact", density === "compact");
@@ -7979,9 +8511,9 @@ linkPaletteFoot.querySelector("button").addEventListener("click",()=>closePalett
 const LINK_PALETTE=[...LINK_COLORS,"#687F95","#D57A3A","#9070AD","#AC6584","#368F99","#586A76"];
 function paletteLinkSlot(){
   const value=paletteFor&&paletteFor.dataset.linkColorSlot;
-  return value==="renamed"?value:/^[1-4]$/.test(value||"")?Number(value):null;
+  return value==="renamed"?value:linkSlotById(Number(value))?Number(value):null;
 }
-function currentPaletteLinkColor(){const slot=paletteLinkSlot();return slot==="renamed"?linkPreferences.renamedLinkColor:slot?linkPreferences.linkColors[slot-1]:null;}
+function currentPaletteLinkColor(){const slot=paletteLinkSlot();return slot==="renamed"?linkPreferences.renamedLinkColor:slot?linkSlotById(slot).color:null;}
 function renderPalettePresets(link){
   palettePop.querySelector(".cpk-presets").innerHTML=(link?LINK_PALETTE:PALETTE).map(c=>`<button type="button" data-c="${c}" style="--pc:${c}${link?';color:'+linkInk(c):''}" aria-label="快選 ${c}"${link?' aria-pressed="false"':''}>${link?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 12 4 4 8-8"/></svg>':''}</button>`).join("");
 }
@@ -8028,7 +8560,7 @@ function cpkCommit(){
   const slot=paletteLinkSlot();
   if(slot){
     const hex=cpkHexNow();if(String(currentPaletteLinkColor()).toUpperCase()===hex)return;
-    if(slot==="renamed")linkPreferences.renamedLinkColor=hex;else linkPreferences.linkColors[slot-1]=hex;
+    if(slot==="renamed")linkPreferences.renamedLinkColor=hex;else linkSlotById(slot).color=hex;
     saveLinkPreferences();return;
   }
   refreshCategories();
@@ -8096,7 +8628,7 @@ function openPalette(btn){
   palettePop.classList.toggle("link-palette",link);renderPalettePresets(link);
   cpkHexEl.removeAttribute("aria-invalid");
   if(link){
-    const slot=paletteLinkSlot();linkPaletteHead.querySelector(".link-palette-name").textContent=slot==="renamed"?"單獨改名":linkPreferences.defaultLinkNames[slot-1];
+    const slot=paletteLinkSlot();linkPaletteHead.querySelector(".link-palette-name").textContent=slot==="renamed"?"單獨改名":linkSlotById(slot).name;
     palettePop.setAttribute("role","dialog");palettePop.setAttribute("aria-label","連結顏色");btn.setAttribute("aria-expanded","true");
   }else{palettePop.removeAttribute("role");palettePop.removeAttribute("aria-label");}
   [cpkSvEl,cpkHueEl,cpkValEl].forEach((el,i)=>{
@@ -8135,7 +8667,11 @@ function closePalette(){
 document.addEventListener("pointerdown", e => {
   if (palettePop.classList.contains("open") && !palettePop.contains(e.target) && !(paletteFor && paletteFor.contains(e.target))) closePalette();
 }, true);
-document.addEventListener("scroll", e => { if (!palettePop.contains(e.target)) closePalette(); }, true);
+document.addEventListener("scroll", e => {
+  // A narrow name input may scroll its text back on blur, without moving the palette anchor.
+  if(paletteFor?.dataset.linkColorSlot && e.target.matches?.(".link-setting-name"))return;
+  if(!palettePop.contains(e.target))closePalette();
+}, true);
 window.addEventListener("resize", () => closePalette());
 window.addEventListener("resize", () => { if (viewMode === "table" && listView.classList.contains("active")) syncTableChrome(); });
 document.getElementById("catManage").addEventListener("click", openCatManager);
@@ -8312,7 +8848,7 @@ document.addEventListener("pointercancel", endCatDrag);
     const el = e.target;
     // 起點若在橫向捲動列 / 輸入框 / 下拉選單 / 表格 / 連結視窗上，則不攔截(讓它們正常運作)
     /* search-help:start */
-    skip = !!(el.closest && el.closest("#tabs, #listCount, input, textarea, .cselect, .table-wrap, #linkpop, #catmenu, .palette-pop, select, #searchHelpBtn, #searchHelpPop"));
+    skip = !!(el.closest && el.closest("#tabs, #listCount, input, textarea, .cselect, .table-wrap, #linkpop, #tableMoreLinks, #catmenu, .palette-pop, select, #searchHelpBtn, #searchHelpPop"));
     /* search-help:end */
     if (modalBg.classList.contains("open")) skip = false;  // 編輯表單開啟時,允許滑動關閉
     if (detailWasOpen) skip = false;  // 詳情頁開啟時,允許滑動關閉(只回列表,不跳封面)
