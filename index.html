@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261110C">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261110C">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261110F">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261110F">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261110C"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261110C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261110F"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261110F"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -860,6 +860,7 @@
   .fpanel-head{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:1.02rem;color:var(--ink);margin-bottom:8px;}
   .fpanel-head .fx{border:0;background:var(--surface-1);color:var(--ink-soft);width:34px;height:34px;border-radius:11px;font-size:1rem;cursor:pointer;}
   .fpanel-body{overflow:auto;min-height:0;display:flex;flex-direction:column;gap:1px;padding:2px 0;}
+  #fltBg .fpanel:focus{outline:none;}
   .fopt{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:10px;transition:transform .16s ease;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
   .fopt-main{flex:1;min-width:0;display:flex;align-items:center;gap:11px;padding:5px 2px;font-size:.94rem;color:var(--ink);cursor:pointer;}
   .fopt-main span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1110,14 +1111,10 @@
   .gen-btn:active{filter:brightness(1.05);}
   .gen-btn.gen-flash{animation:genFlash .5s ease;}
   @keyframes genFlash{0%{background:var(--accent-deep);}100%{background:var(--accent-tint);}}
-  /* 手機:點「到期日」表頭 → 切換 gen-open,所有列的生成面板一起滑出覆蓋(再點關閉) */
+  /* 觸控表格從到期篩選開啟各列的生成按鈕，再點表頭收起。 */
   .gen-open .gen-btn{opacity:1;pointer-events:auto;transform:translateX(0);}
-  .gen-caret{display:none;margin-left:5px;font-size:.72em;opacity:.75;transition:transform .18s ease;}
-  .gen-open th[data-col="due"] .gen-caret{transform:rotate(180deg);}
-  @media (hover:none){
-    .gen-caret{display:inline-block;}
-    th[data-col="due"]{cursor:pointer;}
-  }
+  .gen-open th[data-col="due"] .fmk{transform:rotate(180deg);}
+  #fltGen{align-self:flex-start;margin-top:10px;}
   @keyframes tSaved{0%{background:#D6EFE6;}100%{background:transparent;}}
   .tcell.tnum{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
   .tcell.tdue{font-variant-numeric:tabular-nums;color:var(--ink-soft);font-weight:600;}
@@ -1571,7 +1568,7 @@
   /* Both modes share date geometry; the full value remains in data-full-due. */
   .ptable .tcell.tdue,.ptable .tdue-btn{display:block;box-sizing:border-box;width:100%;padding:9px 10px;min-height:40px;line-height:22px;font-family:inherit;font-size:.66rem;font-variant-numeric:tabular-nums;text-align:center;}
   @media(max-width:819px){.ptable .tcell.tdue,.ptable .tdue-btn{padding-left:7px;padding-right:7px;}}
-  .ptable .duewrap [data-full-due="不確定"]{font-size:.59rem;letter-spacing:-.05em;padding-inline:3px;}
+  .ptable .duewrap [data-full-due="不確定"]{font-size:.75rem;font-weight:500;letter-spacing:normal;padding-inline:3px;}
 </style>
 </head>
 <body>
@@ -1872,9 +1869,10 @@
 
   <!-- ===== 表格欄位標題篩選 ===== -->
   <div class="modal-bg center" id="fltBg">
-    <div class="fpanel">
-      <div class="fpanel-head"><span id="fltTitle"></span><button type="button" class="fx" id="fltX">✕</button></div>
+    <div class="fpanel" role="dialog" aria-modal="true" aria-labelledby="fltTitle" tabindex="-1">
+      <div class="fpanel-head"><span id="fltTitle"></span><button type="button" class="fx" id="fltX" aria-label="關閉篩選">✕</button></div>
       <div class="fpanel-body" id="fltBody"></div>
+      <button type="button" class="s-btn" id="fltGen" hidden>生成檔名</button>
       <div class="fpanel-foot">
         <button type="button" class="cal-fbtn cal-clear" id="fltClear">清除此欄篩選</button>
         <button type="button" class="cal-fbtn cal-today" id="fltDone">完成</button>
@@ -2561,7 +2559,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.10C";
+const APP_VERSION = "2026.11.10F";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -2729,7 +2727,8 @@ function districtFromAddr(addr){
 // 生成面板圖示(文件)
 const GEN_ICON = '<svg viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>';
 function buildFileName(d){
-  const due = String(d.due == null ? "" : d.due).trim();
+  const date = dueValue(d);
+  const due = date === UNKNOWN_DUE ? "0000000" : String(date).trim();
   const dist = districtFromAddr(d.addr);
   const name = String(d.name == null ? "" : d.name).replace(/[／\/＊*＠@]/g, "");   // 案名去符號
   const price = d.price ? String(d.price).trim() : "";   // 空值或 0 皆視為未填,該段略過
@@ -3065,6 +3064,8 @@ function sortList(list){
     return x<y ? -1 : x>y ? 1 : 0;
   };
   const byDue = dir => (a,b) => {
+    const aUnknown = dueValue(a) === UNKNOWN_DUE, bUnknown = dueValue(b) === UNKNOWN_DUE;
+    if(aUnknown !== bUnknown) return aUnknown ? 1 : -1;
     const x=dueNum(a), y=dueNum(b);
     if(x===null&&y===null) return dir*byName(a,b);
     if(x===null) return dir; // 沿用空白日期視為最遠的規則。
@@ -3227,9 +3228,16 @@ function saveNav(screen, cat){ if (storageOK){ try { localStorage.setItem(NAV_KE
 
 // ==== 表格欄位標題篩選(參考客戶總覽:類別/格局/樓層/承辦/門市=勾選;售價=範圍) ====
 const colFilter = { cat:null, layout:null, floor:null, agent:null, store:null };
+const dueFilter = new Set();
+const DUE_FILTER_LABELS = {dated:"有時間", unknown:"不確定", blank:"空白"};
+function matchesDueFilter(item){
+  if(!dueFilter.size)return true;
+  const state = item.due ? "dated" : item.dueUnknown === true ? "unknown" : "blank";
+  return dueFilter.has(state);
+}
 const fltP = { lo:null, hi:null };   // 售價範圍(比照客戶總覽「預算」)
 let fltField = null;
-const FLT_NAME = { cat:"類別", layout:"格局", floor:"樓層", price:"售價（萬）", agent:"承辦", store:"門市" };
+const FLT_NAME = { due:"到期", cat:"類別", layout:"格局", floor:"樓層", price:"售價（萬）", agent:"承辦", store:"門市" };
 const numOrNull = v => { try { const n = PropertyCore.price(v); return n === "" ? null : n; } catch(_){ return NaN; } };
 // link-filter:start
 const LINK_FILTER_KEY = "property_app_linkfilters_v1";
@@ -3325,10 +3333,11 @@ function refreshLinkSlotConsumers(){
   syncLinkFilterTriggers();
 }
 function anyColFilter(){
-  if (fltP.lo != null || fltP.hi != null || anyLinkFilter()) return true;
+  if (dueFilter.size || fltP.lo != null || fltP.hi != null || anyLinkFilter()) return true;
   return Object.keys(colFilter).some(k => colFilter[k] && colFilter[k].size);
 }
 function clearAllColFilters(){
+  dueFilter.clear();
   Object.keys(colFilter).forEach(k => colFilter[k] = null);
   fltP.lo = null; fltP.hi = null;
   clearLinkFilters();
@@ -3359,13 +3368,18 @@ function applyColFilterState(s){
 }
 function saveColFilterState(){
   if (!storageOK) return;
-  try { localStorage.setItem(FILTER_STATE_KEY, JSON.stringify(serializeColFilterState())); } catch(e){}
+  try { localStorage.setItem(FILTER_STATE_KEY, JSON.stringify({...serializeColFilterState(),due:[...dueFilter]})); } catch(e){}
 }
 function loadColFilterState(){
   if (!storageOK) return;
   try {
     const s = JSON.parse(localStorage.getItem(FILTER_STATE_KEY) || "null");
-    if (s) applyColFilterState(s);
+    if (s){
+      applyColFilterState(s);
+      if(Array.isArray(s.due)) for(const state of s.due){
+        if(Object.hasOwn(DUE_FILTER_LABELS,state))dueFilter.add(state);
+      }
+    }
   } catch(e){}
 }
 loadColFilterState();
@@ -3375,8 +3389,9 @@ function remapColFilterCat(oldKey, newKey){
   st.delete(oldKey); st.add(newKey);
   if (!st.size) colFilter.cat = null;
 }
-function colFilterOn(f){ return f === "links" ? anyLinkFilter() : f === "price" ? (fltP.lo != null || fltP.hi != null) : !!(colFilter[f] && colFilter[f].size); }
+function colFilterOn(f){ return f === "due" ? dueFilter.size>0 : f === "links" ? anyLinkFilter() : f === "price" ? (fltP.lo != null || fltP.hi != null) : !!(colFilter[f] && colFilter[f].size); }
 function applyColFilters(list){
+  if(dueFilter.size)list=list.filter(matchesDueFilter);
   ["cat","layout","floor","agent","store"].forEach(f => { const st = colFilter[f]; if (st && st.size) list = list.filter(d => st.has(String(d[f]||"").trim() || "__EMPTY__")); });
   if (fltP.lo != null || fltP.hi != null){
     const flo = fltP.lo != null ? fltP.lo : 0, fhi = fltP.hi != null ? fltP.hi : Infinity;
@@ -3397,16 +3412,22 @@ function orderedFilterVals(f){
   return saved.concat(rest);
 }
 const fltBg = document.getElementById("fltBg");
-function openColFlt(f){
+function openColFlt(f,trigger){
   closeOtherOverlays("flt"); tableWrap.classList.remove("gen-open");
   fltField = f;
+  document.getElementById("fltGen").hidden = f !== "due" || !window.matchMedia("(hover: none)").matches;
   document.getElementById("fltTitle").textContent = "篩選：" + (FLT_NAME[f]||f);
   document.getElementById("fltBody").classList.remove("editing"); document.getElementById("fltClear").textContent = "清除此欄篩選";
   renderFltBody();
   fltBg.classList.add("open");
-  lockOverlay();
+  lockOverlay(trigger);
+  if(f==="due")fltBg.querySelector(".fpanel").focus({preventScroll:true});
 }
-function closeColFlt(){ fltBg.classList.remove("open"); fltField = null; unlockOverlay(); applyPendingMergeIfAny(); }
+function closeColFlt(){
+  const wasDue = fltField==="due";
+  fltBg.classList.remove("open"); fltField=null; unlockOverlay(); applyPendingMergeIfAny();
+  if(wasDue)tableWrap.querySelector('.th-flt[data-flt="due"]')?.focus({preventScroll:true});
+}
 window.closeColFlt = closeColFlt;
 function renderFltBody(){
   const body = document.getElementById("fltBody");
@@ -3433,25 +3454,32 @@ function renderFltBody(){
     return;
   }
   const f = fltField;
-  const vals = orderedFilterVals(f);
-  const hasEmpty = items.some(d => !String(d[f]||"").trim());
-  const st = colFilter[f];
+  const isDue = f === "due";
+  const vals = isDue ? Object.keys(DUE_FILTER_LABELS) : orderedFilterVals(f);
+  const hasEmpty = !isDue && items.some(d => !String(d[f]||"").trim());
+  const st = isDue ? dueFilter : colFilter[f];
   const GRIP = `<span class="fopt-drag" aria-label="拖曳排序" title="拖曳排序"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><g stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><line x1="3.5" y1="5" x2="12.5" y2="5"/><line x1="3.5" y1="8" x2="12.5" y2="8"/><line x1="3.5" y1="11" x2="12.5" y2="11"/></g></svg></span>`;
   const row = (v, label, drag) => `<div class="fopt${drag ? " fopt-draggable" : ""}" data-val="${esc(v)}">${drag ? GRIP : `<span class="fopt-drag-sp"></span>`}<label class="fopt-main"><input type="checkbox" value="${esc(v)}"${st && st.has(v) ? " checked" : ""}><span>${esc(label)}</span></label></div>`;
-  body.innerHTML = vals.map(v => row(v, layoutText && f === "layout" ? v : v, true)).join("") + (hasEmpty ? row("__EMPTY__","（空白）", false) : "");
+  body.innerHTML = vals.map(v => row(v, isDue ? DUE_FILTER_LABELS[v] : v, !isDue)).join("") + (hasEmpty ? row("__EMPTY__","（空白）", false) : "");
   body.querySelectorAll("input[type=checkbox]").forEach(cb => cb.addEventListener("change", () => {
-    let stt = colFilter[f] || new Set();
+    const stt = isDue ? dueFilter : colFilter[f] || new Set();
     if (cb.checked) stt.add(cb.value); else stt.delete(cb.value);
-    colFilter[f] = stt.size ? stt : null;
+    if(!isDue)colFilter[f] = stt.size ? stt : null;
     saveColFilterState();
     applyFilter();
   }));
 }
 document.getElementById("fltX").addEventListener("click", closeColFlt);
 document.getElementById("fltDone").addEventListener("click", closeColFlt);
+document.getElementById("fltGen").addEventListener("click", () => {
+  if(fltField!=="due")return;
+  closeColFlt();
+  tableWrap.classList.add("gen-open");
+});
 document.getElementById("fltClear").addEventListener("click", () => {
   if (document.getElementById("fltBody").classList.contains("editing")){ exitFltEditing(); return; }
-  if (fltField === "price"){ fltP.lo = null; fltP.hi = null; } else if (fltField){ colFilter[fltField] = null; }
+  if (fltField === "due"){ dueFilter.clear(); }
+  else if (fltField === "price"){ fltP.lo = null; fltP.hi = null; } else if (fltField){ colFilter[fltField] = null; }
   saveColFilterState();
   renderFltBody(); applyFilter();
 });
@@ -3463,7 +3491,17 @@ document.getElementById("fltClearAll").addEventListener("click", () => {
   applyFilter();
   toast("已清除所有欄位篩選");
 });
-tableWrap.addEventListener("click", e => { const b = e.target.closest(".th-flt"); if (b){ e.stopPropagation(); if (b.dataset.flt === "links") openLinkFilter(b); else openColFlt(b.dataset.flt); } });
+tableWrap.addEventListener("click", e => {
+  const b=e.target.closest(".th-flt");
+  if(!b)return;
+  e.stopPropagation();
+  if(b.dataset.flt==="due" && tableWrap.classList.contains("gen-open")){
+    tableWrap.classList.remove("gen-open");
+    return;
+  }
+  if(b.dataset.flt==="links")openLinkFilter(b);
+  else openColFlt(b.dataset.flt,b);
+});
 
 // 篩選清單:長按進排序模式(才顯示握把),拖曳調整順序(手機可用)
 let fltDrag = null;
@@ -3634,16 +3672,15 @@ function colGroupHTML(){
   ).join("") + `<col data-field="_del" style="width:${DEL_W}px">`;   // 刪除欄永遠存在(仿客戶總覽):切換模式欄寬不變,只換內容
 }
 // 產生表頭:每個 th 包 .th-label(供量測欄名)+ 可調欄加 .col-resize 把手(彈性欄/刪除欄不加)
-const FILTERABLE = { cat:1, layout:1, floor:1, price:1, links:1, agent:1, store:1 };   // 這些欄可點標題篩選(price 用範圍,links 用連結狀態,其餘勾選)
+const FILTERABLE = { due:1, cat:1, layout:1, floor:1, price:1, links:1, agent:1, store:1 };
 function tHeadHTML(){
   return T_COLS.map((h,i) => {
     const f = T_FIELDS[i];
     if(f==="links"&&!linkPreferences.linkSlots.length)return "";
     const rz = (f && f !== FLEX_FIELD) ? `<span class="col-resize" data-field="${f}"></span>` : "";
-    const mark = (f === "due") ? '<span class="gen-caret" aria-hidden="true">▾</span>' : "";   // 手機:點到期日表頭開/關生成面板的提示
     const lab = (f && FILTERABLE[f])
-      ? `<button type="button" class="th-flt${colFilterOn(f) ? " on" : ""}" data-flt="${f}"${f === "links" ? ' aria-haspopup="dialog" aria-expanded="false" aria-controls="linkFilterBg"' : ''}><span class="th-label">${h}</span><span class="fmk">▾</span></button>`
-      : `<span class="th-label">${h}${mark}</span>`;
+      ? `<button type="button" class="th-flt${colFilterOn(f) ? " on" : ""}" data-flt="${f}"${f === "links" ? ' aria-haspopup="dialog" aria-expanded="false" aria-controls="linkFilterBg"' : ' aria-haspopup="dialog" aria-controls="fltBg"'}><span class="th-label">${h}</span><span class="fmk" aria-hidden="true">▾</span></button>`
+      : `<span class="th-label">${h}</span>`;
     return `<th data-col="${f}">${lab}${rz}</th>`;
   }).join("") + `<th></th>`;   // 刪除欄表頭永遠存在(空白佔位),切換模式不位移
 }
@@ -3676,6 +3713,9 @@ function measureTableDueTexts(requests){
       tableDueTextWidths.set(key,el.getBoundingClientRect().width);
     });
   }finally{host.remove();}
+}
+function tableDueLabel(full){
+  return full===UNKNOWN_DUE ? "未知" : full;
 }
 function tableDueMonthDay(full){
   const raw = String(full || "");
@@ -3820,8 +3860,8 @@ function trowHTML(d){
     : `<td class="tdel"></td>`;   // 正常模式空白佔位(欄仍在),編輯模式才放垃圾桶——切換不位移
   const ds = dueStatus(d.due);   // 方案 D:整列依到期狀態上底色閃爍
   const nameInner = editMode ? esc(d.name) : nameSegmentsHTML(d.name);   // 正常模式:案名依符號分段可點複製;編輯模式維持純文字可編輯
-  const dueText=esc(dueValue(d));
-  const dueAttrs=`data-full-due="${dueText}" aria-label="到期日 ${dueText}" title="${dueText}"`;
+  const fullDue=dueValue(d), dueText=esc(tableDueLabel(fullDue)), dueTitle=esc(fullDue);
+  const dueAttrs=`data-full-due="${dueTitle}" aria-label="到期日 ${dueTitle}" title="${dueTitle}"`;
   const dueInner = editMode
     ? `<button type="button" class="tdue-btn ${ds}" data-duecal="1" ${dueAttrs}>${dueText}</button>`
     : `<div class="tcell tdue ${ds}" contenteditable="false" data-field="due" ${dueAttrs}>${dueText}</div>`;
@@ -3938,14 +3978,14 @@ function autoFitColumn(field){
     if (cell){
       const cs = getComputedStyle(cell);
       const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
-      const w = _measText(cell.dataset.fullDue ?? cell.textContent, cell) + pad;
+      const w = _measText(tableDueLabel(cell.dataset.fullDue) ?? cell.textContent, cell) + pad;
       if (w > maxW) maxW = w;
     } else {
       const sp = td.querySelector(".tcat-badge, .tcat-trigger, .tchips, .tdue-btn");  // 類別膠囊 / 連結膠囊組 / 到期日鈕:本身即內容寬
       if (sp && sp.hasAttribute("data-full-due")){
         const cs = getComputedStyle(sp);
         const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
-        const w = _measText(sp.dataset.fullDue, sp) + pad;
+        const w = _measText(tableDueLabel(sp.dataset.fullDue), sp) + pad;
         if (w > maxW) maxW = w;
       } else if (sp && sp.offsetWidth > maxW) maxW = sp.offsetWidth;
     }
@@ -4044,7 +4084,7 @@ window.isTableBusy = function(){
 // ---- inline editing ----
 function tFindItem(el){ const tr = el.closest("tr"); return tr ? items.find(x => x.id === tr.dataset.id) : null; }
 function tFlash(el){ el.classList.add("saved"); setTimeout(()=>el.classList.remove("saved"), 700); }
-// 表格編輯模式:到期日 → 開共用日曆(與卡片表單同一個);就地更新不重排,並即時更新到期色
+// 表格日曆通常就地更新；離開篩選結果或切換「未知」排序分組時重繪清單。
 // 注意:同步(applyMerged)會把 items 全部換成新物件,所以必須用 id 在「set 當下」重新取得,不能抓開啟時的物件參照
 function openTableDueCal(trigger){
   const it0 = tFindItem(trigger); if (!it0) return;
@@ -4057,10 +4097,14 @@ function openTableDueCal(trigger){
       const cur = items.find(x => x.id === itemId);
       if (!cur){ toast("此物件已不存在"); return; }
       const nv = String(v||"").trim();
-      if (dueValue(cur) === nv) return;
+      const previousDue = dueValue(cur);
+      if (previousDue === nv) return;
       setDueValue(cur,nv); cur.updatedAt = Date.now(); saveItems(); onLocalChange("data");
+      const dueSorted = currentSort === "due_asc" || currentSort === "due_desc";
+      const changedUnknown = previousDue === UNKNOWN_DUE || nv === UNKNOWN_DUE;
+      if(!matchesDueFilter(cur) || (dueSorted && changedUnknown)){applyFilter();return;}
       if (trigger.isConnected){                          // 觸發鈕仍在畫面:就地更新到期色(按鈕+整列)
-        trigger.textContent = nv; trigger.title = nv; trigger.dataset.fullDue = nv; trigger.setAttribute("aria-label", "到期日 " + nv);
+        trigger.textContent = tableDueLabel(nv); trigger.title = nv; trigger.dataset.fullDue = nv; trigger.setAttribute("aria-label", "到期日 " + nv);
         const ds = dueStatus(nv);
         trigger.classList.remove("warn","over"); if (ds) trigger.classList.add(ds);
         const tr = trigger.closest("tr");
@@ -4486,12 +4530,6 @@ tableWrap.addEventListener("click", e=>{
   if (openTr){
     if (e.target.closest(".gen-btn, .tdue-btn, .tchip, .tcell, .tcat-trigger, [data-act='del'], .tneed[data-need]")){ /* 交給下方各 handler */ }
     else { e.stopPropagation(); hideNeedHover(); closeNeedExp(); return; }
-  }
-  // 手機:點「到期日」表頭 → 切換所有列的生成面板開/關(電腦版維持滑到左緣才出現)
-  const dueHead = e.target.closest('th[data-col="due"]');
-  if (dueHead && !e.target.closest(".col-resize") && window.matchMedia && window.matchMedia("(hover: none)").matches){
-    tableWrap.classList.toggle("gen-open");
-    return;
   }
   // 編輯模式:到期日欄「生成檔名」面板 → 生成並複製
   const genBtn = e.target.closest(".gen-btn");
