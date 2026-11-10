@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261110B">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261110B">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261110C">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261110C">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261110B"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261110B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261110C"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261110C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -111,6 +111,8 @@
     --surface-3:#E4EBED;
     --border-2:#C2CDD2;
     --text-faint:#9AA8AE;
+    --link-empty-text:#52626B;
+    --link-none-text:#69767C;
     --accent-tint:#EAF4F0;
     --accent-tint-bd:#CDE6DD;
     --danger-tint:#FBF0EC;
@@ -135,6 +137,8 @@
     --surface-3:#2E3A41;
     --border-2:#3A464D;
     --text-faint:#6C7A81;
+    --link-empty-text:#A3B1B8;
+    --link-none-text:#879398;
     --accent:#13875E;
     --accent-deep:#54C7A3;
     --cover-bg:#0B1613;
@@ -734,7 +738,7 @@
   .lp-none-check{margin-left:auto;padding:5px 0 5px 5px;}
   .modal-body .link-none-check{flex-direction:row;min-height:30px;font-weight:400;}
   .lp-input:disabled,.link-f input:disabled{background:var(--surface-1);color:var(--text-faint);cursor:default;}
-  .property-link.link-none{color:var(--ink-soft)!important;background:var(--surface-1)!important;border-color:var(--line)!important;opacity:1;}
+  .property-link.link-none{background:var(--surface-1)!important;border-color:var(--line)!important;opacity:1;}
   .lp-btn:disabled{opacity:.4;cursor:default;}
   /* link-none:end */
   .link-f input{width:100%;box-sizing:border-box;transition:font-size .15s ease;}
@@ -908,6 +912,7 @@
   #calBg.over-modal{background:rgba(255,255,255,.99);}
   [data-theme="dark"] #calBg.over-modal{background:rgba(6,10,13,.99);}
   .cal{background:var(--card);width:100%;max-width:420px;border-radius:26px;padding:20px 22px 22px;box-shadow:0 22px 60px rgba(22,34,42,.32);}
+  #calBg .cal{max-height:100%;overflow-y:auto;overscroll-behavior:contain;}
   .cal-fmt{display:flex;justify-content:flex-end;margin-bottom:2px;}
   .cal-fmt button{border:1px solid var(--line);background:var(--surface-1);color:var(--ink-soft);font-size:.82rem;font-weight:700;padding:8px 14px;border-radius:999px;cursor:pointer;}
   .cal-fmt button:active{background:var(--surface-2);}
@@ -918,7 +923,8 @@
   .cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;}
   .cal-week span{text-align:center;font-size:.9rem;font-weight:600;color:var(--text-faint);padding:4px 0;}
   .cal-week span:first-child,.cal-week span:last-child{color:#C4737B;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px 4px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px 4px;}
+  .cal-grid .cal-day{width:100%;min-width:0;}
   .cal-day{aspect-ratio:1;min-height:44px;border:0;background:transparent;border-radius:50%;font-size:1.12rem;font-weight:600;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;line-height:1;padding:0;box-sizing:border-box;}
   .cal-day .cal-dnum{display:block;line-height:1;transform:translateY(1.5px);}
   .cal-day.wkend{color:#C4737B;}
@@ -932,7 +938,11 @@
   .cal-day:active{background:var(--surface-2);}
   .cal-day.today:active{background:var(--accent-deep);}
   .cal-day.empty{visibility:hidden;cursor:default;}
-  .cal-foot{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+  .cal-foot{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px;}
+  .cal-foot > #calToday,.cal-foot > #calClear{grid-column:1 / -1;}
+  .cal-foot #calUnknown[aria-current="true"]{background:var(--accent-tint);border-color:var(--accent);color:var(--accent-deep);}
+  .cal-foot #calUnknown[aria-current="true"]::before{content:"✓";margin-right:.3em;}
+  .cal-foot #calUnknown{padding-inline:4px;white-space:nowrap;}
   .cal-fbtn{width:100%;padding:15px;border-radius:16px;font-weight:700;font-size:1.05rem;cursor:pointer;}
   .cal-fbtn.cal-today{background:var(--accent);border:1px solid var(--accent);color:#fff;}
   .cal-fbtn.cal-today:active{background:var(--accent-deep);}
@@ -1313,7 +1323,8 @@
   .table-more-links .platform-dot{width:9px;height:9px;flex:none;border-radius:50%;background:var(--link-color);}
   .table-more-links .platform-name{flex:1;overflow-wrap:anywhere;}
   .table-more-links button:is(.empty,.none) .platform-dot{background:var(--text-faint);}
-  .table-more-links button:is(.empty,.none) .platform-name{color:var(--ink-soft);}
+  .table-more-links button.empty .platform-name{color:var(--link-empty-text);}
+  .table-more-links button.none .platform-name{color:var(--link-none-text);}
   .table-more-links small{margin-left:6px;white-space:nowrap;color:var(--ink-soft);font-size:.75rem;}
   @media(pointer:coarse){.table-more-links button{min-height:44px;}}
   .lp-head{display:flex;align-items:center;gap:8px;font-size:15px;line-height:20px;font-weight:700;color:var(--ink);margin-bottom:9px;}
@@ -1423,6 +1434,8 @@
 
   /* 四格連結：表格維持同排；卡片與表單各以兩格一排。 */
   .property-link .link-text{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .property-link:not(.on) .link-text{color:var(--link-empty-text);}
+  .property-link.link-none .link-text{color:var(--link-none-text);font-weight:400;}
   .property-link.on,.property-link.on:hover,.property-link.on:active{background:var(--link-color);border-color:var(--link-color);color:var(--link-ink);}
   .ptable tbody td.tlinks{padding:0 8px;}
   .tchips{--table-chip-width:30px;gap:3px;align-items:center;}
@@ -1558,6 +1571,7 @@
   /* Both modes share date geometry; the full value remains in data-full-due. */
   .ptable .tcell.tdue,.ptable .tdue-btn{display:block;box-sizing:border-box;width:100%;padding:9px 10px;min-height:40px;line-height:22px;font-family:inherit;font-size:.66rem;font-variant-numeric:tabular-nums;text-align:center;}
   @media(max-width:819px){.ptable .tcell.tdue,.ptable .tdue-btn{padding-left:7px;padding-right:7px;}}
+  .ptable .duewrap [data-full-due="不確定"]{font-size:.59rem;letter-spacing:-.05em;padding-inline:3px;}
 </style>
 </head>
 <body>
@@ -1850,6 +1864,7 @@
       <div class="cal-foot">
         <button type="button" class="cal-fbtn cal-today" id="calToday">回到今天</button>
         <button type="button" class="cal-fbtn cal-clear" id="calClear">清除日期</button>
+        <button type="button" class="cal-fbtn cal-clear" id="calUnknown" aria-current="false">不確定時間</button>
         <button type="button" class="cal-fbtn cal-cancel" id="calCancel">取消</button>
       </div>
     </div>
@@ -1930,6 +1945,16 @@
 (function(root){
 "use strict";
 const KEY = "property_app_state_v5";
+const UNKNOWN_DUE = "不確定";
+// Keep the stored date readable by older versions. The optional flag shares its edit timestamp.
+function dueValue(item){
+ return item?.due || (item?.dueUnknown === true ? UNKNOWN_DUE : "");
+}
+function setDueValue(item,value){
+ if(value===UNKNOWN_DUE){item.due="";item.dueUnknown=true;}
+ else{item.due=value;delete item.dueUnknown;}
+}
+const fieldValue=(row,field)=>field==="due"?dueValue(row):row[field];
 const FIELDS = ["name","cat","layout","floor","price","addr","due","agent","tel","store","url591","urlLeju","urlI","url4","linkNone1","linkNone2","linkNone3","linkNone4","linkBaseName1","linkBaseName2","linkBaseName3","linkBaseName4","linkName1","linkName2","linkName3","linkName4","note","note2","note3","t1","t2","t3","noteFont1","noteFont2","noteFont3","noteOrder"];
 const own = (o,k) => Object.prototype.hasOwnProperty.call(o,k);
 const validSlotId = id => Number.isSafeInteger(id) && id>0 && id!==591;
@@ -2014,6 +2039,8 @@ function record(r,index){
  if(!safeId(d.id)) fail("第 "+(index+1)+" 筆物件識別碼不合法");
  const fields=recordFields(r);
  for(const f of fields) d[f]= f==="noteOrder" ? noteOrder(r[f]) : f.startsWith("linkNone") ? linkNone(r[f]) : f==="price" ? price(r[f]) : f.startsWith("noteFont") ? fontSize(r[f]) : text(r[f],f);
+ if(r.dueUnknown!=null && typeof r.dueUnknown!=="boolean")fail("到期日不確定狀態不正確");
+ if(!d.due && r.dueUnknown===true)d.dueUnknown=true;
  if(d.due){
   const s=d.due.replace(/\D/g,""), yr=Number(s.slice(0,-4)), mo=Number(s.slice(-4,-2)), day=Number(s.slice(-2));
   const date=new Date(yr+1911,mo-1,day);
@@ -2221,8 +2248,9 @@ function fieldMerge(a,b){
  const out={id:a.id,_fieldUpdatedAt:{},updatedAt:Math.max(a.updatedAt,b.updatedAt)};
  for(const f of recordFields(a,b)){
   const at=a._fieldUpdatedAt[f]??-1,bt=b._fieldUpdatedAt[f]??-1;
-  const chosen=at>bt?a:bt>at?b:JSON.stringify(a[f])>=JSON.stringify(b[f])?a:b;
+  const chosen=at>bt?a:bt>at?b:JSON.stringify(fieldValue(a,f))>=JSON.stringify(fieldValue(b,f))?a:b;
   out[f]=chosen[f];out._fieldUpdatedAt[f]=Math.max(at,bt);
+  if(f==="due" && chosen.dueUnknown)out.dueUnknown=true;
  }
  out._metaAt=out.updatedAt;return out;
 }
@@ -2237,7 +2265,7 @@ function track(items,base,now){
    for(const f of recordFields(r,prev)){
     // Omitting a newer-version field is not an edit. Clearing a URL uses an explicit empty value.
     if(!own(r,f)){r[f]=prev[f];r._fieldUpdatedAt[f]=prev._fieldUpdatedAt[f];continue;}
-    if(!same(r[f],prev[f])) {r._fieldUpdatedAt[f]=ts;changed=true;}
+    if(!same(fieldValue(r,f),fieldValue(prev,f))) {r._fieldUpdatedAt[f]=ts;changed=true;}
     else r._fieldUpdatedAt[f]=prev._fieldUpdatedAt[f];
    }
    r.updatedAt=changed?ts:prev.updatedAt;
@@ -2318,7 +2346,7 @@ function createStore(storage){
  const stable=v=>JSON.stringify((function order(x){if(Array.isArray(x))return x.map(order);if(x&&typeof x==="object"){const y={};for(const k of Object.keys(x).sort())y[k]=order(x[k]);return y;}return x})(v));
  const prefValue=s=>{const v=clone(s);delete v._updatedAt;return v};
  const content=s=>{const v=validateState(s);delete v.revision;v.settings=prefValue(v.settings);v.items.sort((a,b)=>String(a.id).localeCompare(String(b.id)));return stable(v)};
- const fieldValues=r=>Object.fromEntries(recordFields(r).map(f=>[f,r[f]]));
+ const fieldValues=r=>Object.fromEntries(recordFields(r).map(f=>[f,fieldValue(r,f)]));
  const intent=s=>stable({items:s.items.map(r=>({id:r.id,...fieldValues(r)})).sort((a,b)=>String(a.id).localeCompare(String(b.id))),cats:s.cats,settings:prefValue(s.settings),deleted:s.deleted,resetAt:s.resetAt});
  function join(a,b){
   if(!a)return clone(b);if(!b)return clone(a);
@@ -2462,7 +2490,7 @@ function createStore(storage){
  return {load,commit,readLatest,acknowledge,compact,rawBackup,get current(){return current?clone(current):null},get blocked(){return blocked}};
 }
 
-const api={KEY,FIELDS,recordFields,linkSlots,rebaseLinkSlots,price,fontSize,noteOrder,draftValues,mergeDraft,deleteStamp,record,records,categories,settings,validateState,backup,fieldMerge,track,merge,restore,mainFrom,stateFromMain,createStore,clone,defaults,ready:false};
+const api={KEY,FIELDS,UNKNOWN_DUE,dueValue,setDueValue,recordFields,linkSlots,rebaseLinkSlots,price,fontSize,noteOrder,draftValues,mergeDraft,deleteStamp,record,records,categories,settings,validateState,backup,fieldMerge,track,merge,restore,mainFrom,stateFromMain,createStore,clone,defaults,ready:false};
 if(typeof module==="object"&&module.exports) module.exports=api;
 root.PropertyCore=api;
 if(!root.document) return;
@@ -2533,7 +2561,8 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.10B";
+const APP_VERSION = "2026.11.10C";
+const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
@@ -2742,6 +2771,7 @@ function cardHTML(d){
     </div>
   </article>`;
   }
+  const dueText=esc(dueValue(d));
   return `<article class="card${sel}${ds ? " due-"+ds : ""}" data-id="${esc(d.id)}"><svg class="lp-ring" aria-hidden="true"><rect class="lp-track"/><rect class="lp-draw" pathLength="100"/><rect class="lp-tip" pathLength="100"/></svg>
     ${selMark(d)}
     <div class="body">
@@ -2757,7 +2787,7 @@ function cardHTML(d){
       <div class="meta">
         <span data-copy="${esc(d.layout)}"><i class="ml">格局</i> ${esc(d.layout)}</span>
         <span data-copy="${esc(d.floor)}"><i class="ml">樓層</i> ${esc(d.floor)}</span>
-        <span class="due ${ds}" data-copy="${esc(d.due)}"><i class="ml">到期</i> ${esc(d.due)}</span>
+        <span class="due ${ds}" data-copy="${dueText}"><i class="ml">到期</i> ${dueText}</span>
       </div>
       <div class="agent">
         <div class="agent-info">承辦 <b data-copy="${esc(d.agent)}">${esc(d.agent)}</b><br><span data-copy="${esc(d.store)}">${esc(d.store)}</span></div>
@@ -3665,6 +3695,7 @@ function fitTableDueDates(force = false){
   const groups=new Map(),entries=[];
   // Read each shared style before measuring or changing any visible date.
   tableWrap.querySelectorAll(".tbody-wrap [data-full-due]").forEach(el=>{
+    if(el.dataset.fullDue===UNKNOWN_DUE)return;
     const weight=el.classList.contains("warn")||el.classList.contains("over")?"alert":"normal";
     let group=groups.get(weight);
     if(!group){
@@ -3789,9 +3820,11 @@ function trowHTML(d){
     : `<td class="tdel"></td>`;   // 正常模式空白佔位(欄仍在),編輯模式才放垃圾桶——切換不位移
   const ds = dueStatus(d.due);   // 方案 D:整列依到期狀態上底色閃爍
   const nameInner = editMode ? esc(d.name) : nameSegmentsHTML(d.name);   // 正常模式:案名依符號分段可點複製;編輯模式維持純文字可編輯
-  const dueInner = editMode      // 編輯模式:到期日改為日曆選擇(不用鍵盤輸入);正常模式維持可點複製
-    ? `<button type="button" class="tdue-btn ${ds}" data-duecal="1" data-full-due="${esc(d.due)}" aria-label="到期日 ${esc(d.due)}" title="${esc(d.due)}">${esc(d.due)}</button>`
-    : `<div class="tcell tdue ${ds}" contenteditable="false" data-field="due" data-full-due="${esc(d.due)}" aria-label="到期日 ${esc(d.due)}" title="${esc(d.due)}">${esc(d.due)}</div>`;
+  const dueText=esc(dueValue(d));
+  const dueAttrs=`data-full-due="${dueText}" aria-label="到期日 ${dueText}" title="${dueText}"`;
+  const dueInner = editMode
+    ? `<button type="button" class="tdue-btn ${ds}" data-duecal="1" ${dueAttrs}>${dueText}</button>`
+    : `<div class="tcell tdue ${ds}" contenteditable="false" data-field="due" ${dueAttrs}>${dueText}</div>`;
   const _trCls = (((openNeedId===d.id) ? ("exp-open" + (editMode ? " exp-editing" : "") + " ") : "") + (ds ? "due-"+ds : "") + ((tselMode && selected.has(d.id)) ? " tsel-row" : "")).trim();
   return `<tr data-id="${esc(d.id)}"${_trCls ? ` class="${_trCls}"` : ""}>`+
     `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" tabindex="-1" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button>${dueInner}</td>`+
@@ -4019,13 +4052,13 @@ function openTableDueCal(trigger){
   closeCatMenu(); closeLinkPop();                       // 先關其他浮層
   if (typeof window.openCalFor !== "function") return;
   window.openCalFor({
-    get: () => { const cur = items.find(x => x.id === itemId); return (cur && cur.due) || ""; },
+    get: () => dueValue(items.find(x => x.id === itemId)),
     set: v => {
       const cur = items.find(x => x.id === itemId);
       if (!cur){ toast("此物件已不存在"); return; }
       const nv = String(v||"").trim();
-      if ((cur.due||"") === nv) return;
-      cur.due = nv; cur.updatedAt = Date.now(); saveItems(); onLocalChange("data");
+      if (dueValue(cur) === nv) return;
+      setDueValue(cur,nv); cur.updatedAt = Date.now(); saveItems(); onLocalChange("data");
       if (trigger.isConnected){                          // 觸發鈕仍在畫面:就地更新到期色(按鈕+整列)
         trigger.textContent = nv; trigger.title = nv; trigger.dataset.fullDue = nv; trigger.setAttribute("aria-label", "到期日 " + nv);
         const ds = dueStatus(nv);
@@ -5496,7 +5529,8 @@ function todayROC(){
     return String(dt.getFullYear()-1911) + String(dt.getMonth()+1).padStart(2,"0") + String(dt.getDate()).padStart(2,"0");
   }
   let calFmtROC = true;
-  const FORM_TARGET = { get: () => F.due.value, set: v => { F.due.value = v; } };   // 預設目標:卡片表單的到期日
+  const FORM_TARGET = { get: () => F.due.value, set: v => { F.due.value = v; saveFormDraft(); } };
+  const unknownButton = document.getElementById("calUnknown");
   let calTarget = FORM_TARGET;
   function render(){
     calTitle.textContent = calFmtROC
@@ -5525,11 +5559,14 @@ function todayROC(){
     if (calBg.classList.contains("open")) return;
     calTarget = target || FORM_TARGET;
     calBg.classList.toggle("over-modal", modalBg.classList.contains("open"));   // 只有疊在編輯表單上時才用不透明遮罩
-    const cur = rocToDate(calTarget.get()) || new Date();
+    const value = calTarget.get();
+    unknownButton.setAttribute("aria-current", String(value === UNKNOWN_DUE));
+    const cur = rocToDate(value) || new Date();
     calY = cur.getFullYear(); calM = cur.getMonth();
     render(); calBg.classList.add("open");
     const panel = calBg.querySelector(".cal");
     if (panel){
+      panel.scrollTop = 0;
       panel.setAttribute("tabindex", "-1");
       try { panel.focus({ preventScroll: true }); } catch (err){ try { panel.focus(); } catch (err2){} }
     }
@@ -5540,6 +5577,7 @@ function todayROC(){
   calGrid.addEventListener("click", e => { const b = e.target.closest(".cal-day[data-roc]"); if (b){ calTarget.set(b.dataset.roc); closeCal(); } });
   document.getElementById("calToday").addEventListener("click", () => { calTarget.set(todayROC()); closeCal(); });
   document.getElementById("calClear").addEventListener("click", () => { calTarget.set(""); closeCal(); });
+  unknownButton.addEventListener("click", () => { calTarget.set(UNKNOWN_DUE); closeCal(); });
   document.getElementById("calCancel").addEventListener("click", closeCal);
   document.getElementById("calFmt").addEventListener("click", () => { calFmtROC = !calFmtROC; render(); });
   calBg.addEventListener("click", e => { if (e.target === calBg) closeCal(); });
@@ -5618,7 +5656,7 @@ function openForm(id){
   F.floor.value  = d ? d.floor||""   : "";
   F.price.value  = d ? (d.price ?? "") : "";
   F.addr.value   = d ? d.addr||""    : "";
-  F.due.value    = d ? d.due||""     : "";
+  F.due.value    = dueValue(d);
   F.agent.value  = d ? d.agent||""   : "";
   F.tel.value    = d ? d.tel||""     : "";
   F.store.value  = d ? d.store||""   : "";
@@ -5663,7 +5701,8 @@ function openDetail(id){
   window.applyPropertyRefresh?.(true);
   const d = items.find(x => x.id === id); if (!d) return;
   const _cat = d.cat ? `<span class="dtl-cat">${esc(d.cat)}</span>` : "";
-  const _dueTop = d.due ? `<span class="dtl-due-top">到期 ${esc(d.due)}</span>` : "";
+  const dueText=dueValue(d);
+  const _dueTop = dueText ? `<span class="dtl-due-top">到期 ${esc(dueText)}</span>` : "";
   document.getElementById("detailTitle").innerHTML = `<span class="dtl-name">${nameSegmentsHTML(d.name) || "（未填案名）"}</span>${_cat}${_dueTop}`;
   // 區段/格內小圖示
   const IC_INFO  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.6" fill="currentColor"/></svg>';
@@ -5887,10 +5926,15 @@ function saveForm(){
     if(i<0){toast("此物件已不存在，無法儲存");return;}
     const raw=readDraftRec(),next={...items[i]};
     for(const key of PropertyCore.recordFields(rec)){
-      if(Object.prototype.hasOwnProperty.call(rec,key)&&JSON.stringify(raw[key])!==JSON.stringify((formBaseRec||{})[key]))next[key]=rec[key];
+      if(!Object.prototype.hasOwnProperty.call(rec,key)||JSON.stringify(raw[key])===JSON.stringify((formBaseRec||{})[key]))continue;
+      if(key==="due")setDueValue(next,rec.due);
+      else next[key]=rec[key];
     }
     items[i]={...next,updatedAt:Date.now()};
-  } else items.push({...rec,id:uid(),updatedAt:Date.now()});
+  } else {
+    setDueValue(rec,rec.due);
+    items.push({...rec,id:uid(),updatedAt:Date.now()});
+  }
   if(!saveItems()) {
     if(!isEdit) { try{formPendingNewAliasRaw=sessionStorage.getItem(FORM_DRAFT_KEY+":new")}catch(e){} editingId=items[items.length-1].id;formPendingNewId=editingId;formPendingNewBase=PropertyCore.draftValues(readDraftRec());formPendingNewSaved=false;document.getElementById("modalTitle").textContent="編輯物件"; }
     saveFormDraft(); return;
