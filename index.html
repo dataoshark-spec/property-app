@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261110A">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261110A">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261110B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261110B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261110A"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261110A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261110B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261110B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1312,7 +1312,9 @@
   .table-more-links button:hover,.table-more-links button:focus-visible{background:var(--surface-1);}
   .table-more-links .platform-dot{width:9px;height:9px;flex:none;border-radius:50%;background:var(--link-color);}
   .table-more-links .platform-name{flex:1;overflow-wrap:anywhere;}
-  .table-more-links small{margin-left:6px;white-space:nowrap;color:var(--ink-soft);}
+  .table-more-links button:is(.empty,.none) .platform-dot{background:var(--text-faint);}
+  .table-more-links button:is(.empty,.none) .platform-name{color:var(--ink-soft);}
+  .table-more-links small{margin-left:6px;white-space:nowrap;color:var(--ink-soft);font-size:.75rem;}
   @media(pointer:coarse){.table-more-links button{min-height:44px;}}
   .lp-head{display:flex;align-items:center;gap:8px;font-size:15px;line-height:20px;font-weight:700;color:var(--ink);margin-bottom:9px;}
   .lp-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:none;border-radius:6px;background:var(--accent-tint);color:var(--accent-deep);}
@@ -2531,7 +2533,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.10A";
+const APP_VERSION = "2026.11.10B";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {name:"示範社區・A棟／3F", cat:"大樓", layout:"322", addr:"台中市西屯區示範路一段 100 號", floor:"3/14", price:1288, due:"1150915", agent:"王小明", tel:"0900000001", store:"示範門市（範例資料）", url591:"", urlLeju:"", urlI:""},
