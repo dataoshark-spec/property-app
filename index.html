@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261111B">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261111B">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261112A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261112A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261111B"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261111B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261112A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261112A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -2562,7 +2562,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.11B";
+const APP_VERSION = "2026.11.12A";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -2571,6 +2571,7 @@ const SEED = [
 ];
 
 // ---- Helpers ----
+const NEED_URL_EDGE = "§§§§";  // 兩對空標題，只有網址與刪線無法由字串區分時才保存。
 const layoutText = g => ({"322":"3房2廳2衛","221":"2房2廳1衛","3改2/22":"3改2房2廳2衛"}[g]) || (g==="開放"?"開放空間":g||"");
 // 搜尋比對用的字串來源:各欄位之間夾一個分隔字元(U+001F),避免「甲欄結尾＋乙欄開頭」被拼成假命中
 const SEARCH_FIELDS = ["name","addr","agent","store","cat","layout","floor","price","note","note2","note3","t1","t2","t3"];   // 不含 due(到期日):關鍵字搜尋不比對到期
@@ -2582,6 +2583,7 @@ function searchHay(d){
     let v = d[k];
     v = (v == null) ? "" : String(v);
     if (NOTE_KEYS[k]){
+      if (v.includes("~~") && /https?:\/\//i.test(v)) v = needMarkupUrlParts(v).map(p => p.t === "url" ? " " : p.v).join("");
       v = v.replace(/[\u00a7\u200b]|~~/g, "");   // 備註三段:去掉 §標題/~~刪線/零寬錨點 等標記,讓「近§捷運§站」也能被「捷運站」搜到(比對貼近顯示文字)
       v = v.replace(SEARCH_URL_RE, " ");         // 不比對「連結」背後的網址
     }
@@ -3103,7 +3105,12 @@ const listCounter=(()=>{
   const viewport=document.getElementById("listCountWindow"),track=document.getElementById("listCountTrack");
   const prev=document.getElementById("listCountPrev"),next=document.getElementById("listCountNext"),status=document.getElementById("listCountStatus");
   let mode="total",recordCount=0,entries=[],widths=[],pages=[],page=0;
-  let dataKey="",renderKey="",gesture=null,ignoreClick=false,wheelAt=0;
+  let dataKey="",measureKey="",renderKey="",gesture=null,ignoreClick=false,wheelAt=0;
+  const sizeObserver=window.ResizeObserver?new ResizeObserver(changes=>{
+    // 字級、字型或欄距變化也可能只改變筆數文字的寬度。
+    if(changes.some(change=>change.target!==space))widths=[];
+    layout();
+  }):null;
   try{if(storageOK&&localStorage.getItem(KEY)==="links")mode="links";}catch(e){}
   function partHTML(entry){
     return '<span class="list-count-part"><span class="list-count-name">'+esc(entry.name)+'</span><span class="list-count-value"><b>'+entry.count+'</b><small>筆</small></span></span>';
@@ -3137,7 +3144,12 @@ const listCounter=(()=>{
     const available=space.getBoundingClientRect().width;
     if(available<=0)return; // Opening the list triggers the space observer after it becomes visible.
     if(!widths.length){
-      measure.innerHTML=entries.map(partHTML).join("");
+      if(measureKey!==dataKey){
+        for(const part of measure.children)sizeObserver?.unobserve(part);
+        measure.innerHTML=entries.map(partHTML).join("");
+        for(const part of measure.children)sizeObserver?.observe(part,{box:"border-box"});
+        measureKey=dataKey;
+      }
       widths=Array.from(measure.children,el=>el.getBoundingClientRect().width);
     }
     const edges=getComputedStyle(countEl);
@@ -3216,7 +3228,7 @@ const listCounter=(()=>{
     e.preventDefault();const now=Date.now();if(now-wheelAt<250)return;wheelAt=now;move(e.deltaX>0?1:-1);
   },{passive:false});
   prev.addEventListener("click",()=>move(-1));next.addEventListener("click",()=>move(1));
-  if(window.ResizeObserver)new ResizeObserver(layout).observe(space);else window.addEventListener("resize",layout);
+  if(sizeObserver)sizeObserver.observe(space);else window.addEventListener("resize",layout);
   if(document.fonts){
     const refreshMetrics=()=>{widths=[];layout();};
     document.fonts.ready.then(refreshMetrics);document.fonts.addEventListener("loadingdone",refreshMetrics);
@@ -4308,9 +4320,9 @@ function flushEditing(){
     if (el.classList.contains("tcell") && tCellIsEditing(el)){
       tCellExitEdit(el);                                   // 一般欄位格(案名/地址/售價…)
     } else if (el.classList.contains("nseg-ed") && !el.classList.contains("needexp-view")){
-      const w = el.closest(".needexp"); if (w) commitNeedSeg(w.dataset.for, +el.dataset.seg, editToNeed(el));   // 備註三段內容
-    } else if (el.dataset && el.dataset.titleedit){
-      const w = el.closest(".needexp"); if (w) commitNeedTitle(w.dataset.for, +el.dataset.seg, el.textContent); // 備註三段標題
+      commitTableNeedEditor(el);
+    } else if (el.dataset && el.dataset.titleedit && el.isContentEditable){
+      commitTableNeedTitle(el);
     } else {
       return;   // 沒在編輯格,不需 blur
     }
@@ -4454,13 +4466,9 @@ tableWrap.addEventListener("copy", e => {
 tableWrap.addEventListener("blur", e => {
   const c = e.target;
   if (c.classList && c.classList.contains("nseg-ed") && !c.classList.contains("needexp-view")){
-    const w = c.closest(".needexp"); if (!w) return;
-    const raw = editToNeed(c);
-    const norm = normalizeNeedStorage(raw);
-    commitNeedSeg(w.dataset.for, +c.dataset.seg, norm);
-    if (norm !== raw) syncNeedEdFromStorage(c, norm);
+    commitTableNeedEditor(c, {redraw:true});
   } else if (c.dataset && c.dataset.titleedit){
-    const w = c.closest(".needexp"); if (w) commitNeedTitle(w.dataset.for, +c.dataset.seg, c.textContent);
+    commitTableNeedTitle(c);
   }
 }, true);
 tableWrap.addEventListener("keydown", e => {
@@ -4471,8 +4479,7 @@ tableWrap.addEventListener("compositionend", e => {
   const ed = needContentEditorFrom(e.target);
   if (!ed) return;
   liveNeedSymbolsFix(ed);
-  const w = ed.closest(".needexp");
-  if (w && ed.classList.contains("nseg-ed")) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
+  if (ed.classList.contains("nseg-ed")) commitTableNeedEditor(ed);
 }, true);
 tableWrap.addEventListener("paste", e => {
   const nedBody = e.target.closest && e.target.closest('.needexp-ed[contenteditable="true"]');
@@ -4486,9 +4493,8 @@ tableWrap.addEventListener("paste", e => {
     try { document.execCommand("insertText", false, tx.replace(/[\r\n\t]+/g," ")); } catch(err){}
     return;
   }
-  const w = nedBody.closest(".needexp"), sg = +nedBody.dataset.seg;
   pasteNeedField(nedBody, tx);
-  if (w) commitNeedSeg(w.dataset.for, sg, editToNeed(nedBody));
+  commitTableNeedEditor(nedBody);
 });
 // 「連結」標籤刪除:游標緊鄰標籤時按 Backspace/Delete 整顆刪除
 tableWrap.addEventListener("keydown", e => {
@@ -4496,18 +4502,16 @@ tableWrap.addEventListener("keydown", e => {
   const ed = e.target.closest && e.target.closest('.needexp-ed[contenteditable="true"]');
   if (!ed) return;
   if (deleteNeedAdjacentChip(ed, e)){
-    const w = ed.closest(".needexp");
-    if (w) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
+    commitTableNeedEditor(ed);
   }
 }, true);
 tableWrap.addEventListener("input", e => {
   const c = e.target;
   if (c.classList && c.classList.contains("nseg-ed") && !c.classList.contains("needexp-view")){
-    const w = c.closest(".needexp");
     if (!e.isComposing && !c.isComposing) liveNeedSymbolsFix(c);
-    if (w) commitNeedSeg(w.dataset.for, +c.dataset.seg, editToNeed(c));
+    commitTableNeedEditor(c, {history:e.inputType === "historyUndo" || e.inputType === "historyRedo"});
   } else if (c.dataset && c.dataset.titleedit){
-    const w = c.closest(".needexp"); if (w) commitNeedTitle(w.dataset.for, +c.dataset.seg, c.textContent);
+    commitTableNeedTitle(c);
   }
 });
 // 防線:若任何方式(貼上/拖入)讓格子帶進了格式(出現子元素),立即攤平成純文字,避免顯示變形
@@ -4886,8 +4890,7 @@ function commitLink(refreshTable=true){
       if (url){ nd.chip.setAttribute("data-url", url); }
       else { nd.chip.remove(); }
       if (nd.ed && nd.ed.isConnected && nd.ed.classList.contains("needexp-ed")){
-        const wx = nd.ed.closest(".needexp");
-        if (wx) commitNeedSeg(wx.dataset.for, +nd.ed.dataset.seg, editToNeed(nd.ed));
+        commitTableNeedEditor(nd.ed);
       }
     }
     closeLinkPop(); return;
@@ -6561,15 +6564,46 @@ function commitNeedFontSize(id,sg,size){
  onLocalChange("data");
 }
 
-function commitNeedSeg(id, sg, val){
-  const it = items.find(x => x.id === id); if (!it) return;
-  val = normalizeNeedStorage((val || "").replace(/\s+$/,""));
+// 比對同一個編輯器實際呈現的內容。舊資料呈現成 DOM 後可能已與儲存字串不同。
+const tableNeedEdits = new WeakMap();
+const tableNeedTitles = new WeakMap();
+function rememberTableNeedEditor(ed, original){
+  const raw = editToNeed(ed);
+  const prior = tableNeedEdits.get(ed);
+  if (prior){
+    prior.raw = prior.normalized = raw;
+  } else {
+    tableNeedEdits.set(ed, {raw, normalized:raw, initialRaw:raw, original, lastStored:original});
+  }
+}
+function commitTableNeedEditor(ed, {redraw=false, history=false, raw=editToNeed(ed)}={}){
+  const prior = tableNeedEdits.get(ed);
+  if (!prior) return;
+  if (raw !== prior.raw){
+    const row = ed.closest(".needexp");
+    if (!row) return;
+    const id = row.dataset.for, sg = +ed.dataset.seg;
+    const record = items.find(it => it.id === id);
+    if (!record) return;
+    // 原生復原回開欄內容時，保留序列化時會省略的舊尾端空格等原文。
+    const restore = history && raw === prior.initialRaw && needSeg(record,sg) === prior.lastStored;
+    prior.raw = raw;
+    prior.normalized = restore ? raw : normalizeNeedStorage(raw);
+    prior.lastStored = restore ? prior.original : prior.normalized;
+    commitNeedSeg(record, sg, prior.lastStored);
+  }
+  if (redraw && raw !== prior.normalized){
+    syncNeedEdFromStorage(ed, prior.normalized);
+    rememberTableNeedEditor(ed);
+  }
+}
+function commitNeedSeg(it, sg, val){
   if (needSeg(it,sg) === val) return;
   if (sg===2) it.note2 = val; else if (sg===3) it.note3 = val; else it.note = val;
   it.updatedAt = Date.now(); saveItems(); onLocalChange("data");
   {
     // 任一段變動都重算「有/無」預覽(不再只看第 1 段,也不顯示真實內容)
-    const tr = tableWrap.querySelector(`tr[data-id="${id}"]`);
+    const tr = tableWrap.querySelector(`tr[data-id="${it.id}"]`);
     const cell = tr && tr.querySelector(".tneed");
     if (cell){
       const html = noteHasContent(it) ? '<span class="tneed-has">有</span>' : '<span class="tneed-ph">無</span>';
@@ -6579,10 +6613,15 @@ function commitNeedSeg(id, sg, val){
     }
   }
 }
-function commitNeedTitle(id, sg, val){
+function commitTableNeedTitle(el){
+  if (!tableNeedTitles.has(el) || tableNeedTitles.get(el) === el.textContent) return;
+  const row = el.closest(".needexp");
+  if (!row) return;
+  const id = row.dataset.for, sg = +el.dataset.seg;
   const it = items.find(x => x.id === id); if (!it) return;
   const def = needDefTitle(sg);
-  val = (val || "").replace(/\n/g," ").trim() || def;
+  tableNeedTitles.set(el, el.textContent);
+  const val = el.textContent.replace(/\n/g," ").trim() || def;
   if (needTitle(it,sg) === val) return;
   if (sg===2) it.t2 = val; else if (sg===3) it.t3 = val; else it.t1 = val;
   it.updatedAt = Date.now(); saveItems(); onLocalChange("data");
@@ -6590,8 +6629,8 @@ function commitNeedTitle(id, sg, val){
 function commitAllSegs(ex){
   if (lpNeed && lpNeed.ed && ex.contains(lpNeed.ed)) commitLink();
   // 只提交可編輯段落;唯讀顯示段落(.needexp-view)不該被序列化寫回 —— 它含顯示用「連結」,序列化會把網址洗成字面「連結」
-  ex.querySelectorAll(".nseg-ed:not(.needexp-view)").forEach(ed => commitNeedSeg(ex.dataset.for, +ed.dataset.seg, editToNeed(ed)));
-  ex.querySelectorAll(".nseg-t[data-titleedit]").forEach(t => commitNeedTitle(ex.dataset.for, +t.dataset.seg, t.textContent));
+  ex.querySelectorAll(".nseg-ed:not(.needexp-view)").forEach(ed => commitTableNeedEditor(ed));
+  ex.querySelectorAll(".nseg-t[contenteditable=true]").forEach(commitTableNeedTitle);
 }
 
 function openNeedExp(tr, doFocus){
@@ -6631,12 +6670,12 @@ function openNeedExp(tr, doFocus){
   requestAnimationFrame(sizeNeedExp);
   [1,2,3].forEach(sg => {
     const ed = exp.querySelector(`.nseg-ed[data-seg="${sg}"]`);
-    let v = needSeg(it, sg);
-    // 展開時順便把「刪線後黏下一筆／跨行 ~~」的舊壞資料寫回(normalize 內含 repair)
-    // 正常模式展開僅顯示，不改寫資料或更新時間戳。
+    const v = needSeg(it, sg);
     ed.innerHTML = v ? (editMode ? needToEditHTML(v) : needToViewHTML(v)) : (editMode ? "<div><br></div>" : '<div class="tneed-ph">（無內容）</div>');
+    if (editMode) rememberTableNeedEditor(ed, v);
   });
   if (editMode){
+    exp.querySelectorAll(".nseg-t[contenteditable=true]").forEach(el => tableNeedTitles.set(el, el.textContent));
     exp.querySelectorAll("button.nseg-tbtn").forEach(hb => {
       hb.addEventListener("pointerdown", ev => {
         ev.preventDefault();
@@ -7117,8 +7156,9 @@ function commitNeedFormatChange(scope,ed,value){
   syncNeedEdFromStorage(ed,value);
   saveFormDraft(); // 表單只保存草稿，正式物件由「儲存」統一提交。
  }else{
-  commitNeedSeg(scope.dataset.for,+ed.dataset.seg,value);
+  commitTableNeedEditor(ed,{raw:value});
   syncNeedEdFromStorage(ed,value);
+  rememberTableNeedEditor(ed);
  }
 }
 function toggleNeedStrike(exp){
@@ -7281,6 +7321,68 @@ function needTokens(s){
   if (last < s.length) toks.push({ t:"txt", v:s.slice(last) });
   return toks;
 }
+// 新編輯的網址緊貼刪線時，只有一般字串無法還原按鈕邊界才保留兩對空標題。
+// 舊版也將這兩對標題顯示為空。它不改網址、資料結構或既有物件。
+function needMarkupUrlParts(text){
+  const tokens = needTokens(text), parts = [];
+  let strikeOpen = false, attachedOpener = false;
+  function addText(v){
+    if (!v) return;
+    parts.push({t:"txt", v});
+    for (const mark of v.matchAll(/~~/g)){
+      strikeOpen = !strikeOpen;
+      // 「未配對~~ 網址」中、緊貼前字而後接空格的符號不借用網址內部的 ~~ 配對。
+      if (strikeOpen) attachedOpener = !(mark.index && /\S/.test(v[mark.index-1]) && /\s/.test(v[mark.index+2] || ""));
+    }
+  }
+  tokens.forEach((tk, i) => {
+    if (tk.t === "txt"){ addText(tk.v); return; }
+    const next = tokens[i+1];
+    if (next && next.v.startsWith(NEED_URL_EDGE)){
+      parts.push({t:"url", v:tk.v, edge:true});
+      next.v = next.v.slice(NEED_URL_EDGE.length);
+      return;
+    }
+    // 舊寫法 ~~https://…~~：網址前已開刪線，網址尾的最後一組才可能是關閉符號。
+    let end = tk.v.length;
+    if (strikeOpen && tk.v.includes("~~")){
+      const last = tk.v.lastIndexOf("~~");
+      if (attachedOpener && (last === end - 2 || !(next && next.v.split("\n",1)[0].includes("~~")))) end = last;
+    }
+    parts.push({t:"url", v:tk.v.slice(0,end)});
+    addText(tk.v.slice(end));
+  });
+  return parts;
+}
+// 對格式符號做舊版換行修復或排版前，先將整個網址隔開；還原時只替換本次建立的代號。
+function withNeedMarkupUrls(text, transform, renderUrl){
+  if (!text.includes("~~") || !/https?:\/\//i.test(text)) return transform(text);
+  let mark = "\uE000", id = 0;
+  while (text.includes(mark)) mark = "\uE000" + (++id) + "\uE001";
+  const urls = [];
+  const masked = needMarkupUrlParts(text).map(p => p.t === "txt" ? p.v : mark + (urls.push(p)-1) + mark).join("");
+  return transform(masked).replace(new RegExp(mark+"(\\d+)"+mark,"g"), (_,index) => {
+    const p = urls[Number(index)];
+    return renderUrl ? renderUrl(p.v) : p.v + (p.edge ? NEED_URL_EDGE : "");
+  });
+}
+function compactNeedUrlEdges(text){
+  if (!text.includes(NEED_URL_EDGE)) return text;
+  const original = needMarkupUrlParts(text);
+  const plain = original.map(p => p.v).join("");
+  const inferred = new Map();
+  let pos = 0;
+  for (const p of needMarkupUrlParts(plain)){
+    if (p.t === "url") inferred.set(pos,p.v);
+    pos += p.v.length;
+  }
+  pos = 0;
+  return original.map(p => {
+    const edge = p.edge && inferred.get(pos) !== p.v;
+    pos += p.v.length;
+    return p.v + (edge ? NEED_URL_EDGE : "");
+  }).join("");
+}
 // 依 ~~..~~ 把一行切成 [一般 / 刪除線] 片段;不成對的 ~~ 視為一般文字,原樣保留
 function strikeParts(text){
   const out = []; let i = 0; const t = String(text == null ? "" : text);
@@ -7299,6 +7401,9 @@ function strikeParts(text){
 // 把一行文字依 inline 標記渲染成 HTML:§..§ → 標題、~~..~~ → 刪除線,兩者可良好巢狀;
 // 純文字段交給 seg(處理網址→「連結」)。標記由選取範圍操作產生、結構保證良好巢狀;不成對的標記當一般文字保留。
 function inlineHTML(t, seg){
+  return withNeedMarkupUrls(String(t == null ? "" : t), masked => renderNeedInline(masked,seg), seg);
+}
+function renderNeedInline(t, seg){
   t = String(t == null ? "" : t);
   let out = "", i = 0;
   while (i < t.length){
@@ -7312,7 +7417,7 @@ function inlineHTML(t, seg){
     if (close < 0){ out += seg(t.slice(pos)); break; }
     const slice = t.slice(pos + mlen, close);
     if (tag === "s" && !slice.replace(/[\u200B\s]/g, "") && !/https?:\/\//i.test(slice)){ out += seg(slice); i = close + mlen; continue; }   // 空格式不渲染，原有空白仍保留。
-    const inner = inlineHTML(slice, seg);
+    const inner = renderNeedInline(slice, seg);
     out += (tag === "h") ? `<span class="need-h">${inner}</span>` : `<s class="need-del">${inner}</s>`;
     i = close + mlen;
   }
@@ -7338,7 +7443,7 @@ function editLineInner(text){
   return inlineHTML(text, seg);
 }
 function needDisplayText(t){
-  return repairNeedCrossLineMarks(t||"");
+  return withNeedMarkupUrls(t||"", repairNeedCrossLineMarks);
 }
 // 唯讀顯示用:逐行渲染(保留 # 標題),並把網址轉成「連結」
 function needToViewHTML(t){
@@ -7394,21 +7499,22 @@ function needLineOnlyBr(node){
   }
   return sawBr || !node.childNodes.length;
 }
-function needNodeText(el, inheritedLineHeading){
+function needNodeText(el, inheritedLineHeading, markUrlEdges){
   const lineHeading = !!(inheritedLineHeading || (el.nodeType === 1 && /^(DIV|P)$/.test(el.tagName) && el.classList && el.classList.contains("nh")));
   let s = "";
   el.childNodes.forEach(n => {
     if (n.nodeType === 3){ s += n.textContent.replace(/\u200B/g,""); return; }
     if (n.nodeType === 1){
-      if (n.classList && n.classList.contains("need-link-chip")){ s += (n.getAttribute("data-url") || ""); return; }
-      if (n.classList && n.classList.contains("need-link")){ s += (n.getAttribute("data-url") || n.getAttribute("href") || ""); return; }   // 顯示用「連結」也還原成網址(否則序列化會吐字面「連結」,把存檔網址洗掉)
-      if (isHeadingEl(n)){ s += wrapNeedMark(needNodeText(n, lineHeading && !s), "\u00a7", "\u00a7"); return; }   // inline 標題 → §..§(逐行)
-      if (isStrikeEl(n)){ s += wrapNeedMark(needNodeText(n, lineHeading && !s), "~~", "~~"); return; }   // 刪除線 → ~~..~~(逐行,不可包住換行)
+      if (n.classList && (n.classList.contains("need-link-chip") || n.classList.contains("need-link"))){
+        s += (n.getAttribute("data-url") || n.getAttribute("href") || "") + (markUrlEdges ? NEED_URL_EDGE : ""); return;
+      }
+      if (isHeadingEl(n)){ s += wrapNeedMark(needNodeText(n, lineHeading && !s, markUrlEdges), "\u00a7", "\u00a7"); return; }
+      if (isStrikeEl(n)){ s += wrapNeedMark(needNodeText(n, lineHeading && !s, markUrlEdges), "~~", "~~"); return; }
       if (n.tagName === "BR"){ s += "\n"; return; }   // 列內 <br> 要保留成換行,否則重開會黏成一團(U 版起的老 bug)
       // 區塊各自結束一行；空區塊也要計數，外層容器不能吞掉中間空行。
       if (n.tagName === "DIV" || n.tagName === "P"){
         const inherited = lineHeading && !s;
-        let inner = needLineOnlyBr(n) ? "" : needNodeText(n, inherited);
+        let inner = needLineOnlyBr(n) ? "" : needNodeText(n, inherited, markUrlEdges);
         // 扣除子區塊最後的 BR／行結束佔位，再由本層補一次，避免容器層數增加換行。
         if (inner.endsWith("\n")) inner = inner.slice(0, -1);
         // 舊式整行標題只標記首行；該行已有外層標題時，不重複添加 #。
@@ -7417,12 +7523,13 @@ function needNodeText(el, inheritedLineHeading){
         s += inner + "\n";
         return;
       }
-      s += needNodeText(n, lineHeading && !s);
+      s += needNodeText(n, lineHeading && !s, markUrlEdges);
     }
   });
   return s;
 }
 function editToNeed(ed){
+  const markUrlEdges = ed.textContent.includes("~~") || !!ed.querySelector("s,strike,.need-del,[style*='line-through']");
   const out = [];
   const pushLine = (t, isH) => { out.push(isH && String(t).trim() ? ("# " + t) : t); };
   const pushParts = (t, isH) => {
@@ -7435,7 +7542,7 @@ function editToNeed(ed){
   let inline = [];
   const flushInline = () => {
     if (!inline.length) return;
-    const t = needNodeText({ childNodes: inline });
+    const t = needNodeText({ childNodes: inline }, false, markUrlEdges);
     inline = [];
     if (t) pushParts(t, false);
   };
@@ -7446,10 +7553,11 @@ function editToNeed(ed){
     flushInline();
     const isH = node.classList && node.classList.contains("nh");
     if (needLineOnlyBr(node)){ pushLine("", isH); return; }
-    pushParts(needNodeText(node), isH);
+    pushParts(needNodeText(node, false, markUrlEdges), isH);
   });
   flushInline();
-  return out.join("\n").replace(/\s+$/,"");
+  const value = out.join("\n").replace(/\s+$/,"");
+  return markUrlEdges ? compactNeedUrlEdges(value) : value;
 }
 // 備註「內容」半形符號→全形。刻意保留:
 // 1) ~~ 刪線語法的半形 ~
@@ -7461,8 +7569,12 @@ function normalizeNeedSymbols(s){
   if (!s) return s;
   function convChunk(chunk){
     let out = "";
-    for (const ch of chunk){
-      if (ch === "~"){ out += ch; continue; }
+    // 格式邊界也可能位於數字中間，例如 52§.04§5。保留使用者原來輸入的半形分隔符。
+    const numeric = new Set();
+    for (const m of chunk.matchAll(/\d(?:§|~~)*[.,](?=(?:§|~~)*\d)/g)) numeric.add(m.index + m[0].length - 1);
+    for (let i = 0; i < chunk.length; i++){
+      const ch = chunk[i];
+      if (ch === "~" || numeric.has(i)){ out += ch; continue; }
       if (ch >= "!" && ch <= "~" && !((ch >= "0" && ch <= "9") || (ch >= "A" && ch <= "Z") || (ch >= "a" && ch <= "z"))){
         out += String.fromCharCode(ch.charCodeAt(0) + 0xFEE0);
       } else out += ch;
@@ -7512,8 +7624,8 @@ function repairNeedBrokenStrikeLines(t){
 function normalizeNeedStorage(t){
   // 只移除「同一行內」的空刪線標記，保留其中空白；零寬字仍只供游標使用。
   // 不可用 \\s(含換行)，否則相鄰兩行 ~~\\n~~ 會被合併。
-  t = String(t == null ? "" : t).replace(/\u200B/g, "").replace(/~~([\t ]*)~~/g, "$1");
-  t = repairNeedCrossLineMarks(t);
+  t = String(t == null ? "" : t).replace(/\u200B/g, "");
+  t = withNeedMarkupUrls(t, masked => repairNeedCrossLineMarks(masked.replace(/~~([\t ]*)~~/g, "$1")));
   // 保留使用者的行內刪線與換行，不再推測舊資料斷行。
   return normalizeNeedSymbols(t);
 }
@@ -7797,7 +7909,9 @@ function liveNeedSymbolsFix(ed){
       for (let i = 0; i < raw.length; i++){
         const ch = raw[i];
         if (ch === "\u200B"){ out += ch; continue; }
-        const nw = needFwInsertText(ch, prefix);
+        // 逐字輸入 52. 時下一碼還沒出現，先保留半形；下一碼或離欄後再判定一般標點。
+        const numberPunct = (ch === "." || ch === ",") && /\d$/.test(prefix) && (!raw[i+1] || /\d/.test(raw[i+1]));
+        const nw = numberPunct ? ch : needFwInsertText(ch, prefix);
         if (nw !== ch){
           changed = true;
           if (cNode === n && i < cOff) cOff += (nw.length - ch.length);
@@ -7840,7 +7954,7 @@ function toggleLineHeading(ed){
   const line = needCurLine(ed); if (!line) return;
   line.classList.toggle("nh");
   ed.focus();
-  const w = ed.closest(".needexp"); if (w) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
+  if (ed.closest(".needexp")) commitTableNeedEditor(ed);
 }
 
 
@@ -7974,12 +8088,10 @@ function fragToNeedText(box){
     if (n.nodeType !== 1) return;
     if (n.classList && n.classList.contains("need-link-chip")){ append(n.getAttribute("data-url") || ""); return; }
     if (n.classList && n.classList.contains("need-link")){ append(n.getAttribute("data-url") || n.getAttribute("href") || ""); return; }
-    if (isStrikeEl(n)){ append(wrapNeedMark(needNodeText(n), "~~", "~~")); return; }
     if (n.tagName === "BR"){ flush(); return; }
     const isLine = (n.tagName === "DIV" || n.tagName === "P");
-    if (isLine){ if (cur.trim()) flush(); else cur = ""; }
+    if (isLine && cur) flush();
     const emittedBefore = lines.length;
-    if (isLine && n.classList && n.classList.contains("nh")) cur += "# ";
     n.childNodes.forEach(walk);
     // BR 或內層區塊已結束該行時，外層 DIV 不再多補一次換行。
     // 真正的空 DIV 仍須保留一行；多個 BR 每個都各自計數。
@@ -8017,8 +8129,7 @@ function needClipboardHandler(e, isCut){
     // 不在交易後重建 innerHTML，否則瀏覽器無法復原原本的標籤。
     try { document.execCommand("delete", false); } catch(_){}
     if (ed.classList.contains("needexp-ed")){
-      const w = ed.closest(".needexp");
-      if (w) commitNeedSeg(w.dataset.for, +ed.dataset.seg, editToNeed(ed));
+      commitTableNeedEditor(ed);
     }
   }
 }
@@ -8071,14 +8182,41 @@ function pasteNeedInline(ed, tx){
 // 表格及卡片使用相同插入方式，不重繪整欄，也不把游標移到欄位尾端。
 function pasteNeedField(ed, tx){
   if (!ed || !tx) return false;
-  tx = normalizeNeedSymbols(String(tx).replace(/\r\n?/g, "\n"));
-  if (!tx) return false;
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount || !ed.contains(sel.anchorNode) || !ed.contains(sel.focusNode)) return false;
+  tx = String(tx).replace(/\r\n?/g, "\n");
+  // 若只貼小數點、逗號，左右的數字可能在貼上範圍之外，或位於另一個標題／刪線節點內。
+  let left = "", right = "";
+  if (/^[.,]|[.,]$/.test(tx)){
+    const range = sel.getRangeAt(0), map = needSelectionMap(ed);
+    const begin = needSelectionOffset(map, range.startContainer, range.startOffset);
+    const end = needSelectionOffset(map, range.endContainer, range.endOffset);
+    if (begin && /\d/.test(map.atoms[begin-1].ch)) left = map.atoms[begin-1].ch;
+    if (end < map.atoms.length && /\d/.test(map.atoms[end].ch)) right = map.atoms[end].ch;
+  }
+  tx = normalizeNeedSymbols(left + tx + right).slice(left.length, right ? -1 : undefined);
   if (sel.isCollapsed && caretAfterChip(ed)) tx = " " + tx;
   if (!tx.includes("\n")) return pasteNeedInline(ed, tx);
-  const htmlFn = ed.classList.contains("fneed-ed") ? needToFormHTML : needToEditHTML;
-  try { return document.execCommand("insertHTML", false, htmlFn(tx)); } catch(_){ return false; }
+  // 每個換行只插入一個 BR。外層空 DIV 會和既有前後文各產生額外段落，
+  // Chromium 也可能在合併末行時丟掉單獨位於該行的不可編輯網址標籤。
+  const form = ed.classList.contains("fneed-ed");
+  let previousHeading = false;
+  const html = needDisplayText(tx).split("\n").map((line, index) => {
+    const heading = !form && /^#\s+([\s\S]*)$/.exec(line);
+    const separator = index > 0 && !previousHeading ? "<br>" : "";
+    previousHeading = !!heading;
+    return separator + (heading ? '<div class="nh">' + (editLineInner(heading[1]) || "<br>") + "</div>" : editLineInner(line));
+  }).join("");
+  let insertion = html;
+  if (tx.endsWith("\n")){
+    const tail = sel.getRangeAt(0).cloneRange();
+    tail.collapse(false); tail.setEnd(ed, ed.childNodes.length);
+    if (!tail.toString().replace(/\u200B/g, "")){
+      // 欄尾的 BR 會被當成游標佔位；提供可接著輸入的末行，避免少掉最後一次換行。
+      insertion += "<div><br></div>";
+    }
+  }
+  try { return document.execCommand("insertHTML", false, insertion); } catch(_){ return false; }
 }
 // 越過網址的零寬游標錨點，但不越過一般空白、換行或其他文字。
 function deleteNeedAdjacentChip(ed, e){
