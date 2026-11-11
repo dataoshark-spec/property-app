@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261110G">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261110G">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261111B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261111B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261110G"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261110G"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261111B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261111B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1208,7 +1208,12 @@
   .need-link:empty,.need-link-chip:empty{display:none;}   /* 刪線分割時偶發空標籤殼 → 不顯示幽靈泡沫 */
   .need-del{text-decoration:line-through;text-decoration-thickness:1px;}   /* 細刪除線,劃在字的垂直中間 */
   .needexp-ed s,.needexp-ed strike{text-decoration-thickness:1px;}         /* execCommand 剛套上、尚未正規化前也維持細線 */
-  .need-h{font-weight:800;font-size:1.06em;color:var(--accent-deep);}   /* inline 標題:選取範圍包成 span.need-h,序列化為 §..§(與客戶總覽同套) */
+  /* 備註標題優先用本機繁中粗體，避免網路字型只載入部分文字時混用字重。 */
+  .need-h,.needexp-ed .nh,#needHover .nh-bd .nh{
+    font-family:"PingFang TC","Microsoft JhengHei","Noto Sans CJK TC",sans-serif;
+    font-weight:700;font-size:1.06em;color:var(--accent-deep);
+  }
+  .nh .need-h,.need-h .need-h{font-size:inherit;}
   .nseg-btns{display:inline-flex;align-items:center;gap:6px;flex:none;}    /* 刪線+標題群組:.nseg-head 是 space-between,不包起來兩顆會被撐開 */
   .needexp-view{user-select:text;-webkit-user-select:text;cursor:text;}
   /* ===== 物件明細頁(點卡片開啟的唯讀詳情) ===== */
@@ -1273,7 +1278,6 @@
   .needexp-ed{width:100%;box-sizing:border-box;font-family:inherit;font-size:calc(.92rem * var(--need-font-scale,1));line-height:1.7;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px 14px;outline:none;min-height:104px;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;}
   .needexp-ed:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(43,92,168,.12);}
   .needexp-ed div{min-height:1.25em;}
-  .needexp-ed .nh{font-weight:800;font-size:1.06em;color:var(--accent-deep);}
   /* 原生貼上可能產生固定字級 span；一般文字仍跟隨每欄字級，保留標題比例與原生復原。 */
   .needexp-ed span[style]:not(.need-h),.fneed-ed span[style]:not(.need-h){font-size:inherit!important;}
   /* ===== 編輯表單:備註三段(富文本,與展開列同套但表單版) ===== */
@@ -1295,7 +1299,6 @@
   #needHover .nh-tt{font-size:.8rem;font-weight:700;color:var(--accent-deep);margin-bottom:8px;padding:2px 0;}
   #needHover .nh-bd{flex:1;font-size:calc(.92rem * var(--need-font-scale,1));line-height:1.7;color:var(--ink);white-space:pre-wrap;word-break:break-word;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px 14px;min-height:96px;max-height:60vh;overflow:hidden;}
   #needHover .nh-bd div{min-height:1.4em;}
-  #needHover .nh-bd .nh{font-weight:800;font-size:1.05em;color:var(--accent-deep);}
   #needHover .nh-empty{color:var(--text-faint);}
   /* 與展開 .nseg-grid 同一斷點:窄螢幕改上中下,寬螢幕維持左中右(.stacked 由 JS 依視窗／表格寬度同步) */
   #needHover.show.stacked{flex-direction:column;align-items:stretch;gap:10px;}
@@ -2559,7 +2562,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.10G";
+const APP_VERSION = "2026.11.11B";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -6779,31 +6782,26 @@ function reselectAfterNeedOp(ed, bookmark, pick){
   if (restoreNeedBookmark(ed, bookmark)) return true;
   return reselectNeedPick(pick, null);
 }
-function unwrapStrikesInRange(ed, rg, reselect){
-  const strikeSel = "s,strike,.need-del";
-  let hit = false, first = null, last = null;
-  const marks = [...ed.querySelectorAll(strikeSel + ",span[style*='line-through']")].filter(el => isStrikeEl(el) && el.isConnected);
+// 分割既有格式會換掉選取端點。每一段都依同一份文字位置重新定位，保留選取外的格式。
+function unwrapNeedMarksInRange(ed, bookmark, selector, isMark){
+  const selected = window.getSelection().getRangeAt(0);
+  const marks = [...ed.querySelectorAll(selector)].filter(mk => isMark(mk) && selected.intersectsNode(mk));
   const mkR = document.createRange();
-  marks.reverse().forEach(mk => {
-    let inter = false; try { inter = rg.intersectsNode(mk); } catch(_){}
-    if (!inter) return;
-    hit = true;
+  const covered = new Set(marks.filter(mk => {
     mkR.selectNodeContents(mk);
-    let startCmp = 0, endCmp = 0;
-    try { startCmp = rg.compareBoundaryPoints(Range.START_TO_START, mkR); endCmp = rg.compareBoundaryPoints(Range.END_TO_END, mkR); } catch(_){}
-    if (startCmp <= 0 && endCmp >= 0){
-      while (mk.firstChild){ const c = mk.firstChild; mk.parentNode.insertBefore(c, mk); if (!first) first = c; last = c; }
-      mk.remove();
+    return selected.compareBoundaryPoints(Range.START_TO_START, mkR) <= 0 &&
+           selected.compareBoundaryPoints(Range.END_TO_END, mkR) >= 0;
+  }));
+  for (const mk of marks.reverse()){
+    if (!mk.isConnected) continue;
+    if (covered.has(mk)){
+      mk.replaceWith(...mk.childNodes);
     } else {
-      const sn = splitMarkAtRange(mk, rg, strikeSel);
-      if (sn && sn.midStart){ if (!first) first = sn.midStart; last = sn.midEnd || sn.midStart; }
+      if (!restoreNeedBookmark(ed, bookmark)) return false;
+      splitMarkAtRange(mk, window.getSelection().getRangeAt(0), selector);
     }
-  });
-  if (reselect !== false && hit && first && last){   // 重建選取:框住剛解除的內容,可立刻再按一次重新加上
-    try { const sel = window.getSelection(); sel.removeAllRanges();
-      const nr = document.createRange(); nr.setStartBefore(first); nr.setEndAfter(last); sel.addRange(nr); } catch(_){}
   }
-  return hit;
+  return restoreNeedBookmark(ed, bookmark);
 }
 // 片段是否「有實質內容」:忽略零寬錨點/空白;連結標籤須有網址(空殼不算,避免刪線分割產生幽靈泡沫)
 function needFragHasStuff(root){
@@ -7014,6 +7012,13 @@ function splitMarkAtRange(mk, rg, sel){
   const preR = document.createRange(); preR.selectNodeContents(mk); preR.setEnd(splitR.startContainer, splitR.startOffset);
   const postR = document.createRange(); postR.selectNodeContents(mk); postR.setStart(splitR.endContainer, splitR.endOffset);
   const preFrag = preR.cloneContents(), midFrag = splitR.cloneContents(), postFrag = postR.cloneContents();
+  // cloneContents() 不含共同祖先本身。局部取消刪線或標題時，保留內層另一種格式。
+  for (let node = splitR.commonAncestorContainer; node !== mk; node = node.parentNode){
+    if (node.nodeType !== 1) continue;
+    const shell = node.cloneNode(false);
+    shell.appendChild(midFrag);
+    midFrag.appendChild(shell);
+  }
   const frag = document.createDocumentFragment();
   if (needFragHasStuff(preFrag)){ const e = mk.cloneNode(false); e.appendChild(preFrag); frag.appendChild(e); }
   else frag.appendChild(preFrag); // 空白也屬於使用者內容，只移除空格式，不刪文字。
@@ -7133,9 +7138,7 @@ function toggleNeedStrike(exp){
   if (rangeFullyMarked(rg, "s,strike,.need-del")){
     pick = unmarkRange(ed, rg, "s,strike,.need-del");   // 整段都是刪線 → 只取消選取範圍(部分選取時分割,不整段解除)
   } else {
-    // 先清範圍內既有刪線再整段重包;操作前存選取、unwrap 不縮選取、包完還原,避免全選變成只框一部分
-    unwrapStrikesInRange(ed, rg, false);
-    restoreNeedRange(saved);
+    if (!unwrapNeedMarksInRange(ed, bookmark, "s,strike,.need-del,span[style*='line-through']", isStrikeEl)) return;
     const sel2 = window.getSelection();
     if (sel2 && sel2.rangeCount) wrapRangeByLine(ed, sel2.getRangeAt(0), wrapStrikeRange, saved);
   }
@@ -7149,29 +7152,6 @@ function toggleNeedStrike(exp){
 }
 // —— inline 標題:與刪線同一套「選取範圍」邏輯,把選取的文字包成 <span class="need-h">(序列化為 §..§)。
 //    標題與刪線各自獨立、可並存(巢狀);沒選取則提示先選。跟 toggleNeedStrike 對稱。
-function unwrapHeadingsInRange(ed, rg, reselect){
-  const bookmark = saveNeedBookmark(ed, rg);
-  if (!bookmark) return false;
-  let hit = false;
-  const marks = [...ed.querySelectorAll("span.need-h")].filter(el => isHeadingEl(el) && el.isConnected);
-  const mkR = document.createRange();
-  marks.reverse().forEach(mk => {
-    // 分割會換掉端點節點；每次以可見文字位置還原，保留選取外的標題。
-    if (!mk.isConnected || !restoreNeedBookmark(ed, bookmark)) return;
-    const live = window.getSelection().getRangeAt(0);
-    let inter = false; try { inter = live.intersectsNode(mk); } catch(_){}
-    if (!inter) return;
-    mkR.selectNodeContents(mk);
-    let startCmp = 0, endCmp = 0;
-    try { startCmp = live.compareBoundaryPoints(Range.START_TO_START, mkR); endCmp = live.compareBoundaryPoints(Range.END_TO_END, mkR); } catch(_){}
-    if (startCmp <= 0 && endCmp >= 0){
-      while (mk.firstChild) mk.parentNode.insertBefore(mk.firstChild, mk);
-      mk.remove(); hit = true;
-    } else if (splitMarkAtRange(mk, live, "span.need-h")) hit = true;
-  });
-  restoreNeedBookmark(ed, bookmark);
-  return hit;
-}
 function wrapHeadingRange(rg){
   const probe = document.createElement("div"); probe.appendChild(rg.cloneContents());
   if (!needFragHasStuff(probe)) return null;
@@ -7180,6 +7160,25 @@ function wrapHeadingRange(rg){
   hEl.appendChild(frag); rg.insertNode(hEl);
   if (hEl.querySelector && hEl.querySelector("br")) splitNeedMarkAtBr(hEl);
   return hEl.isConnected ? hEl : null;
+}
+// 明確操作標題時，僅將選到的舊式「# 整行標題」換成同等的行內標題，讓局部取消有效。
+function prepareLegacyHeadingSelection(ed, bookmark){
+  if (!ed.querySelector(":scope > .nh")) return;
+  const lines = new Set();
+  for (const atom of needSelectionMap(ed).atoms.slice(bookmark.so, bookmark.eo)){
+    if (!atom.ch.trim()) continue;
+    const node = atom.before.node;
+    const line = (node.nodeType === 1 ? node : node.parentElement).closest(".nh");
+    if (line && line.parentElement === ed) lines.add(line);
+  }
+  for (const line of lines){
+    for (const mark of line.querySelectorAll("span.need-h")) mark.replaceWith(...mark.childNodes);
+    const heading = document.createElement("span");
+    heading.className = "need-h";
+    while (line.firstChild) heading.appendChild(line.firstChild);
+    line.classList.remove("nh");
+    line.appendChild(heading);
+  }
 }
 function toggleNeedHeading(exp){
   const sel = window.getSelection();
@@ -7190,16 +7189,16 @@ function toggleNeedHeading(exp){
   const bookmark = saveNeedBookmark(ed, rg);
   if (!bookmark) return;
   normalizeNeedInlineRoot(ed);
+  const before = editToNeed(ed);
+  prepareLegacyHeadingSelection(ed, bookmark);
   if (!restoreNeedBookmark(ed, bookmark)) return;
   rg = sel.getRangeAt(0);
-  const before = editToNeed(ed);
   const saved = saveNeedRange(rg);
   let pick = null;
   if (rangeFullyMarked(rg, "span.need-h")){
     pick = unmarkRange(ed, rg, "span.need-h");   // 整段都是標題 → 只取消選取範圍(部分選取時分割,不整段解除)
   } else {
-    unwrapHeadingsInRange(ed, rg, false);
-    if (!restoreNeedBookmark(ed, bookmark)) return;
+    if (!unwrapNeedMarksInRange(ed, bookmark, "span.need-h", isHeadingEl)) return;
     const sel2 = window.getSelection();
     if (sel2 && sel2.rangeCount) wrapRangeByLine(ed, sel2.getRangeAt(0), wrapHeadingRange, saved);
   }
