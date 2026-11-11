@@ -410,10 +410,30 @@
     transition:background .15s ease;flex:none;
   }
   .back:hover{background:var(--surface-2);}
-  .topbar .ttl{font-family:"Noto Serif TC",serif;font-weight:700;font-size:1.18rem;}
-  .topbar .ct{margin-left:auto;font-size:.8rem;color:var(--ink-soft);
-    background:var(--card);border:1px solid var(--line);padding:5px 11px;border-radius:999px;
-    font-variant-numeric:tabular-nums;}
+  /* list-header-count:start */
+  .topbar .ttl{font-family:"Noto Serif TC",serif;font-weight:700;font-size:1.18rem;flex:0 1 auto;min-width:36px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .header-count{margin-left:auto;display:flex;align-items:stretch;flex:0 0 auto;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:999px;overflow:hidden;font-variant-numeric:tabular-nums;touch-action:pan-y;}
+  .topbar .ct{appearance:none;display:flex;align-items:center;min-width:0;flex:1 1 auto;border:0;background:none;border-radius:0;padding:5px 10px;font:inherit;font-size:.8rem;line-height:1.5;color:var(--ink-soft);white-space:nowrap;cursor:pointer;}
+  .list-count-values{display:flex;align-items:center;gap:10px;min-width:0;}
+  .count-item{display:flex;align-items:center;gap:5px;min-width:0;}
+  .count-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .count-amount{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;flex:none;}
+  .count-amount b{font-weight:700;color:#0B7D65;}
+  [data-theme="dark"] .count-amount b{color:#72D1AF;}
+  .header-count:not(.is-all) .count-item:not([data-active="true"]){display:none;}
+  .header-count.is-all .count-item+.count-item,.list-count-probe .count-item+.count-item{border-left:1px solid var(--line);padding-left:10px;}
+  .header-count .ct:focus-visible,.header-count .count-next:focus-visible{box-shadow:var(--focus-ring-inset);}
+  .topbar .ct:disabled{cursor:default;}
+  .count-next{appearance:none;display:grid;place-items:center;flex:none;width:28px;min-height:32px;padding:0;border:0;border-left:1px solid var(--line);background:none;color:var(--ink-soft);cursor:pointer;}
+  .count-next[hidden]{display:none;}
+  .count-next svg{width:14px;height:14px;}
+  .count-next:hover,.topbar .ct:not(:disabled):hover{background:var(--surface-2);}
+  .list-count-probe{position:absolute!important;left:auto;right:100%;top:0;visibility:hidden;pointer-events:none;width:max-content!important;max-width:none!important;flex:none!important;}
+  .list-gear{appearance:none;display:grid;place-items:center;flex:none;width:34px;height:34px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--card);color:var(--ink-soft);cursor:pointer;}
+  .list-gear svg{width:19px;height:19px;}
+  .list-gear:hover{background:var(--surface-2);border-color:var(--border-2);color:var(--ink);}
+  @media(max-width:480px){.topbar{gap:7px;padding-left:12px;padding-right:12px;}.topbar .ct{padding-left:8px;padding-right:8px;}}
+  /* list-header-count:end */
 
   .search{display:flex;align-items:center;gap:10px;padding:12px 18px 0;}
   .search input{
@@ -1573,7 +1593,8 @@
       <header class="topbar">
         <button class="back" id="backBtn" aria-label="返回">←</button>
         <span class="ttl" id="listTitle">全部需求</span>
-        <span class="ct" id="listCount"></span>
+        <div class="header-count" id="listCountWrap"><button class="ct" id="listCount" type="button" aria-label="顯示類型筆數" aria-pressed="false"><span class="list-count-values" id="listCountValues"></span></button><button class="count-next" id="listCountNext" type="button" aria-label="下一個客戶類型" title="下一個類型・可左右滑動" hidden><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button></div>
+        <button class="list-gear" id="listGear" type="button" aria-label="設定" title="設定"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/></svg></button>
         <button class="sync-led" id="listLed" type="button" aria-label="同步" title="點一下立即同步・長按進入設定"><span class="led"></span></button>
       </header>
       <div class="tabs-row">
@@ -2254,7 +2275,7 @@ return {create};
 
 </script>
 <script>
-const APP_VERSION = "2026.11.11A";
+const APP_VERSION = "2026.11.11B";
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
   {"date": "1150713", "area": "北屯區", "cat": "大樓", "budget": "2000-2500萬", "bMin": 2000, "bMax": 2500, "rooms": "3房", "parking": "平面車位", "pType": "平面車位", "pNum": 1, "cust": "王先生", "tel": "0912345678", "line": "wang168", "ask": "麗晨卓爾", "need": "# 主要條件\n近捷運、屋齡新、雙衛浴", "need2": "麗晨卓爾／坤峰硯", "t2": "想看", "need3": "6/28 坤峰硯→嫌車位小", "t3": "看過"},
@@ -2624,6 +2645,99 @@ const tableWrap = document.getElementById("tableWrap");
 const countEl  = document.getElementById("listCount");
 const titleEl  = document.getElementById("listTitle");
 const searchEl = document.getElementById("search");
+
+/* list-header-count:start */
+// Only the display mode is local; counts use the exact list already filtered by applyFilter.
+const HEADER_COUNT_KEY="customer_app_header_count_v1";
+let headerCountMode=(()=>{try{return storageOK&&localStorage.getItem(HEADER_COUNT_KEY)==="types"?"types":"total";}catch(_){return "total";}})();
+let headerCountIndex=0,headerCountRows=[],headerCountEntries=[],headerCountMarkup="",headerCountFrame=0;
+const headerCountWrap=document.getElementById("listCountWrap"),headerCountValues=document.getElementById("listCountValues"),headerCountNext=document.getElementById("listCountNext");
+const headerCountProbe=document.createElement("span");headerCountProbe.className="ct list-count-probe";headerCountProbe.setAttribute("aria-hidden","true");headerCountProbe.inert=true;
+countEl.closest(".topbar").appendChild(headerCountProbe);
+function scheduleHeaderCountLayout(){
+  if(headerCountFrame)return;
+  headerCountFrame=requestAnimationFrame(()=>{headerCountFrame=0;layoutHeaderCounts();});
+}
+function layoutHeaderCounts(){
+  const bar=countEl.closest(".topbar");
+  if(!bar||!bar.getClientRects().length)return;
+  const style=getComputedStyle(bar),gap=parseFloat(style.columnGap)||0;
+  const width=bar.clientWidth-(parseFloat(style.paddingLeft)||0)-(parseFloat(style.paddingRight)||0);
+  const peers=[document.getElementById("backBtn"),document.getElementById("listGear"),document.getElementById("listLed")];
+  const fixed=peers.reduce((sum,el)=>sum+(el?el.getBoundingClientRect().width:0),0)+gap*4;
+  const preferredTitle=Math.min(200,Math.max(36,titleEl.scrollWidth));
+  const detail=headerCountMode==="types"&&headerCountEntries.length>0;
+  const fullWidth=headerCountProbe.getBoundingClientRect().width+2;
+  const all=detail&&Math.ceil(fullWidth)<=Math.max(0,Math.floor(width-fixed-preferredTitle));
+  headerCountWrap.classList.toggle("is-all",all);
+  headerCountNext.hidden=!detail||all||headerCountEntries.length<2;
+  const items=headerCountValues.querySelectorAll(".count-item");
+  items.forEach((el,i)=>{const active=all||i===headerCountIndex;if(el.dataset.active!==String(active))el.dataset.active=String(active);});
+  const maxWidth=Math.max(0,Math.floor(width-fixed-36));
+  let desired=fullWidth;
+  if(detail&&!all&&items[headerCountIndex]){
+    const item=items[headerCountIndex],padding=getComputedStyle(countEl);
+    const name=Math.min(160,item.querySelector(".count-name").scrollWidth);
+    const amount=item.querySelector(".count-amount").getBoundingClientRect().width;
+    desired=name+amount+5+(parseFloat(padding.paddingLeft)||0)+(parseFloat(padding.paddingRight)||0)+(headerCountNext.hidden?0:28)+2;
+  }
+  const targetWidth=Math.min(maxWidth,Math.ceil(desired))+"px";
+  if(headerCountWrap.style.width!==targetWidth)headerCountWrap.style.width=targetWidth;
+  if(headerCountWrap.style.maxWidth!==maxWidth+"px")headerCountWrap.style.maxWidth=maxWidth+"px";
+  titleEl.title=titleEl.textContent;
+}
+function updateListCounts(list){
+  if(Array.isArray(list))headerCountRows=list;
+  const counts=new Map(cats.map(c=>[c.key,0]));
+  for(const item of headerCountRows)for(const key of fieldVals(item,"cat"))if(counts.has(key))counts.set(key,counts.get(key)+1);
+  headerCountEntries=cats.map(c=>({key:c.key,count:counts.get(c.key)||0}));
+  headerCountIndex=headerCountEntries.length?Math.min(headerCountIndex,headerCountEntries.length-1):0;
+  const detail=headerCountMode==="types"&&headerCountEntries.length>0;
+  const itemHTML=entry=>'<span class="count-item"><span class="count-name">'+esc(entry.key)+'</span><span class="count-amount"><b>'+entry.count+'</b>筆</span></span>';
+  const html=detail?headerCountEntries.map(itemHTML).join(""):'<span class="count-amount"><b>'+headerCountRows.length+'</b>筆</span>';
+  if(html!==headerCountMarkup){
+    headerCountMarkup=html;headerCountValues.innerHTML=html;
+    headerCountProbe.innerHTML='<span class="list-count-values">'+html+'</span>';
+  }
+  countEl.disabled=!headerCountEntries.length;
+  countEl.setAttribute("aria-pressed",String(detail));
+  const description=detail?headerCountEntries.map(c=>c.key+" "+c.count+" 筆").join("；"):headerCountRows.length+" 筆";
+  countEl.title=description+(detail?"・點一下顯示總筆數":"・點一下顯示類型筆數");
+  countEl.setAttribute("aria-label",countEl.title);
+  layoutHeaderCounts();scheduleHeaderCountLayout();
+}
+function advanceHeaderCount(direction){
+  if(headerCountMode!=="types"||headerCountEntries.length<2)return;
+  headerCountIndex=(headerCountIndex+direction+headerCountEntries.length)%headerCountEntries.length;
+  layoutHeaderCounts();
+}
+countEl.addEventListener("click",()=>{
+  headerCountMode=headerCountMode==="types"?"total":"types";headerCountIndex=0;
+  try{if(storageOK)localStorage.setItem(HEADER_COUNT_KEY,headerCountMode);}catch(_){}
+  updateListCounts();
+});
+headerCountNext.addEventListener("click",()=>advanceHeaderCount(1));
+headerCountWrap.addEventListener("keydown",e=>{
+  if(headerCountMode!=="types"||!['ArrowLeft','ArrowRight'].includes(e.key))return;
+  e.preventDefault();e.stopPropagation();advanceHeaderCount(e.key==='ArrowLeft'?-1:1);
+});
+let headerCountTouch=null;
+headerCountWrap.addEventListener("touchstart",e=>{if(e.touches.length===1)headerCountTouch={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
+headerCountWrap.addEventListener("touchend",e=>{
+  if(!headerCountTouch)return;
+  const start=headerCountTouch;headerCountTouch=null;
+  const touch=e.changedTouches[0];if(!touch)return;
+  const dx=touch.clientX-start.x,dy=touch.clientY-start.y;
+  if(headerCountMode==="types"&&!headerCountNext.hidden&&Math.abs(dx)>25&&Math.abs(dx)>Math.abs(dy)){
+    e.preventDefault();advanceHeaderCount(dx<0?1:-1);
+  }
+},{passive:false});
+headerCountWrap.addEventListener("touchcancel",()=>{headerCountTouch=null;},{passive:true});
+if(window.ResizeObserver)new ResizeObserver(scheduleHeaderCountLayout).observe(countEl.closest(".topbar"));
+else window.addEventListener("resize",scheduleHeaderCountLayout);
+if(document.fonts){document.fonts.ready.then(scheduleHeaderCountLayout);document.fonts.addEventListener("loadingdone",scheduleHeaderCountLayout);}
+/* list-header-count:end */
+
 // ---- 記住上次畫面(封面或列表+分類) ----
 // PWA 切到背景太久、或切去 Chrome 開連結時,系統可能把 App 回收;回來時整頁重新載入,預設會落在封面。
 // 這裡記住「上次在哪」,重載後自動回去,體感上就像沒被中斷。
@@ -5514,6 +5628,7 @@ function applyCatChoice(key, opts){
       it.cat = next; it.updatedAt = Date.now(); saveItems(); onLocalChange("data");
     }
     paintCatTrigger(catTrigger, it);
+    updateListCounts();
     renderCatMenu();
     return;
   }
@@ -6408,8 +6523,9 @@ function applyFilter(){
   if (terms.length) list = list.filter(d => { const hay = searchHay(d); return terms.every(t => hay.includes(t) || lineSearchMatches(d.line, t)); });
   list = applyColFilters(list);
   list = sortList(list);
-  countEl.textContent = `${list.length} 筆`;
+  updateListCounts(list);
   titleEl.textContent = currentCat ? currentCat + "需求" : "全部需求";
+  scheduleHeaderCountLayout();
   document.querySelectorAll(".tab").forEach(t =>
     t.classList.toggle("active", t.dataset.cat === currentCat));
   if (viewMode === "table"){
@@ -8298,10 +8414,44 @@ document.getElementById("resetBtn").addEventListener("click",()=>confirmApplyBac
 
 const settingsView = document.getElementById("settings");
 
+// The settings page returns to its caller without re-entering openList,
+// which intentionally clears search/edit state on a fresh list navigation.
+let settingsReturnView = null, settingsReturnFrame = null, settingsReturnRevision = 0;
+function cancelSettingsReturnFrame(){
+  settingsReturnRevision++;
+  if (settingsReturnFrame !== null){ cancelAnimationFrame(settingsReturnFrame); settingsReturnFrame = null; }
+}
+function captureSettingsReturnView(){
+  const body = tableWrap.querySelector(".tbody-wrap"), head = tableWrap.querySelector(".thead-wrap"), tabs = document.getElementById("tabs");
+  return {
+    screen: listView.classList.contains("active") ? "list" : "cover",
+    windowX: window.scrollX, windowY: window.scrollY,
+    bodyX: body ? body.scrollLeft : 0, bodyY: body ? body.scrollTop : 0,
+    headX: head ? head.scrollLeft : 0, tabsX: tabs ? tabs.scrollLeft : 0
+  };
+}
+function restoreSettingsReturnScroll(saved){
+  const tabs = document.getElementById("tabs");
+  if (tabs) tabs.scrollLeft = saved.tabsX;
+  if (viewMode === "table"){
+    // Settings changes or incoming data may have replaced the table nodes.
+    const body = tableWrap.querySelector(".tbody-wrap"), head = tableWrap.querySelector(".thead-wrap");
+    if (body){ body.scrollTop = saved.bodyY; body.scrollLeft = saved.bodyX; }
+    if (head) head.scrollLeft = body ? body.scrollLeft : saved.headX;
+  }
+  window.scrollTo(saved.windowX, saved.windowY);
+}
 function openSettings(){
+  if (settingsView.classList.contains("active")) return;
+  cancelSettingsReturnFrame();
+  settingsReturnView = captureSettingsReturnView();
   exitSelectMode();
-  if (typeof closeColFlt === "function") closeColFlt();
-  if (typeof closeNeedExp === "function") closeNeedExp();
+  if (typeof closeOtherOverlays === "function") closeOtherOverlays("");
+  else {
+    if (typeof closeColFlt === "function") closeColFlt();
+    if (typeof closeNeedExp === "function") closeNeedExp();
+  }
+  if (typeof closeSortSel === "function") closeSortSel();
   if (typeof flushEditing === "function") flushEditing();
   document.getElementById("app").classList.remove("table-mode");
   settingsView.classList.add("active");
@@ -8311,13 +8461,48 @@ function openSettings(){
   window.scrollTo(0,0);
 }
 function closeSettings(){
-  saveNav("cover");
+  if (!settingsView.classList.contains("active")) return;
+  cancelSettingsReturnFrame();
+  const saved = settingsReturnView;
+  settingsReturnView = null;
+  if (typeof cpick !== "undefined" && cpick.classList.contains("show") && typeof cpClose === "function") cpClose(true);
   settingsView.classList.remove("active");
-  cover.style.display = "flex";
-  renderCover();
-  window.scrollTo(0,0);
+  if (saved && saved.screen === "list"){
+    cover.style.display = "none";
+    listView.classList.add("active");
+    syncTableMode();
+    updateLH();
+    if (typeof sizeNeedExp === "function") sizeNeedExp();
+    saveNav("list", currentCat);
+    restoreSettingsReturnScroll(saved);
+    const revision = settingsReturnRevision;
+    const returnedMode = viewMode, returnedCategory = currentCat;
+    const rendered = viewMode === "table" ? tableWrap.querySelector(".tbody-wrap") : cardsEl.firstElementChild;
+    const returnedScroll = captureSettingsReturnView();
+    settingsReturnFrame = requestAnimationFrame(() => {
+      settingsReturnFrame = null;
+      if (revision !== settingsReturnRevision || settingsView.classList.contains("active") || !listView.classList.contains("active")) return;
+      const currentRendered = viewMode === "table" ? tableWrap.querySelector(".tbody-wrap") : cardsEl.firstElementChild;
+      if (viewMode !== returnedMode || currentCat !== returnedCategory || currentRendered !== rendered) return;
+      const currentScroll = captureSettingsReturnView();
+      if (["windowX", "windowY", "bodyX", "bodyY", "headX", "tabsX"].some(key => Math.abs(currentScroll[key] - returnedScroll[key]) >= 1)) return;
+      updateLH();
+      if (typeof syncTableChrome === "function") syncTableChrome();
+      restoreSettingsReturnScroll(saved);
+    });
+  } else {
+    saveNav("cover");
+    listView.classList.remove("active");
+    syncTableMode();
+    cover.style.display = "flex";
+    renderCover();
+    window.scrollTo(0,0);
+  }
 }
-document.getElementById("coverGear").addEventListener("click", e => { e.stopPropagation(); openSettings(); });
+["coverGear", "listGear"].forEach(id => {
+  const gear = document.getElementById(id);
+  if (gear) gear.addEventListener("click", e => { e.stopPropagation(); openSettings(); });
+});
 document.getElementById("setBack").addEventListener("click", closeSettings);
 (function(){ const v = document.getElementById("verLine"); if (v) v.textContent = "客戶總覽 · 更新日 " + APP_VERSION; })();
 
@@ -8681,7 +8866,7 @@ document.addEventListener("pointercancel", endCatDrag);
     detailWasOpen = detailBg.classList.contains("open");
     const el = e.target;
     // 起點若在橫向捲動列 / 輸入框 / 下拉選單 / 表格 / 連結視窗上，則不攔截(讓它們正常運作)
-    skip = !!(el.closest && el.closest("#tabs, input, textarea, .cselect, .table-wrap, #linkpop, #catmenu, select"));
+    skip = !!(el.closest && el.closest("#tabs, #listCountWrap, input, textarea, .cselect, .table-wrap, #linkpop, #catmenu, select"));
     if (modalBg.classList.contains("open")) skip = false;  // 編輯表單開啟時,允許滑動關閉
     if (detailWasOpen) skip = false;  // 詳情頁開啟時,允許滑動關閉(只回列表,不跳封面)
     const _cb = document.getElementById("calBg");

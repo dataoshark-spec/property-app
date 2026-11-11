@@ -1,7 +1,7 @@
 /* 客戶總覽：只維護自己作用範圍內的成功快取。 */
 const SCOPE=self.registration.scope;
 const PREFIX="customer-shell:"+SCOPE+":";
-const CACHE=PREFIX+"20261111A";
+const CACHE=PREFIX+"20261111B";
 const SHELL=["./","./index.html","./icon-192.png","./icon-180.png","./icon-512.png"];
 const ASSETS=new Set(SHELL.map(x=>new URL(x,SCOPE).href));
 self.addEventListener("install",e=>{
