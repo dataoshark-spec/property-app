@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261112A">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261112A">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261113A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261113A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261112A"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261112A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261113A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261113A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -2536,11 +2536,14 @@ api.showRecovery=e=>panel("資料需要先檢查",e.message+"。原始內容保�
 ]);
 api.showSaveError=(e,retry,exportPending)=>{
  root._saveBlocked=true;
- panel("尚未儲存成功",e.message+"。目前輸入仍保留，請重試或先匯出。",[
+ const box=panel("尚未儲存成功",e.message+"。目前輸入仍保留，請重試或先匯出。",[
   ["重試儲存",async()=>{if(await retry()){root._saveBlocked=false;api.dismissPanel();if(root.onLocalChange)root.onLocalChange("data")}}],
   ["匯出未儲存資料",exportPending],
   ["匯出本機安全副本",()=>api.download(api.local().rawBackup(),"物件總覽_本機安全副本.json")]
  ]);
+ const retryButton=box.querySelector("button");
+ retryButton.id="saveErrorRetry";
+ retryButton.focus({preventScroll:true});
 };
 api.start=function(src){
  try{
@@ -2562,7 +2565,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.12A";
+const APP_VERSION = "2026.11.13A";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -5374,12 +5377,21 @@ function tabModeToggleAllowed(){
   if (palettePop && palettePop.classList.contains("open")) return false;
   return true;
 }
+// 儲存失敗時，鍵盤先交給提示視窗，避免背景選單或模式捷徑接手。
+window.addEventListener("keydown", e => {
+  const retry = document.getElementById("saveErrorRetry");
+  if (!retry) return;
+  e.stopPropagation();
+  if (e.key === "Tab") trapFocusKey(e, retry.closest('[role="alertdialog"]'));
+  if (e.key === "Escape") e.preventDefault();
+}, true);
 document.addEventListener("keydown", e => {
   if (e.key !== "Tab") return;
   if (needOrderBusy && e.target.closest(".need-order-menu")) return;
   if (!e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && tabModeToggleAllowed()){
     e.preventDefault();
     flushEditing();                       // 正在編輯的格先落地,避免重繪時漏存
+    if (document.getElementById("saveErrorRetry")) return;
     setEditMode(!editMode);
     toast(editMode ? "編輯模式" : "正常模式");
     return;
