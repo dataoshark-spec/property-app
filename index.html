@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261113A">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261113A">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261115A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261115A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261113A"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261113A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261115A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261115A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1633,7 +1633,7 @@
         <!-- search-help:start -->
         <button type="button" class="search-help-btn" id="searchHelpBtn" aria-label="搜尋說明" aria-expanded="false" aria-controls="searchHelpPop" title="搜尋說明"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><circle cx="12" cy="7.5" r=".75" fill="currentColor" stroke="none"/></svg></button>
         <div class="search-help-pop" id="searchHelpPop" role="region" aria-label="搜尋說明" hidden>
-          <p>輸入部分文字即可搜尋；多個條件用 / 隔開，而且必須全部符合。</p>
+          <p>輸入部分文字即可搜尋；多個條件用 /（半形或全形都可） 隔開，而且必須全部符合。</p>
           <p class="search-help-fields"><strong>會搜尋：</strong><span>案名、地址、類別、格局、樓層、售價、承辦、門市、備註三欄的內容與標題。</span></p>
           <p class="search-help-fields"><strong>不搜尋：</strong><span>電話、到期日、連結欄名稱、網址。</span></p>
         </div>
@@ -2565,7 +2565,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.13A";
+const APP_VERSION = "2026.11.15A";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
