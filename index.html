@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261117B">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261117B">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261117C">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261117C">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261117B"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261117B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261117C"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261117C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -313,9 +313,8 @@
   .cover-gear:hover{background:rgba(255,255,255,.16);color:#fff;}
   .cover-gear svg{width:20px;height:20px;}
   .cover-gear:active{transform:scale(.93) rotate(30deg);}
-  #listGear{display:none;position:relative;width:36px;height:36px;padding:0;}
+  #listGear{display:inline-flex;position:relative;width:36px;height:36px;padding:0;}
   :is(#listGear,#setBack)[data-pointer-focus]:focus-visible{box-shadow:none;}
-  #app.table-mode #listGear{display:inline-flex;}
   @media(pointer:coarse){#listGear::after{content:"";position:absolute;inset:-4px;border-radius:50%;}}
   .cover-actions{display:flex;flex-direction:row-reverse;align-items:center;gap:8px;}   /* 齒輪+同步燈成一組,兩圈間距 8px */
   .cover-top .cover-led{flex:none;width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
@@ -446,13 +445,16 @@
   #listCount [hidden]{display:none!important;}
   #listCount:focus-within{border-color:var(--accent);}
   .list-count-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+  @media(max-width:819px){
+    #list .topbar .ttl{min-width:4em;}
+    .list-count-space{min-width:0;}
+  }
   @media(max-width:440px){#list .topbar{gap:7px;padding-left:12px;padding-right:12px;}}
   @media(max-width:360px){#list .topbar{gap:5px;padding-left:9px;padding-right:9px;}}
   @media(max-width:360px){
-    #app.table-mode #list .topbar{padding-inline:6px;}
-    #app.table-mode .list-count-space{min-width:min(100px,42%);}
-    #app.table-mode .list-count-part{padding-inline:2px;gap:2px;}
-    #app.table-mode .list-count-prev,#app.table-mode .list-count-next{width:20px;flex-basis:20px;}
+    #list .topbar{padding-inline:6px;}
+    .list-count-part{padding-inline:2px;gap:2px;}
+    .list-count-prev,.list-count-next{width:20px;flex-basis:20px;}
   }
   @media(prefers-reduced-motion:reduce){.list-count-track{transition:none;}}
   /* list-count:end */
@@ -2565,7 +2567,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.17B";
+const APP_VERSION = "2026.11.17C";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -3158,20 +3160,26 @@ const listCounter=(()=>{
     const edges=getComputedStyle(countEl);
     const border=parseFloat(edges.borderLeftWidth)+parseFloat(edges.borderRightWidth);
     const contentWidth=available-border,sum=widths.reduce((a,b)=>a+b,0);
-    const paged=entries.length>1&&sum>contentWidth;
+    const singleEntry=window.matchMedia("(max-width:819px)").matches;
+    const paged=entries.length>1&&(singleEntry||sum>contentWidth);
     prev.hidden=next.hidden=!paged;
     const arrows=paged?prev.getBoundingClientRect().width+next.getBoundingClientRect().width:0;
     const budget=Math.max(0,contentWidth-arrows),startIndex=pages[page]?.start||0;
     pages=[];
     let start=0,used=0;
     for(let i=0;i<widths.length;i++){
-      if(i>start&&used+widths[i]>budget){
+      if(i>start&&(singleEntry||used+widths[i]>budget)){
         pages.push({start,end:i,width:Math.min(available,Math.ceil(used+arrows+border))});
         start=i;used=0;
       }
       used+=widths[i];
     }
     pages.push({start,end:widths.length,width:Math.min(available,Math.ceil(used+arrows+border))});
+    // Keep mobile paging arrows still when platform names have different lengths.
+    if(singleEntry){
+      const pageWidth=Math.min(available,Math.ceil(Math.max(...widths)+arrows+border));
+      for(const group of pages)group.width=pageWidth;
+    }
     page=pages.findIndex(group=>group.end>startIndex);if(page<0)page=pages.length-1;
     const key=dataKey+":"+pages.map(g=>g.end).join(",");
     if(key!==renderKey){
@@ -3231,7 +3239,8 @@ const listCounter=(()=>{
     e.preventDefault();const now=Date.now();if(now-wheelAt<250)return;wheelAt=now;move(e.deltaX>0?1:-1);
   },{passive:false});
   prev.addEventListener("click",()=>move(-1));next.addEventListener("click",()=>move(1));
-  if(sizeObserver)sizeObserver.observe(space);else window.addEventListener("resize",layout);
+  if(sizeObserver)sizeObserver.observe(space);
+  window.addEventListener("resize",layout);
   if(document.fonts){
     const refreshMetrics=()=>{widths=[];layout();};
     document.fonts.ready.then(refreshMetrics);document.fonts.addEventListener("loadingdone",refreshMetrics);
@@ -8623,7 +8632,7 @@ const listGear=document.getElementById("coverGear").cloneNode(true);
 listGear.id="listGear";
 listGear.type="button";
 document.getElementById("listLed").before(listGear);
-let settingsTableReturn=null;
+let settingsListReturn=null;
 const settingsBack=document.getElementById("setBack");
 // Keep focus on the navigation control without showing a keyboard ring for a pointer round trip.
 function focusSettingsControl(control,quiet){
@@ -8638,14 +8647,14 @@ for(const control of [listGear,settingsBack]){
 
 function openSettings(trigger,fromPointer=false){
   if(settingsView.classList.contains("active"))return;
-  const fromTable=viewMode==="table"&&listView.classList.contains("active");
-  if(fromTable){
+  const fromList=listView.classList.contains("active");
+  if(fromList){
     const body=tableWrap.querySelector(".tbody-wrap");
-    settingsTableReturn={top:body?.scrollTop||0,left:body?.scrollLeft||0,tabsLeft:document.getElementById("tabs").scrollLeft,trigger,quietGearFocus:trigger===listGear&&fromPointer};
-    flushEditing();
+    settingsListReturn={top:body?.scrollTop||0,left:body?.scrollLeft||0,windowTop:window.scrollY,windowLeft:window.scrollX,tabsLeft:document.getElementById("tabs").scrollLeft,trigger,quietGearFocus:trigger===listGear&&fromPointer};
+    if(viewMode==="table")flushEditing();
     closeOtherOverlays("");
   }else{
-    settingsTableReturn=null;
+    settingsListReturn=null;
     if (typeof closeColFlt === "function") closeColFlt();
     if (typeof closeNeedExp === "function") closeNeedExp();
   }
@@ -8656,15 +8665,15 @@ function openSettings(trigger,fromPointer=false){
   syncTableMode();   // 離開表格頁就取消寬版,設定頁維持一般寬度
   saveNav("settings", currentCat);
   window.scrollTo(0,0);
-  if(fromTable)focusSettingsControl(settingsBack,settingsTableReturn.quietGearFocus);
+  if(fromList)focusSettingsControl(settingsBack,settingsListReturn.quietGearFocus);
 }
 function closeSettings(event){
   if (typeof palettePop !== "undefined" && palettePop.classList.contains("link-palette")) closePalette();
   if(linkDeleteUI.picker.hidden===false)setLinkDeleteMode(false);
   settingsView.classList.remove("active");
-  if(settingsTableReturn){
-    const position=settingsTableReturn;
-    settingsTableReturn=null;
+  if(settingsListReturn){
+    const position=settingsListReturn;
+    settingsListReturn=null;
     listView.classList.add("active");
     syncTableMode();
     updateLH();
@@ -8676,6 +8685,7 @@ function closeSettings(event){
       if(head)head.scrollLeft=body.scrollLeft;
     }
     document.getElementById("tabs").scrollLeft=position.tabsLeft;
+    window.scrollTo(position.windowLeft,position.windowTop);
     saveNav("list",currentCat);
     const trigger=position.trigger||listGear;
     if(trigger===listGear)focusSettingsControl(trigger,position.quietGearFocus||event?.detail>0);
