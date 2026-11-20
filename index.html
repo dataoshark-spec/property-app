@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261117C">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261117C">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261120A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261120A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261117C"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261117C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261120A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261120A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1102,19 +1102,23 @@
   .ptable:not(.ro) .tcell[contenteditable="true"][data-field]{cursor:text;user-select:text;-webkit-user-select:text;}
   .tcell.saved{animation:tSaved .7s ease;}
   /* 編輯模式:到期日欄「生成檔名」面板 — 滑到該格最左窄感應帶,面板從左滑入覆蓋整格,點任一處生成 */
-  td.duewrap{position:relative;}
+  td.duewrap,td.tcat{position:relative;}
   .gen-edge{position:absolute;left:0;top:0;bottom:0;width:14px;z-index:3;}   /* 最左窄感應帶,不干擾日期編輯 */
-  .gen-btn{position:absolute;left:0;top:-1px;bottom:-1px;width:calc(100% + 1px);display:inline-flex;align-items:center;justify-content:center;
+  .gen-btn,.dup-btn{position:absolute;left:0;top:0;bottom:0;width:100%;display:inline-flex;align-items:center;justify-content:center;
     border:none;border-right:1px solid var(--accent-tint-bd);background:var(--accent-tint);color:var(--accent-deep);cursor:pointer;
     opacity:0;pointer-events:none;transform:translateX(-100%);transition:transform .16s ease, background .12s;z-index:5;box-shadow:2px 0 7px rgba(0,0,0,.16);}
-  .gen-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;flex:none;}
-  .gen-label{font-size:.82rem;font-weight:700;margin-left:5px;letter-spacing:.02em;}
-  .gen-edge:hover ~ .gen-btn, .gen-btn:hover{opacity:1;pointer-events:auto;transform:translateX(0);}
-  .gen-btn:active{filter:brightness(1.05);}
+  .gen-btn,.dup-btn{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  .gen-btn svg,.dup-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;flex:none;}
+  .gen-label{font-size:.76rem;font-weight:700;margin-left:3px;letter-spacing:0;}
+  tr.row-actions-open .gen-btn,tr.row-actions-open .dup-btn,
+  tr:has(.gen-btn:focus-visible,.dup-btn:focus-visible) :is(.gen-btn,.dup-btn){opacity:1;pointer-events:auto;transform:translateX(0);}
+  tr.duplicate-new td{animation:none!important;background:var(--accent-tint)!important;}
+  tr.duplicate-new td:first-child{box-shadow:inset 3px 0 var(--accent);}
+  .gen-btn:active,.dup-btn:active{filter:brightness(1.05);}
   .gen-btn.gen-flash{animation:genFlash .5s ease;}
   @keyframes genFlash{0%{background:var(--accent-deep);}100%{background:var(--accent-tint);}}
   /* 觸控表格從到期篩選開啟各列的生成按鈕，再點表頭收起。 */
-  .gen-open .gen-btn{opacity:1;pointer-events:auto;transform:translateX(0);}
+  .gen-open .gen-btn,.gen-open .dup-btn{opacity:1;pointer-events:auto;transform:translateX(0);}
   .gen-open th[data-col="due"] .fmk{transform:rotate(180deg);}
   #fltGen{align-self:flex-start;margin-top:10px;}
   @keyframes tSaved{0%{background:#D6EFE6;}100%{background:transparent;}}
@@ -1159,7 +1163,7 @@
   .table-wrap.tsel-on tbody{user-select:none;-webkit-user-select:none;}
   /* 選取中一律只做「點列切換」:所有互動元素關閉命中,點擊落到列上由 capture 處理器統一接管 */
   .table-wrap.tsel-on .tcell,.table-wrap.tsel-on .tcat-trigger,.table-wrap.tsel-on .tdel button,
-  .table-wrap.tsel-on .tdue-btn,.table-wrap.tsel-on .gen-btn,.table-wrap.tsel-on .gen-edge,.table-wrap.tsel-on .tchip{pointer-events:none;}
+  .table-wrap.tsel-on .tdue-btn,.table-wrap.tsel-on .gen-btn,.table-wrap.tsel-on .dup-btn,.table-wrap.tsel-on .gen-edge,.table-wrap.tsel-on .tchip{pointer-events:none;}
   .table-wrap.tsel-on tbody tr.tsel-row td{background:color-mix(in srgb, var(--accent) 10%, var(--card))!important;}
   /* 垃圾桶按鈕在選取模式化身為圓形勾選框:未選=空圈,已選=accent 實心打勾 */
   .table-wrap.tsel-on .tdel button svg{display:none;}
@@ -1177,7 +1181,7 @@
   /* 展開中:父列與展開區同用淡藍底,連成一塊聚焦區;用 !important 鎖定,任何 hover 都不會蓋掉 */
   .ptable tbody tr.exp-open td{background:var(--accent-tint) !important;border-bottom:none;}
   /* 已展開的那一列:欄位與下拉先鎖定,點一下=收合;垃圾桶保留操作並顯示刪除確認。 */
-  tr.exp-open .tcell[contenteditable],tr.exp-open .tcat-trigger,tr.exp-open .tdue-btn,tr.exp-open .gen-btn{pointer-events:none;}   /* 展開列鎖定:到期日鈕與生成鈕;不鎖定刪除鈕 */
+  tr.exp-open .tcell[contenteditable],tr.exp-open .tcat-trigger,tr.exp-open .tdue-btn,tr.exp-open .gen-btn,tr.exp-open .dup-btn{pointer-events:none;}   /* 展開列鎖定:到期日鈕與生成鈕;不鎖定刪除鈕 */
   .ptable tbody tr.exp-open td:first-child{box-shadow:inset 3px 0 0 var(--accent);}
   tr.needexp > td{padding:0;height:auto;background:var(--accent-tint) !important;border-bottom:1px solid var(--accent-tint-bd);border-right:none;border-radius:0 0 13px 13px;box-shadow:inset 3px 0 0 var(--accent), 0 18px 26px -12px rgba(22,34,42,.24);}
   /* 編輯模式:展開區(父列+展開列)背景改灰、左側邊線改中性色,與正常(唯讀)淺藍一眼可辨 */
@@ -1877,7 +1881,7 @@
     <div class="fpanel" role="dialog" aria-modal="true" aria-labelledby="fltTitle" tabindex="-1">
       <div class="fpanel-head"><span id="fltTitle"></span><button type="button" class="fx" id="fltX" aria-label="關閉篩選">✕</button></div>
       <div class="fpanel-body" id="fltBody"></div>
-      <button type="button" class="s-btn" id="fltGen" hidden>生成檔名</button>
+      <button type="button" class="s-btn" id="fltGen" hidden>生成／複製</button>
       <div class="fpanel-foot">
         <button type="button" class="cal-fbtn cal-clear" id="fltClear">清除此欄篩選</button>
         <button type="button" class="cal-fbtn cal-today" id="fltDone">完成</button>
@@ -2567,7 +2571,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.17C";
+const APP_VERSION = "2026.11.20A";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -3877,13 +3881,17 @@ function observeTableLinks(){
   if(observedLinkGroup){tableLinkObserver?.observe(observedLinkGroup);queueTableLinkFit();}
 }
 if(!tableLinkObserver)window.addEventListener("resize",queueTableLinkFit);
+// 複製回饋只在畫面暫存，不寫入物件或同步資料。
+let duplicatePendingId=null,duplicatePendingView=null,duplicateHighlightId=null,duplicateHighlightUntil=0,duplicateLastAt=0;
+const DUPLICATE_ICON='<svg viewBox="0 0 24 24" aria-hidden="true" stroke-width="1.8"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>';
+function tableDuplicateButton(){return `<button type="button" class="dup-btn" tabindex="-1" title="複製物件" aria-label="複製物件">${DUPLICATE_ICON}<span class="gen-label">複製</span></button>`;}
 function trowHTML(d){
   const color = catColor(d.cat);
   const ce = "false";
   const tTab = editMode ? ' tabindex="0"' : "";
   const catCell = editMode
-    ? `<td class="tcat"><button type="button" class="tcat-trigger" data-field="cat" style="border-color:${safeColor(color)}"><span class="tcat-label">${esc(d.cat)}</span></button></td>`
-    : `<td class="tcat"><span class="tcat-badge" style="border-color:${safeColor(color)}"><span class="tcat-label">${esc(d.cat)}</span></span></td>`;
+    ? `<td class="tcat"><button type="button" class="tcat-trigger" data-field="cat" style="border-color:${safeColor(color)}"><span class="tcat-label">${esc(d.cat)}</span></button>${tableDuplicateButton()}</td>`
+    : `<td class="tcat"><span class="tcat-badge" style="border-color:${safeColor(color)}"><span class="tcat-label">${esc(d.cat)}</span></span>${tableDuplicateButton()}</td>`;
   const delCell = editMode
     ? `<td class="tdel"><button data-act="del" title="刪除此列">${ICON_TRASH}</button></td>`
     : `<td class="tdel"></td>`;   // 正常模式空白佔位(欄仍在),編輯模式才放垃圾桶——切換不位移
@@ -3894,7 +3902,7 @@ function trowHTML(d){
   const dueInner = editMode
     ? `<button type="button" class="tdue-btn ${ds}" data-duecal="1" ${dueAttrs}>${dueText}</button>`
     : `<div class="tcell tdue ${ds}" contenteditable="false" data-field="due" ${dueAttrs}>${dueText}</div>`;
-  const _trCls = (((openNeedId===d.id) ? ("exp-open" + (editMode ? " exp-editing" : "") + " ") : "") + (ds ? "due-"+ds : "") + ((tselMode && selected.has(d.id)) ? " tsel-row" : "")).trim();
+  const _trCls = (((openNeedId===d.id) ? ("exp-open" + (editMode ? " exp-editing" : "") + " ") : "") + (ds ? "due-"+ds : "") + ((tselMode && selected.has(d.id)) ? " tsel-row" : "") + ((d.id===duplicateHighlightId && Date.now()<duplicateHighlightUntil) ? " duplicate-new" : "")).trim();
   return `<tr data-id="${esc(d.id)}"${_trCls ? ` class="${_trCls}"` : ""}>`+
     `<td class="duewrap"><span class="gen-edge"></span><button type="button" class="gen-btn" tabindex="-1" data-gen="1" title="生成檔名" aria-label="生成檔名">${GEN_ICON}<span class="gen-label">生成</span></button>${dueInner}</td>`+
     catCell +
@@ -4540,6 +4548,19 @@ tableWrap.addEventListener("input", e => {
   clearTimeout(cell._saveT);
   cell._saveT = setTimeout(function(){ if (cell.isConnected) tCommitCell(cell); }, 200);
 });
+// 從到期欄左側啟動，跨到類別欄時不因欄線收起；不攔截類別原有操作。
+tableWrap.addEventListener("pointerover",e=>{
+  const trigger=e.target.closest(".gen-edge,.gen-btn,.dup-btn");
+  if(!trigger || (e.pointerType==="touch" && trigger.classList.contains("gen-edge")))return;
+  const row=e.target.closest("tr[data-id]");
+  if(row && !tselMode && !row.classList.contains("exp-open"))row.classList.add("row-actions-open");
+});
+tableWrap.addEventListener("pointerout",e=>{
+  // 觸控的 pointerout 可能早於 click；由下一次點列外收起，避免放手前按鈕消失。
+  if(e.pointerType==="touch")return;
+  const row=e.target.closest("tr.row-actions-open");
+  if(row && !row.contains(e.relatedTarget))row.classList.remove("row-actions-open");
+});
 tableWrap.addEventListener("click", e=>{
   // 備註展開中:點空白區收合;同列上的按鈕/欄位/連結仍可操作
   const more=e.target.closest(".more-links");
@@ -4550,8 +4571,15 @@ tableWrap.addEventListener("click", e=>{
   }
   const openTr = e.target.closest("tr.exp-open");
   if (openTr){
-    if (e.target.closest(".gen-btn, .tdue-btn, .tchip, .tcell, .tcat-trigger, [data-act='del'], .tneed[data-need]")){ /* 交給下方各 handler */ }
+    if (e.target.closest(".gen-btn, .dup-btn, .tdue-btn, .tchip, .tcell, .tcat-trigger, [data-act='del'], .tneed[data-need]")){ /* 交給下方各 handler */ }
     else { e.stopPropagation(); hideNeedHover(); closeNeedExp(); return; }
+  }
+  const duplicateBtn=e.target.closest(".dup-btn");
+  if(duplicateBtn){
+    e.stopPropagation();
+    if(e.detail>1 || duplicateBtn.closest("tr.exp-open"))return;
+    duplicateTableItem(duplicateBtn.closest("tr[data-id]")?.dataset.id);
+    return;
   }
   // 編輯模式:到期日欄「生成檔名」面板 → 生成並複製
   const genBtn = e.target.closest(".gen-btn");
@@ -4716,6 +4744,70 @@ catmenu.addEventListener("click", e=>{
   const opt = e.target.closest(".catmenu-opt"); if (!opt || !catTrigger) return;
   applyCatChoice(opt.dataset.key);
 });
+// 不依顯示順序或單筆別名判斷；清空設定中指定平台的固定欄位。
+function buildDuplicateItem(source,settings){
+  const copy=PropertyCore.clone(source);
+  copy.id=uid();copy.updatedAt=Date.now();
+  delete copy._metaAt;delete copy._fieldUpdatedAt;
+  for(const slot of PropertyCore.linkSlots(settings)){
+    const name=slot.name.normalize("NFKC").replace(/\s/g,"");
+    if(!["591","樂居","樂屋"].includes(name))continue;
+    copy[linkUrlField(slot.id)]="";
+    copy["linkNone"+slot.id]=false;
+  }
+  return copy;
+}
+function finishTableDuplicate(){
+  if(!duplicatePendingId || window._saveBlocked)return;
+  if(!PropertyCore.local().current.items.some(row=>row.id===duplicatePendingId))return;
+  const id=duplicatePendingId,view=duplicatePendingView;duplicatePendingId=null;duplicatePendingView=null;
+  duplicateHighlightId=id;duplicateHighlightUntil=Date.now()+4500;
+  const row=tableWrap.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
+  if(row)row.classList.add("duplicate-new");
+  // 新表格的彈性欄寬在下一幀才定案；此後還原，避免水平位置被暫時較窄的表格夾住。
+  requestAnimationFrame(()=>{
+    if(viewMode!=="table" || !view || view.key!==tableDuplicateViewKey())return;
+    const body=tableWrap.querySelector(".tbody-wrap"),head=tableWrap.querySelector(".thead-wrap");
+    if(body){body.scrollTop=view.top;body.scrollLeft=view.left;}
+    if(head)head.scrollLeft=body?body.scrollLeft:view.left;
+  });
+  setTimeout(()=>{
+    tableWrap.querySelector(`tr[data-id="${CSS.escape(id)}"]`)?.classList.remove("duplicate-new");
+    if(duplicateHighlightId===id)duplicateHighlightId=null;
+  },4500);
+  toast(getFilteredItems().some(item=>item.id===id)?"已複製為新物件":"已複製，新物件不符合目前篩選");
+}
+function tableDuplicateViewKey(){
+  return JSON.stringify([currentCat,currentSort,searchEl.value,linkFilterState,[...dueFilter],
+    Object.fromEntries(Object.entries(colFilter).map(([key,value])=>[key,value?[...value]:null])),fltP]);
+}
+function duplicateTableItem(sourceId){
+  if(!sourceId || tselMode || window._saveBlocked || Date.now()-duplicateLastAt<600)return;
+  const sourceResetAt=window._resetAt||0;
+  const body=tableWrap.querySelector(".tbody-wrap");
+  const view=body?{top:body.scrollTop,left:body.scrollLeft,key:tableDuplicateViewKey()}:null;
+  flushEditing();
+  closeOtherOverlays("");
+  if(window._saveBlocked || document.getElementById("dataSafetyPanel"))return;
+  try{
+    const latest=PropertyCore.local().readLatest();
+    if(latest.resetAt!==sourceResetAt){
+      toast("資料已從備份還原，請確認目前資料後再複製");window.applyPropertyRefresh?.(true);return;
+    }
+    if(!latest.items.some(item=>item.id===sourceId)){
+      toast("原物件已被刪除，無法複製");window.applyPropertyRefresh?.(true);return;
+    }
+  }catch(e){toast("尚未複製："+e.message);return;}
+  // 先經既有持久化流程合併最新資料；失敗時尚未建立新筆。
+  if(!saveItems())return;
+  const source=items.find(item=>item.id===sourceId);if(!source)return;
+  const copy=buildDuplicateItem(source,PropertyCore.local().current.settings);
+  duplicateLastAt=Date.now();duplicatePendingId=copy.id;duplicatePendingView=view;
+  items.push(copy);
+  // 失敗時保留同一個新 id，既有重試視窗會儲存這一筆，不再新增另一筆。
+  if(!saveItems())return;
+  applyFilter();onLocalChange("data");
+}
 function addTableRow(){
   if (!editMode){ editMode = true; saveEditMode(); }
   if (searchEl.value){ searchEl.value = ""; }   // 清除搜尋:否則新增的空白列會被搜尋過濾掉、看不到也無法輸入
@@ -5020,6 +5112,7 @@ function applyFilter(){
   }
   syncTableMode();
   if(viewMode==="table")fitTableDueDates();
+  finishTableDuplicate();
 }
 renderTabs();
 
@@ -6220,7 +6313,7 @@ function toggleTselRow(tr){
   updateSelbar();
 }
 // 瀏覽器可能把列線上的接觸派給附近的按鈕；只接受實際在同一顆按鈕內起落的觸控。
-const tableActionSelector = '.tchip, .more-links, button[data-act="del"]';
+const tableActionSelector = '.tchip, .more-links, button[data-act="del"], .gen-btn, .dup-btn';
 let tableActionTouch = null;
 function insideTableAction(button, point){
   if (!button || !button.isConnected) return false;
@@ -6229,6 +6322,9 @@ function insideTableAction(button, point){
          point.clientY >= r.top && point.clientY < r.bottom;
 }
 document.addEventListener("pointerdown", e => {
+  if(e.isPrimary)tableWrap.querySelectorAll("tr.row-actions-open").forEach(row=>{
+    if(!row.contains(e.target))row.classList.remove("row-actions-open");
+  });
   if (!e.isPrimary){
     // 第二指即使落在表格外，也要中止第一指待判定的點按或長按。
     if (e.pointerType === "touch" && tableActionTouch){
@@ -6240,7 +6336,11 @@ document.addEventListener("pointerdown", e => {
   if (!tableWrap.contains(e.target)) return;
   tableActionTouch = null;
   _tselSwallow = false; // 上一次長按放手後，瀏覽器可能沒有產生 click。
-  if (e.pointerType !== "touch" || tselMode || !e.target.closest("td.tlinks, td.tdel")) return;
+  const actionCell=e.target.closest("td.duewrap,td.tcat");
+  const rowActionsVisible=actionCell && !actionCell.closest("tr.exp-open") &&
+    (tableWrap.classList.contains("gen-open") || actionCell.closest("tr.row-actions-open") ||
+     actionCell.closest("tr").matches(":has(.gen-btn:focus-visible,.dup-btn:focus-visible)"));
+  if (e.pointerType !== "touch" || tselMode || (!e.target.closest("td.tlinks, td.tdel") && !rowActionsVisible)) return;
   const button = e.target.closest(tableActionSelector);
   const scroller = e.target.closest(".tbody-wrap");
   tableActionTouch = {id:e.pointerId, button, x:e.clientX, y:e.clientY, scroller,
