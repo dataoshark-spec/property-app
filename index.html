@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261121B">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261121B">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261121C">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261121C">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261121B"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261121B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261121C"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261121C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1076,9 +1076,9 @@
   .ptable tbody td{padding:0;border-bottom:1px solid var(--line-soft);border-right:1px solid var(--line-soft);
     white-space:nowrap;vertical-align:middle;}
   .ptable tbody td:last-child{border-right:none;}
-  .ptable tbody td.tneedcell{border-right:none;}   /* 備註欄去右框(刪除欄永遠在它右邊,兩模式皆是倒數第二欄)——與客戶總覽一致 */
+  .ptable tbody td.tneedcell{border-right:none;}   /* 備註右側不加框；查看時為末欄，編輯時右邊接刪除欄。 */
   .ptable td.tdel{border-left:none;}   /* 刪除欄去左框(仿客戶總覽)*/
-  .ptable thead th:nth-last-child(2){border-right:none;}   /* 備註標題去右框(它後面永遠是刪除欄)*/
+  .ptable:not(.ro) thead th:nth-last-child(2){border-right:none;}   /* 編輯時備註標題右邊接刪除欄。 */
   @media (hover:hover){ .ptable tbody tr:not(.exp-open):not(.needexp):hover td{background:var(--surface-1);} }
   .ptable tbody tr[data-id]{height:var(--table-row-height);}
   /* 單行含列底線為 32px；聚焦後可依文字行數自然增高。 */
@@ -2601,7 +2601,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.21B";
+const APP_VERSION = "2026.11.21C";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -3710,7 +3710,7 @@ const COLW_MIN = 48, COLW_MAX = 640, FLEX_MIN_FALLBACK = 36, DEL_W = 40;   // �
 function loadColW(){ if (storageOK){ try { const s = JSON.parse(localStorage.getItem("property_app_colw_v1") || "null"); if (s && typeof s === "object") return {...DEFAULT_COLW, ...s}; } catch(e){} } return {...DEFAULT_COLW}; }
 function saveColW(){ if (storageOK){ try { localStorage.setItem("property_app_colw_v1", JSON.stringify(colW)); } catch(e){} } }
 let colW = loadColW();
-// 最小總寬 = 各固定欄總和 + 彈性欄最小 +(編輯模式再加刪除欄)
+// 保持兩模式總寬：查看時把刪除欄的 40px 交給備註，編輯時再預留刪除欄。
 // 彈性欄(備註)的最小寬 = 剛好容納欄名「備註」(不再固定 240,讓備註能縮到最小)。量不到欄名時用保底值。
 function flexMinWidth(){
   if (!FLEX_FIELD) return 0;
@@ -3726,13 +3726,13 @@ function flexMinWidth(){
   if (lw <= 0) return FLEX_MIN_FALLBACK;   // 尚未排版(初次渲染)→ 保底
   return Math.max(FLEX_MIN_FALLBACK, Math.ceil(lw + pad + 6));
 }
-function colSumMinWidth(){ let s = 0; for (const f of tableFields()) if(f!==FLEX_FIELD)s += (colW[f] || DEFAULT_COLW[f]); return s + flexMinWidth() + DEL_W; }   // 固定欄總和 + 彈性欄最小寬 + 刪除欄(永遠存在,切換模式寬度不變)
+function colSumMinWidth(){ let s = 0; for (const f of tableFields()) if(f!==FLEX_FIELD)s += (colW[f] || DEFAULT_COLW[f]); return s + flexMinWidth() + DEL_W; }   // 固定欄總和 + 備註最小寬 + 40px；查看時由備註吸收，切換模式總寬不變。
 // 產生 colgroup:固定欄用 colW(px)、彈性欄不給寬、編輯模式尾端加刪除欄
 function colGroupHTML(){
   return tableFields().map(f => f === FLEX_FIELD
     ? `<col data-field="${f}">`
     : `<col data-field="${f}" style="width:${colW[f] || DEFAULT_COLW[f]}px">`
-  ).join("") + `<col data-field="_del" style="width:${DEL_W}px">`;   // 刪除欄永遠存在(仿客戶總覽):切換模式欄寬不變,只換內容
+  ).join("") + (editMode ? `<col data-field="_del" style="width:${DEL_W}px">` : "");
 }
 // 產生表頭:每個 th 包 .th-label(供量測欄名)+ 可調欄加 .col-resize 把手(彈性欄/刪除欄不加)
 const FILTERABLE = { due:1, cat:1, layout:1, floor:1, price:1, links:1, agent:1, store:1 };
@@ -3745,7 +3745,7 @@ function tHeadHTML(){
       ? `<button type="button" class="th-flt${colFilterOn(f) ? " on" : ""}" data-flt="${f}"${f === "links" ? ' aria-haspopup="dialog" aria-expanded="false" aria-controls="linkFilterBg"' : ' aria-haspopup="dialog" aria-controls="fltBg"'}><span class="th-label">${h}</span><span class="fmk" aria-hidden="true">▾</span></button>`
       : `<span class="th-label">${h}</span>`;
     return `<th data-col="${f}">${lab}${rz}</th>`;
-  }).join("") + `<th></th>`;   // 刪除欄表頭永遠存在(空白佔位),切換模式不位移
+  }).join("") + (editMode ? `<th></th>` : "");
 }
 // 同時把某欄寬度套到「表頭 table」與「表身 table」兩邊的 <col>,並同步兩表 min-width
 function setColWidth(field, w){
@@ -3924,7 +3924,7 @@ function trowHTML(d){
     : `<td class="tcat"><span class="tcat-badge" style="border-color:${safeColor(color)}"><span class="tcat-label">${esc(d.cat)}</span></span>${tableDuplicateButton()}</td>`;
   const delCell = editMode
     ? `<td class="tdel"><button data-act="del" title="刪除此列">${ICON_TRASH}</button></td>`
-    : `<td class="tdel"></td>`;   // 正常模式空白佔位(欄仍在),編輯模式才放垃圾桶——切換不位移
+    : "";   // 查看時不留刪除空欄，備註吸收右側空間。
   const ds = dueStatus(d.due);   // 方案 D:整列依到期狀態上底色閃爍
   const nameInner = editMode ? esc(d.name) : nameSegmentsHTML(d.name);   // 正常模式:案名依符號分段可點複製;編輯模式維持純文字可編輯
   const fullDue=dueValue(d), dueText=esc(tableDueLabel(fullDue)), dueTitle=esc(fullDue);
@@ -3957,7 +3957,7 @@ function renderTable(list){
   const cols = colGroupHTML();
   const mw = colSumMinWidth();
   const rows = list.length ? list.map(trowHTML).join("")
-    : `<tr><td colspan="${tableFields().length + 1}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，點右上「＋ 新增物件」開始建立。"}</td></tr>`;
+    : `<tr><td colspan="${tableFields().length + (editMode ? 1 : 0)}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，點右上「＋ 新增物件」開始建立。"}</td></tr>`;
   const cls = editMode ? "" : "ro";
   // 表頭與表身分成上下兩層:表頭獨立固定(天生填滿到圓角),捲軸只長在表身層(只在資料列出現)。兩表共用同一份 colgroup 與 min-width,欄位才對齊
   tableWrap.innerHTML =
@@ -6904,7 +6904,7 @@ function openNeedExp(tr, doFocus){
     ex.remove();
   });
   const it = items.find(x => x.id === id); if (!it) return;
-  const nCols = tableFields().length + 1;   // 刪除欄永遠存在(仿客戶總覽)
+  const nCols = tr.cells.length;   // 依目前實際欄數展開，含編輯時才有的刪除欄。
   const exp = document.createElement("tr");
   exp.className = editMode ? "needexp editing" : "needexp"; exp.dataset.for = id;
   const head = (sg) => {
