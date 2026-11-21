@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261120A">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261120A">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261121B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261121B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261120A"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261120A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261121B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261121B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1154,10 +1154,13 @@
   .tchip.on.n591{background:#2C6FB0;border-color:#2C6FB0;}
   .tchip:not(.on):hover::after{content:"＋";position:absolute;top:-5px;right:-5px;width:14px;height:14px;font-size:.6rem;line-height:14px;text-align:center;border-radius:50%;background:var(--ink-soft);color:#fff;}
   .tdel{padding:7px;text-align:center;}
-  .tdel button{position:relative;display:flex;align-items:center;justify-content:center;margin:0 auto;width:32px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);cursor:pointer;transition:all .15s;
+  .tdel button{position:relative;display:flex;align-items:center;justify-content:center;margin:0 auto;width:32px;height:28px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--ink-soft);cursor:pointer;transition:all .15s;
     touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
   .tdel button svg{display:block;}
-  .tdel button:hover{border-color:var(--danger-tint-bd);color:#B4472E;background:var(--danger-tint);}
+  /* Trash icon stays visible; only pointer feedback adds a faint background. */
+  .table-wrap:not(.tsel-on) .tdel button:active,
+  .table-wrap:not(.tsel-on) .tdel button.lp-run{background:color-mix(in srgb,currentColor 8%,transparent);}
+  @media(hover:hover){.table-wrap:not(.tsel-on) .tdel button:hover{background:color-mix(in srgb,currentColor 8%,transparent);}}
   /* ---- 表格批次刪除選取模式(垃圾桶長按 600ms 進入;與客戶總覽同款) ---- */
   .table-wrap.tsel-on tbody tr{cursor:pointer;}
   .table-wrap.tsel-on tbody{user-select:none;-webkit-user-select:none;}
@@ -1578,6 +1581,33 @@
   .ptable .tcell.tdue,.ptable .tdue-btn{display:block;box-sizing:border-box;width:100%;font-family:inherit;font-size:.66rem;font-variant-numeric:tabular-nums;text-align:center;}
   @media(max-width:819px){.ptable .tcell.tdue,.ptable .tdue-btn{padding-left:7px;padding-right:7px;}}
   .ptable .duewrap [data-full-due="不確定"]{font-size:.75rem;font-weight:500;letter-spacing:normal;padding-inline:3px;}
+
+  /* table-row-hover:start — visual-only pointer feedback; keep row geometry and alerts. */
+  .table-wrap:not(.tsel-on) .ptable tbody tr.table-row-hover{
+    --row-hover-tint:rgba(15,122,95,.10);--row-hover-line:rgba(15,122,95,.36);
+  }
+  .table-wrap:not(.tsel-on) .ptable tbody tr.table-row-hover.due-warn{
+    --row-hover-tint:rgba(193,137,16,.10);--row-hover-line:rgba(169,112,4,.38);
+  }
+  .table-wrap:not(.tsel-on) .ptable tbody tr.table-row-hover.due-over{
+    --row-hover-tint:rgba(204,65,37,.08);--row-hover-line:rgba(192,65,37,.36);
+  }
+  [data-theme="dark"] .table-wrap:not(.tsel-on) .ptable tbody tr.table-row-hover{
+    --row-hover-tint:rgba(91,203,167,.13);--row-hover-line:rgba(111,217,183,.40);
+  }
+  [data-theme="dark"] .table-wrap:not(.tsel-on) .ptable tbody tr.table-row-hover.due-warn{
+    --row-hover-tint:rgba(242,183,64,.12);--row-hover-line:rgba(242,183,64,.45);
+  }
+  [data-theme="dark"] .table-wrap:not(.tsel-on) .ptable tbody tr.table-row-hover.due-over{
+    --row-hover-tint:rgba(251,122,94,.12);--row-hover-line:rgba(251,122,94,.45);
+  }
+  .table-wrap:not(.tsel-on) .ptable tbody tr.table-row-hover:not(.exp-open):not(.needexp):not(.duplicate-new)>td{
+    box-shadow:inset 0 1px var(--row-hover-line),inset 0 -1px var(--row-hover-line),inset 0 0 0 999px var(--row-hover-tint);
+  }
+  .table-wrap:not(.tsel-on) .ptable tbody tr.table-row-hover:not(.exp-open):not(.needexp):not(.duplicate-new) .tcell:not(:focus):not(.saved):hover{
+    background:transparent;
+  }
+  /* table-row-hover:end */
 </style>
 </head>
 <body>
@@ -2571,7 +2601,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.20A";
+const APP_VERSION = "2026.11.21B";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -4561,6 +4591,32 @@ tableWrap.addEventListener("pointerout",e=>{
   const row=e.target.closest("tr.row-actions-open");
   if(row && !row.contains(e.relatedTarget))row.classList.remove("row-actions-open");
 });
+// table-row-hover:start — follow real mouse movement only; never changes item data.
+(function(){
+  let hoveredRow=null;
+  function clear(){
+    if(hoveredRow){hoveredRow.classList.remove("table-row-hover");hoveredRow=null;}
+  }
+  tableWrap.addEventListener("pointermove",e=>{
+    if(e.pointerType!=="mouse" || e.buttons || document.hidden || !document.hasFocus()) {clear();return;}
+    const td=e.target instanceof Element?e.target.closest("td"):null;
+    const row=td?.parentElement;
+    if(!row?.matches("tr[data-id]") || !tableWrap.contains(row) || row.matches(".exp-open,.needexp,.duplicate-new") ||
+       tableWrap.classList.contains("tsel-on") || document.body.classList.contains("col-resizing")){clear();return;}
+    if(row!==hoveredRow){clear();hoveredRow=row;row.classList.add("table-row-hover");}
+  },{passive:true});
+  tableWrap.addEventListener("pointerleave",clear,{passive:true});
+  document.addEventListener("pointerdown",clear,{passive:true,capture:true});
+  document.addEventListener("pointercancel",clear,{passive:true,capture:true});
+  document.addEventListener("keydown",clear,{passive:true,capture:true});
+  document.addEventListener("scroll",clear,{passive:true,capture:true});
+  document.addEventListener("visibilitychange",clear);
+  window.addEventListener("blur",clear);
+  window.addEventListener("resize",clear);
+  window.addEventListener("pagehide",clear);
+})();
+// table-row-hover:end
+
 tableWrap.addEventListener("click", e=>{
   // 備註展開中:點空白區收合;同列上的按鈕/欄位/連結仍可操作
   const more=e.target.closest(".more-links");
