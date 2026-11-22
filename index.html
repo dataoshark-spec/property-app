@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261122A">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261122A">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261122B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261122B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261122A"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261122A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261122B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261122B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -2667,7 +2667,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.22A";
+const APP_VERSION = "2026.11.22B";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -10956,7 +10956,12 @@ function handleQuickLinkClick(event){
  window.addEventListener('pointercancel',()=>{pencilEnds=false;pointerHeld=false;rejectedClick=false;},true);
  window.addEventListener('keydown',event=>{
   if(!current||event.isComposing||event.keyCode===229||event.target.closest('#dataSafetyPanel')||!ready())return;
-  if(current.field==='note'&&current.seg?.contains(event.target)&&(event.key==='Escape'||event.key==='Tab'&&!event.shiftKey||current.title&&event.key==='Enter')){stop(event);finishQuick();return;}
+  if(current.field==='note'&&current.seg?.contains(event.target)&&(event.key==='Escape'||event.key==='Tab'&&!event.shiftKey||current.title&&event.key==='Enter')){
+   stop(event);
+   if(event.key==='Escape'&&!editMode)closeNeedExp();
+   else finishQuick();
+   return;
+  }
   if(textFields.has(current.field)&&current.td?.contains(event.target)&&['Enter','Escape','Tab'].includes(event.key)){
    stop(event);finishQuick();
   }
