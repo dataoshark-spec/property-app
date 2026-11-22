@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261121C">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261121C">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261122A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261122A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261121C"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261121C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261122A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261122A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -866,6 +866,20 @@
   .fopt{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:10px;transition:transform .16s ease;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
   .fopt-main{flex:1;min-width:0;display:flex;align-items:center;gap:11px;padding:5px 2px;font-size:.94rem;color:var(--ink);cursor:pointer;}
   .fopt-main span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  /* floor-filter-and-counts:start */
+  .fopt-count{flex:none;color:var(--ink-soft);font-size:.84em;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .floor-range-group{border:0;margin:0;padding:10px 0 14px;min-width:0;}
+  .floor-range-group+.floor-range-group{border-top:1px solid var(--line);padding-top:16px;}
+  .floor-range-group legend{float:left;display:flex;justify-content:space-between;width:100%;padding:0 2px 4px;color:var(--ink);font-size:.88rem;font-weight:700;}
+  .floor-range-group legend span{color:var(--ink-soft);font-weight:400;font-size:.8rem;}
+  .floor-range-group .fbud{clear:both;}
+  .floor-range-group input[aria-invalid="true"]{border-color:var(--danger);}
+  .floor-filter-summary{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:4px 2px;color:var(--ink-soft);font-size:.78rem;}
+  #fltFloorCount{flex:none;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  #fltFloorHint.invalid{color:var(--danger);}
+  .floor-filter-legacy{font-size:.78rem;color:var(--ink-soft);padding:4px 2px;}
+  #fltDone:disabled{opacity:.45;cursor:default;}
+  /* floor-filter-and-counts:end */
   .fopt-drag{flex:none;width:22px;height:32px;display:none;place-items:center;color:var(--text-faint);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;}
   #fltBody.editing .fopt-drag{display:grid;}
   #fltBody.editing .fopt-main{pointer-events:none;}
@@ -941,8 +955,9 @@
   .cal-day:active{background:var(--surface-2);}
   .cal-day.today:active{background:var(--accent-deep);}
   .cal-day.empty{visibility:hidden;cursor:default;}
-  .cal-foot{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px;}
-  .cal-foot > #calToday,.cal-foot > #calClear{grid-column:1 / -1;}
+  .cal-foot{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:18px;}
+  .cal-foot > .cal-fbtn{grid-column:span 3;}
+  .cal-foot > [data-cal-days]{grid-column:span 2;padding-inline:4px;white-space:nowrap;}
   .cal-foot #calUnknown[aria-current="true"]{background:var(--accent-tint);border-color:var(--accent);color:var(--accent-deep);}
   .cal-foot #calUnknown[aria-current="true"]::before{content:"✓";margin-right:.3em;}
   .cal-foot #calUnknown{padding-inline:4px;white-space:nowrap;}
@@ -1004,6 +1019,8 @@
   /* 正常/編輯切換:一顆鉛筆鈕,編輯中反白 */
   .mode-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink-soft);cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .1s;}
   .mode-btn svg{width:18px;height:18px;}
+  .mode-btn.quick-edit:not(.on){background:#d1d5db;border-color:#d1d5db;color:#16222a;}
+  .ptable.ro [data-quick-edit] .tcell[contenteditable="true"]{cursor:text;user-select:text;-webkit-user-select:text;box-shadow:var(--focus-ring-inset);background:var(--card);color:var(--ink);}
   .mode-btn.on{background:var(--ink);border-color:var(--ink);color:#fff;}
   @media (hover:hover){ .mode-btn:not(.on):hover{border-color:var(--border-2);color:var(--ink);} }
   .mode-btn:active{transform:scale(.94);}
@@ -1176,9 +1193,9 @@
 
   /* ═══ 「備註」欄:點擊展開 + 懸浮預覽(移植自客戶總覽客戶需求欄;類名沿用 need*) ═══ */
   .tneed{cursor:pointer;}
-  .tneed-ph{color:var(--text-faint);font-weight:300;}   /* 「無」用細體,對比「有」的粗體 */
-  .tneed-has{color:var(--ink);font-weight:600;}   /* 未展開時「有」使用正文黑字，深色主題跟隨正文色 */
-  .tneed .tneed-has{display:block;text-align:center;}
+  .tneed-ph{color:var(--text-faint);font-weight:300;}   /* 空白提示保持低調。 */
+  .tneed-has{color:var(--ink);font-weight:400;}   /* 內容預覽使用正文色，深色主題跟隨正文色。 */
+  .tneed .tneed-has{display:block;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .tneed .tneed-ph{display:block;text-align:center;font-size:.85rem;font-weight:300;}
   @media (hover:hover){ .tneed:hover{color:var(--accent-deep);} }   /* 展開時「備註」欄不再加粗/加深(展開重點在下方三個框,上面這欄回原本字重);只保留 hover 的深色當可點提示 */
   /* 展開中:父列與展開區同用淡藍底,連成一塊聚焦區;用 !important 鎖定,任何 hover 都不會蓋掉 */
@@ -1900,6 +1917,9 @@
       <div class="cal-foot">
         <button type="button" class="cal-fbtn cal-today" id="calToday">回到今天</button>
         <button type="button" class="cal-fbtn cal-clear" id="calClear">清除日期</button>
+        <button type="button" class="cal-fbtn cal-clear" data-cal-days="30">30天</button>
+        <button type="button" class="cal-fbtn cal-clear" data-cal-days="60">60天</button>
+        <button type="button" class="cal-fbtn cal-clear" data-cal-days="90">90天</button>
         <button type="button" class="cal-fbtn cal-clear" id="calUnknown" aria-current="false">不確定時間</button>
         <button type="button" class="cal-fbtn cal-cancel" id="calCancel">取消</button>
       </div>
@@ -2028,6 +2048,51 @@ function price(value){
  if(!Number.isFinite(n) || n > 1e10) fail("售價超出可接受範圍");
  return n;
 }
+// floor-range:start — derive searchable numbers without rewriting the stored floor text.
+function floorBound(value,total=false){
+ if(value==null || (typeof value==="string"&&!value.trim()))return null;
+ if(typeof value!=="string"&&typeof value!=="number")return NaN;
+ const s=String(value).normalize("NFKC").trim().toUpperCase().replace(/\s+/g,"").replace(/\u2212/g,"-");
+ if(!/^(?:[+-]?\d+|B[1-9]\d*)(?:F|樓)?$/.test(s))return NaN;
+ const token=s.replace(/(?:F|樓)$/, "");
+ const n=token.startsWith("B")?-Number(token.slice(1)):Number(token);
+ return Number.isSafeInteger(n)&&(!total||n>0)?n:NaN;
+}
+function floorRange(value){
+ if(!obj(value))fail("樓層篩選格式不正確");
+ const range={};
+ for(const key of ["lo","hi","totalLo","totalHi"]){
+  const n=floorBound(value[key],key.startsWith("total"));
+  if(Number.isNaN(n))fail("樓層篩選必須是有效整數，總樓高須大於零");
+  range[key]=n;
+ }
+ if((range.lo!=null&&range.hi!=null&&range.lo>range.hi)||(range.totalLo!=null&&range.totalHi!=null&&range.totalLo>range.totalHi))fail("樓層篩選下限不可大於上限");
+ return range;
+}
+function floorInfo(value){
+ const unknown={levels:null,total:null};
+ if(typeof value!=="string"&&typeof value!=="number")return unknown;
+ const parts=String(value).normalize("NFKC").trim().toUpperCase().replace(/\s+/g,"").replace(/\u2212/g,"-").split("/");
+ if(parts.length>2)return unknown;
+ const totalValue=parts.length===2?floorBound(parts[1],true):null;
+ const total=Number.isFinite(totalValue)?totalValue:null;
+ const single=floorBound(parts[0]);
+ if(Number.isFinite(single))return {levels:[[single,single]],total};
+ const token="(?:[+-]?\\d+|B[1-9]\\d*)(?:F|樓)?";
+ const match=parts[0].match(new RegExp("^("+token+")[~〜至到–—-]("+token+")$"));
+ if(!match)return {levels:null,total};
+ const a=floorBound(match[1]),b=floorBound(match[2]);
+ return {levels:Number.isFinite(a)&&Number.isFinite(b)&&a<=b?[[a,b]]:null,total};
+}
+function matchesFloorRange(value,range){
+ const hasUnit=range.lo!=null||range.hi!=null,hasTotal=range.totalLo!=null||range.totalHi!=null;
+ if(!hasUnit&&!hasTotal)return true;
+ const info=floorInfo(value);
+ if(hasUnit&&(!info.levels||!info.levels.some(([a,b])=>b>=(range.lo??-Infinity)&&a<=(range.hi??Infinity))))return false;
+ return !hasTotal||(info.total!=null&&info.total>=(range.totalLo??-Infinity)&&info.total<=(range.totalHi??Infinity));
+}
+// floor-range:end
+
 function fontSize(value){
  if(value==null) return 100;
  if(typeof value!=="number" || !Number.isFinite(value)) fail("字級格式不正確");
@@ -2185,6 +2250,7 @@ function settings(value){
   if(!obj(value.fltP)) fail("售價篩選格式不正確");s.fltP={};
   for(const f of ["lo","hi"]) s.fltP[f]=value.fltP[f]==null?null:price(value.fltP[f]);
  }
+ if(value.fltF!=null)s.fltF=floorRange(value.fltF);
  if(value.defaultLinkNames!=null){
   if(!Array.isArray(value.defaultLinkNames)||value.defaultLinkNames.length!==4||value.defaultLinkNames.some(n=>typeof n!=="string"||!n.trim()||n.length>20))fail("預設連結名稱不正確");
   s.defaultLinkNames=value.defaultLinkNames.map(n=>n.trim());
@@ -2527,7 +2593,7 @@ function createStore(storage){
  return {load,commit,readLatest,acknowledge,compact,rawBackup,get current(){return current?clone(current):null},get blocked(){return blocked}};
 }
 
-const api={KEY,FIELDS,UNKNOWN_DUE,dueValue,setDueValue,recordFields,linkSlots,rebaseLinkSlots,price,fontSize,noteOrder,draftValues,mergeDraft,deleteStamp,record,records,categories,settings,validateState,backup,fieldMerge,track,merge,restore,mainFrom,stateFromMain,createStore,clone,defaults,ready:false};
+const api={KEY,FIELDS,UNKNOWN_DUE,dueValue,setDueValue,recordFields,linkSlots,rebaseLinkSlots,price,floorBound,floorInfo,floorRange,matchesFloorRange,fontSize,noteOrder,draftValues,mergeDraft,deleteStamp,record,records,categories,settings,validateState,backup,fieldMerge,track,merge,restore,mainFrom,stateFromMain,createStore,clone,defaults,ready:false};
 if(typeof module==="object"&&module.exports) module.exports=api;
 root.PropertyCore=api;
 if(!root.document) return;
@@ -2601,7 +2667,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.21C";
+const APP_VERSION = "2026.11.22A";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -3289,7 +3355,7 @@ const listCounter=(()=>{
 const NAV_KEY = "property_app_lastview_v1";
 function saveNav(screen, cat){ if (storageOK){ try { localStorage.setItem(NAV_KEY, JSON.stringify({ screen: screen, cat: cat || "" })); } catch(e){} } }
 
-// ==== 表格欄位標題篩選(參考客戶總覽:類別/格局/樓層/承辦/門市=勾選;售價=範圍) ====
+// ==== 表格欄位標題篩選：樓層／售價範圍；其他欄位勾選，保留舊樓層精確條件 ====
 const colFilter = { cat:null, layout:null, floor:null, agent:null, store:null };
 const dueFilter = new Set();
 const DUE_FILTER_LABELS = {dated:"有時間", unknown:"不確定", blank:"空白"};
@@ -3299,6 +3365,8 @@ function matchesDueFilter(item){
   return dueFilter.has(state);
 }
 const fltP = { lo:null, hi:null };   // 售價範圍(比照客戶總覽「預算」)
+const fltF = {lo:null,hi:null,totalLo:null,totalHi:null};
+const floorRangeOn = () => Object.values(fltF).some(value=>value!=null);
 let fltField = null;
 const FLT_NAME = { due:"到期", cat:"類別", layout:"格局", floor:"樓層", price:"售價（萬）", agent:"承辦", store:"門市" };
 const numOrNull = v => { try { const n = PropertyCore.price(v); return n === "" ? null : n; } catch(_){ return NaN; } };
@@ -3396,13 +3464,14 @@ function refreshLinkSlotConsumers(){
   syncLinkFilterTriggers();
 }
 function anyColFilter(){
-  if (dueFilter.size || fltP.lo != null || fltP.hi != null || anyLinkFilter()) return true;
+  if (dueFilter.size || floorRangeOn() || fltP.lo != null || fltP.hi != null || anyLinkFilter()) return true;
   return Object.keys(colFilter).some(k => colFilter[k] && colFilter[k].size);
 }
 function clearAllColFilters(){
   dueFilter.clear();
   Object.keys(colFilter).forEach(k => colFilter[k] = null);
   fltP.lo = null; fltP.hi = null;
+  Object.assign(fltF,{lo:null,hi:null,totalLo:null,totalHi:null});
   clearLinkFilters();
   saveColFilterState();
 }
@@ -3414,7 +3483,7 @@ const FILTER_STATE_KEY = "property_app_filters_v1";
 function serializeColFilterState(){
   const o = {};
   Object.keys(colFilter).forEach(k => { const s = colFilter[k]; o[k] = s && s.size ? [...s] : null; });
-  return { colFilter: o, fltP: { lo: fltP.lo, hi: fltP.hi } };
+  return { colFilter: o, fltP: { lo: fltP.lo, hi: fltP.hi }, fltF:{...fltF} };
 }
 function applyColFilterState(s){
   if (!s || typeof s !== "object") return;
@@ -3424,6 +3493,8 @@ function applyColFilterState(s){
       colFilter[k] = (Array.isArray(a) && a.length) ? new Set(a) : null;
     });
   }
+  if(s.fltF){Object.assign(fltF,PropertyCore.floorRange(s.fltF));}
+  else if(s.colFilter){Object.assign(fltF,{lo:null,hi:null,totalLo:null,totalHi:null});}
   if (s.fltP){
     fltP.lo = (s.fltP.lo != null && isFinite(s.fltP.lo)) ? s.fltP.lo : null;
     fltP.hi = (s.fltP.hi != null && isFinite(s.fltP.hi)) ? s.fltP.hi : null;
@@ -3452,11 +3523,12 @@ function remapColFilterCat(oldKey, newKey){
   st.delete(oldKey); st.add(newKey);
   if (!st.size) colFilter.cat = null;
 }
-function colFilterOn(f){ return f === "due" ? dueFilter.size>0 : f === "links" ? anyLinkFilter() : f === "price" ? (fltP.lo != null || fltP.hi != null) : !!(colFilter[f] && colFilter[f].size); }
-function applyColFilters(list){
-  if(dueFilter.size)list=list.filter(matchesDueFilter);
-  ["cat","layout","floor","agent","store"].forEach(f => { const st = colFilter[f]; if (st && st.size) list = list.filter(d => st.has(String(d[f]||"").trim() || "__EMPTY__")); });
-  if (fltP.lo != null || fltP.hi != null){
+function colFilterOn(f){ return f === "due" ? dueFilter.size>0 : f === "links" ? anyLinkFilter() : f === "floor" ? (floorRangeOn() || !!colFilter.floor?.size) : f === "price" ? (fltP.lo != null || fltP.hi != null) : !!(colFilter[f] && colFilter[f].size); }
+function applyColFilters(list,skipField=""){
+  if(skipField!=="due"&&dueFilter.size)list=list.filter(matchesDueFilter);
+  ["cat","layout","floor","agent","store"].forEach(f => { const st = colFilter[f]; if (f!==skipField && st && st.size) list = list.filter(d => st.has(String(d[f]||"").trim() || "__EMPTY__")); });
+  if(skipField!=="floor"&&floorRangeOn())list=list.filter(d=>PropertyCore.matchesFloorRange(d.floor,fltF));
+  if (skipField!=="price"&&(fltP.lo != null || fltP.hi != null)){
     const flo = fltP.lo != null ? fltP.lo : 0, fhi = fltP.hi != null ? fltP.hi : Infinity;
     list = list.filter(d => { const n = numOrNull(d.price); return n != null && n >= flo && n <= fhi; });   // 售價落在範圍內
   }
@@ -3473,6 +3545,15 @@ function orderedFilterVals(f){
   const saved = (ord[f] || []).filter(v => present.includes(v));
   const rest = present.filter(v => !saved.includes(v)).sort((a,b)=>a.localeCompare(b,"zh-Hant"));
   return saved.concat(rest);
+}
+const COUNTED_FILTER_FIELDS = new Set(["layout","agent","store"]);
+function columnOptionCounts(field){
+ const counts=new Map();
+ for(const item of getFilteredItems(linkFilterState,field)){
+  const key=String(item[field]||"").trim()||"__EMPTY__";
+  counts.set(key,(counts.get(key)||0)+1);
+ }
+ return counts;
 }
 const fltBg = document.getElementById("fltBg");
 function openColFlt(f,trigger){
@@ -3492,8 +3573,40 @@ function closeColFlt(){
   if(wasDue)tableWrap.querySelector('.th-flt[data-flt="due"]')?.focus({preventScroll:true});
 }
 window.closeColFlt = closeColFlt;
+function renderFloorFilter(body){
+ const legacy=!!colFilter.floor?.size;
+ body.innerHTML=`<fieldset class="floor-range-group"><legend>物件樓層<span>樓</span></legend><div class="fbud"><input id="fltFloorLo" inputmode="text" aria-label="物件樓層下限" placeholder="下限" value="${fltF.lo??""}"><span class="bsep" aria-hidden="true">–</span><input id="fltFloorHi" inputmode="text" aria-label="物件樓層上限" placeholder="上限" value="${fltF.hi??""}"></div></fieldset>
+ <fieldset class="floor-range-group"><legend>總樓高<span>樓</span></legend><div class="fbud"><input id="fltTotalLo" inputmode="numeric" aria-label="總樓高下限" placeholder="下限" value="${fltF.totalLo??""}"><span class="bsep" aria-hidden="true">–</span><input id="fltTotalHi" inputmode="numeric" aria-label="總樓高上限" placeholder="上限" value="${fltF.totalHi??""}"></div></fieldset>
+ <div class="floor-filter-summary"><span id="fltFloorHint">留白不限；地下樓層可填 B1</span><span id="fltFloorCount" aria-live="polite"></span></div>
+ <div class="floor-filter-legacy"${legacy?"":" hidden"}>目前保留原本的樓層勾選；輸入範圍後取代。</div>`;
+ const fields=[["lo","fltFloorLo"],["hi","fltFloorHi"],["totalLo","fltTotalLo"],["totalHi","fltTotalHi"]].map(([key,id])=>[key,document.getElementById(id)]);
+ const hint=document.getElementById("fltFloorHint"),done=document.getElementById("fltDone"),count=document.getElementById("fltFloorCount");
+ const refreshCount=()=>{count.textContent=`符合 ${getFilteredItems().length} 筆`;};
+ const update=()=>{
+  const next=Object.fromEntries(fields.map(([key,input])=>[key,PropertyCore.floorBound(input.value,key.startsWith("total"))]));
+  const invalid=new Set(fields.filter(([key])=>Number.isNaN(next[key])).map(([key])=>key));
+  const reversed=[];
+  for(const [lo,hi] of [["lo","hi"],["totalLo","totalHi"]])if(!invalid.has(lo)&&!invalid.has(hi)&&next[lo]!=null&&next[hi]!=null&&next[lo]>next[hi])reversed.push(lo,hi);
+  fields.forEach(([key,input])=>{const bad=invalid.has(key)||reversed.includes(key);input.toggleAttribute("aria-invalid",bad);if(bad)input.setAttribute("aria-invalid","true");});
+  const bad=invalid.size||reversed.length;done.disabled=!!bad;
+  hint.textContent=invalid.size?"請輸入整數；地下樓層可填 B1，總樓高須大於零。":reversed.length?"下限不可大於上限；保留上次有效範圍。":"留白不限；地下樓層可填 B1";
+  hint.classList.toggle("invalid",!!bad);
+  if(bad)return;
+  Object.assign(fltF,next);colFilter.floor=null;
+  body.querySelector(".floor-filter-legacy").hidden=true;
+  saveColFilterState();applyFilter();onLocalChange("settings");refreshCount();
+ };
+ fields.forEach(([,input])=>{
+  input.addEventListener("input",update);
+  input.addEventListener("keydown",event=>{if(event.key==="Enter"&&!event.isComposing){event.preventDefault();update();if(!done.disabled)done.click();}});
+ });
+ refreshCount();
+}
+
 function renderFltBody(){
   const body = document.getElementById("fltBody");
+  document.getElementById("fltDone").disabled=false;
+  if(fltField==="floor"){renderFloorFilter(body);return;}
   if (fltField === "price"){
     body.innerHTML = `<div class="fbud-hint">顯示售價落在此範圍內的物件(單位：萬)</div>
       <div class="fbud"><input id="fltLo" inputmode="numeric" placeholder="下限" value="${fltP.lo != null ? fltP.lo : ""}"><span class="bsep">–</span><input id="fltHi" inputmode="numeric" placeholder="上限" value="${fltP.hi != null ? fltP.hi : ""}"></div>`;
@@ -3519,11 +3632,14 @@ function renderFltBody(){
   const f = fltField;
   const isDue = f === "due";
   const vals = isDue ? Object.keys(DUE_FILTER_LABELS) : orderedFilterVals(f);
-  const hasEmpty = !isDue && items.some(d => !String(d[f]||"").trim());
+  const counts=COUNTED_FILTER_FIELDS.has(f)?columnOptionCounts(f):null;
+  const hasEmpty = !isDue && (counts || items.some(d => !String(d[f]||"").trim()));
   const st = isDue ? dueFilter : colFilter[f];
+  const knownVals=new Set(vals);
+  if(counts&&st)for(const value of st)if(value!=="__EMPTY__"&&!vals.includes(value))vals.push(value);
   const GRIP = `<span class="fopt-drag" aria-label="拖曳排序" title="拖曳排序"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><g stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><line x1="3.5" y1="5" x2="12.5" y2="5"/><line x1="3.5" y1="8" x2="12.5" y2="8"/><line x1="3.5" y1="11" x2="12.5" y2="11"/></g></svg></span>`;
-  const row = (v, label, drag) => `<div class="fopt${drag ? " fopt-draggable" : ""}" data-val="${esc(v)}">${drag ? GRIP : `<span class="fopt-drag-sp"></span>`}<label class="fopt-main"><input type="checkbox" value="${esc(v)}"${st && st.has(v) ? " checked" : ""}><span>${esc(label)}</span></label></div>`;
-  body.innerHTML = vals.map(v => row(v, isDue ? DUE_FILTER_LABELS[v] : v, !isDue)).join("") + (hasEmpty ? row("__EMPTY__","（空白）", false) : "");
+  const row = (v, label, drag) => `<div class="fopt${drag ? " fopt-draggable" : ""}" data-val="${esc(v)}">${drag ? GRIP : `<span class="fopt-drag-sp"></span>`}<label class="fopt-main"><input type="checkbox" value="${esc(v)}"${st && st.has(v) ? " checked" : ""}><span>${esc(label)}</span>${counts?`<small class="fopt-count">${counts.get(v)||0} 筆</small>`:""}</label></div>`;
+  body.innerHTML = vals.map(v => row(v, isDue ? DUE_FILTER_LABELS[v] : v, !isDue && knownVals.has(v))).join("") + (hasEmpty ? row("__EMPTY__","（空白）", false) : "");
   body.querySelectorAll("input[type=checkbox]").forEach(cb => cb.addEventListener("change", () => {
     const stt = isDue ? dueFilter : colFilter[f] || new Set();
     if (cb.checked) stt.add(cb.value); else stt.delete(cb.value);
@@ -3541,17 +3657,22 @@ document.getElementById("fltGen").addEventListener("click", () => {
 });
 document.getElementById("fltClear").addEventListener("click", () => {
   if (document.getElementById("fltBody").classList.contains("editing")){ exitFltEditing(); return; }
-  if (fltField === "due"){ dueFilter.clear(); }
+  const wasFloor=fltField==="floor";
+  if(wasFloor){Object.assign(fltF,{lo:null,hi:null,totalLo:null,totalHi:null});colFilter.floor=null;}
+  else if (fltField === "due"){ dueFilter.clear(); }
   else if (fltField === "price"){ fltP.lo = null; fltP.hi = null; } else if (fltField){ colFilter[fltField] = null; }
   saveColFilterState();
   renderFltBody(); applyFilter();
+  if(wasFloor)onLocalChange("settings");
 });
 fltBg.addEventListener("click", e => { if (e.target === fltBg) closeColFlt(); });
 document.getElementById("fltClearAll").addEventListener("click", () => {
   if (!anyColFilter()) return;
   if (typeof closeOtherOverlays === "function") closeOtherOverlays("");   // 先關掉篩選彈窗/下拉/展開
+  const hadFloor=floorRangeOn()||!!colFilter.floor?.size;
   clearAllColFilters();
   applyFilter();
+  if(hadFloor)onLocalChange("settings");
   toast("已清除所有欄位篩選");
 });
 tableWrap.addEventListener("click", e => {
@@ -3945,7 +4066,7 @@ function trowHTML(d){
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="agent" title="${esc(d.agent)}">${esc(d.agent)}</div></td>`+
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="tel" title="${esc(d.tel)}">${esc(d.tel)}</div></td>`+
     `<td><div class="tcell" contenteditable="${ce}"${tTab} data-field="store" title="${esc(d.store)}">${esc(d.store)}</div></td>`+
-    `<td class="tneedcell"><div class="tcell tneed" data-need="1"${editMode ? ' tabindex="0"' : ""}>${noteHasContent(d) ? '<span class="tneed-has">有</span>' : '<span class="tneed-ph">無</span>'}</div></td>`+
+    `<td class="tneedcell"><div class="tcell tneed" data-need="1"${editMode ? ' tabindex="0"' : ""}>${notePreviewHTML(d)}</div></td>`+
     delCell +
   `</tr>`;
 }
@@ -4835,7 +4956,7 @@ function finishTableDuplicate(){
 }
 function tableDuplicateViewKey(){
   return JSON.stringify([currentCat,currentSort,searchEl.value,linkFilterState,[...dueFilter],
-    Object.fromEntries(Object.entries(colFilter).map(([key,value])=>[key,value?[...value]:null])),fltP]);
+    Object.fromEntries(Object.entries(colFilter).map(([key,value])=>[key,value?[...value]:null])),fltP,fltF]);
 }
 function duplicateTableItem(sourceId){
   if(!sourceId || tselMode || window._saveBlocked || Date.now()-duplicateLastAt<600)return;
@@ -5133,14 +5254,14 @@ document.getElementById("viewBtn").addEventListener("click", () => {
 });
 document.getElementById("modeBtn").addEventListener("click", () => setEditMode(!editMode));
 
-function getFilteredItems(linkSelections = linkFilterState){
+function getFilteredItems(linkSelections = linkFilterState,skipField=""){
   // 多關鍵字搜尋:用「/」(半形或全形「／」皆可)分隔多個條件,「全部命中」才顯示(AND)。
   // 例:「北屯/大樓/322」= 同時符合這三個條件的物件;「/」本身只是分隔符,不參與比對。
   // 沒打「/」時行為與原本完全相同(單一關鍵字)。與客戶總覽同一套做法。
   const terms = searchEl.value.toLowerCase().split(/[\/／]/).map(t => t.trim()).filter(Boolean);
   let list = currentCat ? items.filter(d => d.cat === currentCat) : items.slice();
   if (terms.length) list = list.filter(d => { const hay = searchHay(d); return terms.every(t => hay.includes(t)); });
-  return applyLinkFilters(applyColFilters(list), linkSelections);   // 連結條件與其他欄位、關鍵字篩選一起符合
+  return applyLinkFilters(applyColFilters(list,skipField), linkSelections);   // 連結條件與其他欄位、關鍵字篩選一起符合
 }
 function applyFilter(){
   closeTableMoreLinks();
@@ -5788,13 +5909,21 @@ function todayROC(){
       try { panel.focus({ preventScroll: true }); } catch (err){ try { panel.focus(); } catch (err2){} }
     }
   }
-  function closeCal(){ calBg.classList.remove("open"); calTarget = FORM_TARGET; }
+  function closeCal(){
+    if(calTarget.beforeClose?.()===false)return false;
+    const target=calTarget;calBg.classList.remove("open");calTarget=FORM_TARGET;target.onClose?.();return true;
+  }
   document.getElementById("calPrev").addEventListener("click", () => { calM--; if (calM<0){calM=11;calY--;} if (calY < 1912){ calY = 1912; calM = 0; } render(); });
   document.getElementById("calNext").addEventListener("click", () => { calM++; if (calM>11){calM=0;calY++;} render(); });
-  calGrid.addEventListener("click", e => { const b = e.target.closest(".cal-day[data-roc]"); if (b){ calTarget.set(b.dataset.roc); closeCal(); } });
-  document.getElementById("calToday").addEventListener("click", () => { calTarget.set(todayROC()); closeCal(); });
-  document.getElementById("calClear").addEventListener("click", () => { calTarget.set(""); closeCal(); });
-  unknownButton.addEventListener("click", () => { calTarget.set(UNKNOWN_DUE); closeCal(); });
+  calGrid.addEventListener("click", e => { const b = e.target.closest(".cal-day[data-roc]"); if (b){ if(calTarget.set(b.dataset.roc)!==false)closeCal(); } });
+  document.getElementById("calToday").addEventListener("click", () => { if(calTarget.set(todayROC())!==false)closeCal(); });
+  document.getElementById("calClear").addEventListener("click", () => { if(calTarget.set("")!==false)closeCal(); });
+  calBg.querySelectorAll("[data-cal-days]").forEach(button => button.addEventListener("click", () => {
+    const date = new Date();
+    date.setDate(date.getDate() + Number(button.dataset.calDays));
+    if(calTarget.set(dateToRoc(date))!==false)closeCal();
+  }));
+  unknownButton.addEventListener("click", () => { if(calTarget.set(UNKNOWN_DUE)!==false)closeCal(); });
   document.getElementById("calCancel").addEventListener("click", closeCal);
   document.getElementById("calFmt").addEventListener("click", () => { calFmtROC = !calFmtROC; render(); });
   calBg.addEventListener("click", e => { if (e.target === calBg) closeCal(); });
@@ -6581,9 +6710,17 @@ function closeOtherOverlays(keep){
   if (keep !== "hover" && typeof hideNeedHover === "function") hideNeedHover();
 }
 function needSeg(it, sg){ return sg===2 ? (it.note2||"") : sg===3 ? (it.note3||"") : (it.note||""); }
-// 備註是否有內容:三段(備註/注意/其它)任一有任何非空白字元即為「有」(未展開時只顯示 有/無,不顯示真實內容)
-function noteHasContent(it){
-  return !!(String(it.note||"").trim() || String(it.note2||"").trim() || String(it.note3||"").trim());
+// 表格固定依備註、注意、其它取第一段可見內容；只產生顯示文字，不改原文或欄位順序。
+function notePreviewHTML(it){
+  const box=document.createElement("div");
+  for(const key of ["note","note2","note3"]){
+    const value=String(it[key]||"");
+    if(!value.trim())continue;
+    box.innerHTML=needToViewHTML(value);
+    const text=Array.from(box.childNodes,node=>node.textContent||"").join(" ").replace(/[\u200B\uFEFF]/g,"").replace(/\s+/g," ").trim();
+    if(text)return `<span class="tneed-has">${esc(text)}</span>`;
+  }
+  return '<span class="tneed-ph">—</span>';
 }
 function needDefTitle(sg){ return sg===2 ? "注意" : sg===3 ? "其它" : "備註"; }
 function needTitle(it, sg){
@@ -6863,13 +7000,20 @@ function commitNeedSeg(it, sg, val){
   if (sg===2) it.note2 = val; else if (sg===3) it.note3 = val; else it.note = val;
   it.updatedAt = Date.now(); saveItems(); onLocalChange("data");
   {
-    // 任一段變動都重算「有/無」預覽(不再只看第 1 段,也不顯示真實內容)
+    // 任一段變動都依固定優先順序重算內容預覽。
     const tr = tableWrap.querySelector(`tr[data-id="${it.id}"]`);
     const cell = tr && tr.querySelector(".tneed");
     if (cell){
-      const html = noteHasContent(it) ? '<span class="tneed-has">有</span>' : '<span class="tneed-ph">無</span>';
-      // 有／無未變時保留原 DOM，避免每次輸入切斷瀏覽器的連續復原記錄。
-      if (cell.innerHTML !== html) cell.innerHTML = html;
+      const html = notePreviewHTML(it);
+      // 原地更新預覽文字，保留節點，避免打斷下方編輯器的連續復原群組。
+      if (cell.innerHTML !== html){
+        const holder=document.createElement("div");holder.innerHTML=html;
+        const next=holder.firstElementChild,preview=cell.firstElementChild;
+        if(preview?.tagName==="SPAN"&&preview.childNodes.length===1&&preview.firstChild.nodeType===3){
+          if(preview.className!==next.className)preview.className=next.className;
+          if(preview.firstChild.nodeValue!==next.textContent)preview.firstChild.nodeValue=next.textContent;
+        }else cell.innerHTML=html;
+      }
       cell.removeAttribute("title");
     }
   }
@@ -9058,7 +9202,7 @@ function renderLinkSettings(){
 // ===== 設定的收集 / 套用(供備份、匯入、雲端同步共用;含 到期提醒 與 外觀主題) =====
 function collectSettings(){
   const fs = serializeColFilterState();
-  return { density: density, sort: currentSort, theme: theme, colw: colW, fltorder: ensureFltOrder(), expfocus: expFocus, colFilter: fs.colFilter, fltP: fs.fltP, ...PropertyCore.clone(linkPreferences) };
+  return { density: density, sort: currentSort, theme: theme, colw: colW, fltorder: ensureFltOrder(), expfocus: expFocus, colFilter: fs.colFilter, fltP: fs.fltP, fltF:fs.fltF, ...PropertyCore.clone(linkPreferences) };
 }
 function applySettings(s){
   if (!s || typeof s !== "object") return;
@@ -9081,7 +9225,7 @@ function applySettings(s){
   if (s.colw && typeof s.colw === "object"){ colW = {...DEFAULT_COLW, ...s.colw}; saveColW(); }
   if (s.fltorder && typeof s.fltorder === "object"){ filterOrder = s.fltorder; saveFltOrder(); }
   if (typeof s.expfocus === "boolean"){ expFocus = s.expfocus; saveExpFocus(); if (typeof applyExpFocus === "function") applyExpFocus(); }
-  if (s.colFilter || s.fltP){ applyColFilterState(s); saveColFilterState(); }
+  if (s.colFilter || s.fltP || s.fltF){ applyColFilterState(s); saveColFilterState(); }
   applyFilter();
 }
 applySettings(PropertyCore.local().current.settings);
@@ -10355,6 +10499,486 @@ function paintPropertyState(state){
  document.addEventListener("focusout",()=>{if(pending)queue();});
  if(persistLocal())queue();
 })();
+
+// desktop-quick-edit:start — scoped desktop editors; existing persistence owns all writes.
+(()=>{
+ const textFields=new Set(['layout','name','addr','floor','price','agent','tel','store']);
+ let current=null,closing=false,lastPointer='',pointerHeld=false,pendingRefresh=false,rejectedClick=false;
+ const getItem=id=>items.find(item=>item.id===id);
+ const ready=()=>PropertyCore.ready&&!window._saveBlocked;
+ const withEditing=fn=>{const old=editMode;try{editMode=true;return fn();}finally{editMode=old;}};
+ const original={sync:syncToggleUI,apply:applyFilter,exit:tCellExitEdit,mode:setEditMode,view:setViewMode,catChoice:applyCatChoice,closeCat:closeCatMenu,openNeed:openNeedExp,closeNeed:closeNeedExp,toggleNeed:toggleNeedExp,settings:openSettings,cover:showCover};
+ function indicator(){
+  const button=document.getElementById('modeBtn'),local=!!current&&!editMode;
+  if(!button)return;
+  button.classList.toggle('quick-edit',local);button.classList.toggle('on',editMode);
+  const title=local?'臨時編輯：點一下儲存並結束':editMode?'編輯模式：可修改資料（點一下或按 TAB 切回正常）':'正常模式：點內容可複製（點一下或按 TAB 切為編輯）';
+  button.title=title;button.setAttribute('aria-label',title);button.setAttribute('aria-pressed',String(editMode||local));
+ }
+ function makeCell(id,field,editing){
+  const item=getItem(id),index=tableFields().indexOf(field);if(!item||index<0)return null;
+  const previous=editMode;try{
+   editMode=editing;const table=document.createElement('table');table.innerHTML='<tbody>'+trowHTML(item)+'</tbody>';
+   return table.rows[0]?.cells[index]||null;
+  }finally{editMode=previous;}
+ }
+ function persistChoice(change){
+  if(!ready())return false;
+  if(change()===false)return true;
+  if(!saveItems())return false;
+  onLocalChange('data');return ready();
+ }
+ function commitText(cell){
+  if(!ready()||!cell?.isConnected||!tFindItem(cell))return false;
+  clearTimeout(cell._saveT);tCommitCell(cell);
+  return ready()&&cell.getAttribute('aria-invalid')!=='true';
+ }
+ function commitCurrent(){
+  if(!current)return true;
+  if(!ready())return false;
+  if(!getItem(current.id))return false;
+  if(textFields.has(current.field))return commitText(current.td?.querySelector('.tcell[data-field]'));
+  if(current.field==='note')return commitNote(current);
+  if(current.field==='links')return commitQuickLinksForCurrent();
+  return ready();
+ }
+ function finishQuick(){
+  if(!current)return true;
+  if(!commitCurrent()){indicator();return false;}
+  const done=current;current=null;closing=true;
+  try{
+   original.closeCat();if(done.field==='due')window.closeCal?.();
+   if(done.field==='links')closeTableMoreLinks();
+   if(done.field==='note')endNote(done);
+   if(done.td?.isConnected){
+    const cell=done.td.querySelector('.tcell[contenteditable="true"]');if(cell)cell.setAttribute('contenteditable','false');
+    const normal=makeCell(done.id,done.field,editMode);if(normal)done.td.replaceWith(normal);
+   }
+  }finally{closing=false;indicator();}
+  pendingRefresh=true;window.queuePropertyRefresh?.();
+  return true;
+ }
+ function mountCell(info){
+  const tr=[...tableWrap.querySelectorAll('tr[data-id]')].find(row=>row.dataset.id===info.id);
+  const td=makeCell(info.id,info.field,true),index=tableFields().indexOf(info.field);
+  if(!tr||!td||index<0)return null;
+  td.dataset.quickEdit=info.field;tr.cells[index].replaceWith(td);
+  current={...info,td};indicator();return td;
+ }
+ function identify(target){
+  if(!(target instanceof Element)||tselMode||selectMode)return null;
+  if(target.closest('input,textarea,[contenteditable="true"]'))return null;
+  const selection=getSelection();if(selection&&!selection.isCollapsed&&tableWrap.contains(selection.anchorNode))return null;
+  const link=quickLinkInfo(target);if(link)return link;
+  if(!tableWrap.contains(target))return null;
+  if(target.closest('thead,.tdel,.col-resize,.gen-btn,.dup-btn,.gen-edge,.need-order-menu,button.nseg-hbtn'))return null;
+  if(target.closest('input,textarea,[contenteditable="true"],a[href]'))return null;
+  const note=noteInfo(target);if(note)return note;
+  const tr=target.closest('tr[data-id]'),td=target.closest('td');if(!tr||!td)return null;
+  const field=tableFields()[td.cellIndex];
+  return textFields.has(field)||field==='cat'||field==='due'?{id:tr.dataset.id,field}:null;
+ }
+ function begin(info,event){
+  if(!finishQuick()||!ready())return;
+  // Commit an existing full-mode editor synchronously before replacing its cell.
+  const active=tableWrap.querySelector('.tcell[contenteditable="true"]');
+  if(active){if(!commitText(active))return;active.setAttribute('contenteditable','false');}
+  const exp=tableWrap.querySelector('.needexp');if(exp){commitAllSegs(exp);if(!ready())return;}
+  if(lpNeed||lpTableTarget){commitLink(false);if(!ready())return;}
+  closeOtherOverlays(info.field==='note'?'exp':'');if(!ready())return;
+  if(info.field==='note'){startNote(info);return;}
+  if(info.field==='links'){if(!startQuickLink(info))finishQuick();return;}
+  const td=mountCell(info);if(!td)return;
+  if(textFields.has(info.field)){
+   withEditing(()=>tCellEdit(td.querySelector('.tcell[data-field]'),event.clientX,event.clientY,{syncCaret:true}));
+  }else if(info.field==='cat')openCatMenu(td.querySelector('.tcat-trigger'));
+  else if(info.field==='due'){
+   const session=current;
+   window.openCalFor({
+    get:()=>dueValue(getItem(info.id)),
+    set:value=>persistChoice(()=>{
+     const item=getItem(info.id);if(!item)return false;
+     const next=String(value||'').trim();if(dueValue(item)===next)return false;
+     setDueValue(item,next);item.updatedAt=Date.now();return true;
+    }),
+    beforeClose:()=>current!==session||ready(),
+    onClose:()=>{if(current===session&&!closing)finishQuick();}
+   });
+  }
+ }
+ syncToggleUI=function(...args){const result=original.sync.apply(this,args);indicator();return result;};
+ applyFilter=function(...args){if(current&&!closing)return;pendingRefresh=false;return original.apply.apply(this,args);};
+ const originalBusy=window.isTableBusy;
+ window.isTableBusy=function(){return !!current||pendingRefresh&&(pointerHeld||tableMoreAnchor!==null)||originalBusy();};
+ tCellExitEdit=function(cell,opts){
+  if(!current||!current.td?.contains(cell)||!textFields.has(current.field))return original.exit(cell,opts);
+  if(opts?.commit===false){cell.setAttribute('contenteditable','false');return true;}
+  if(!commitText(cell))return false;
+  cell.setAttribute('contenteditable','false');return true;
+ };
+ applyCatChoice=function(key){
+  if(!current||current.field!=='cat')return original.catChoice(key);
+  const session=current;
+  if(persistChoice(()=>{
+   const item=getItem(session.id);if(!item)return false;if(item.cat===key)return false;
+   item.cat=key;item.updatedAt=Date.now();
+   const label=session.td.querySelector('.tcat-label');if(label)label.textContent=key;
+   catmenu.querySelectorAll('.catmenu-opt').forEach(opt=>opt.classList.toggle('sel',opt.dataset.key===key));
+   return true;
+  }))finishQuick();else indicator();
+ };
+ closeCatMenu=function(){
+  if(current?.field==='cat'&&!closing&&!ready())return false;
+  const session=current,result=original.closeCat();
+  if(session?.field==='cat'&&!closing)queueMicrotask(()=>{if(current===session&&!catmenu.classList.contains('show'))finishQuick();});
+  return result;
+ };
+ setEditMode=function(on){if(!finishQuick())return false;return original.mode(on);};
+ setViewMode=function(mode){if(!finishQuick())return false;return original.view(mode);};
+ openSettings=function(...args){if(!finishQuick())return false;return original.settings.apply(this,args);};
+ showCover=function(...args){if(!finishQuick())return false;return original.cover.apply(this,args);};
+ closeNeedExp=function(){if(current?.field==='note'&&!closing&&!finishQuick())return false;return original.closeNeed();};
+ toggleNeedExp=function(tr){if(current?.field==='note'&&!finishQuick())return false;return original.toggleNeed(tr);};
+ openNeedExp=function(tr,focus){if(current&&!closing&&!finishQuick())return false;return original.openNeed(tr,focus);};
+ // Only the selected segment is promoted; the preview keeps its existing precedence.
+ function noteInfo(target){
+  const exp=target.closest('.needexp'),part=target.closest('.nseg-ed,.nseg-t');
+  if(exp&&part){
+   const link=target.closest('.need-link');
+   return {id:exp.dataset.for,field:'note',sg:+part.dataset.seg,title:part.classList.contains('nseg-t'),linkIndex:link?[...part.querySelectorAll('.need-link')].indexOf(link):-1};
+  }
+  const tr=target.closest('tr[data-id]');if(!tr||!target.closest('.tneed'))return null;
+  const item=getItem(tr.dataset.id);if(!item)return null;
+  const sg=[1,2,3].find(sg=>notePreviewHTML({note:needSeg(item,sg)}).includes('tneed-has'))||1;
+  return {id:item.id,field:'note',sg,title:false,linkIndex:-1};
+ }
+ function startNote(info){
+  const tr=[...tableWrap.querySelectorAll('tr[data-id]')].find(row=>row.dataset.id===info.id);
+  if(!tr)return;
+  let exp=tableWrap.querySelector('tr.needexp');
+  if(!exp||exp.dataset.for!==info.id){original.openNeed(tr,false);exp=tr.nextElementSibling;}
+  if(!exp?.classList.contains('needexp')||!ready())return;
+  const item=getItem(info.id),seg=exp.querySelector('.nseg[data-need-font-seg="'+info.sg+'"]');
+  const ed=seg?.querySelector('.nseg-ed'),title=seg?.querySelector('.nseg-t');if(!item||!ed||!title)return;
+  current={...info,exp,seg,ed,titleEl:title,addedButtons:[]};
+  if(info.title){title.setAttribute('contenteditable','true');tableNeedTitles.set(title,title.textContent);title.focus();}
+  else{
+   ed.classList.remove('needexp-view');ed.setAttribute('contenteditable','true');ed.spellcheck=false;
+   ed.innerHTML=needSeg(item,info.sg)?needToEditHTML(needSeg(item,info.sg)):'<div><br></div>';
+   rememberTableNeedEditor(ed,needSeg(item,info.sg));
+   seg.querySelectorAll('.nseg-hbtn-ph').forEach(ph=>{
+    const button=document.createElement('button');button.type='button';button.className='nseg-hbtn';button.textContent=ph.textContent;
+    button.addEventListener('pointerdown',event=>{event.preventDefault();if(!ready())return;if(button.textContent==='標題')toggleNeedHeading(exp);else toggleNeedStrike(exp);});
+    ph.hidden=true;ph.after(button);current.addedButtons.push({ph,button});
+   });
+   ed.focus();const range=document.createRange();range.selectNodeContents(ed);range.collapse(false);const selection=getSelection();selection.removeAllRanges();selection.addRange(range);
+  }
+  exp.classList.add('editing');tr.classList.add('exp-editing');indicator();
+  if(info.linkIndex>=0){const chip=ed.querySelectorAll('.need-link-chip')[info.linkIndex];if(chip)openLinkPopNeed(chip);}
+ }
+ function commitNote(session){
+  if(!ready()||!session.exp?.isConnected||!getItem(session.id))return false;
+  if(lpNeed&&session.exp.contains(lpNeed.ed)&&commitLink(false)===false)return false;
+  if(session.title)commitTableNeedTitle(session.titleEl);else commitTableNeedEditor(session.ed);
+  return ready();
+ }
+ function endNote(session){
+  if(!session.exp?.isConnected)return;
+  const item=getItem(session.id);if(!item)return;
+  if(!editMode){
+   session.titleEl.setAttribute('contenteditable','false');
+   session.ed.classList.add('needexp-view');session.ed.removeAttribute('contenteditable');
+   const value=needSeg(item,session.sg);session.ed.innerHTML=value?needToViewHTML(value):'<div class="tneed-ph">（無內容）</div>';
+   session.addedButtons.forEach(({ph,button})=>{button.remove();ph.hidden=false;});
+   session.exp.classList.remove('editing');
+   session.exp.previousElementSibling?.classList.remove('exp-editing');
+  }
+ }
+
+const quickLinkOriginal={
+  open:openLinkPop,openNeed:openLinkPopNeed,commit:commitLink,
+  finish:finishLinkEditor,close:closeLinkPop,outside:lpOutside
+};
+let quickLinkSwitchDepth=0;
+const quickNeedLinkState=new WeakMap();
+lpOutside=function(event){
+  if(quickLinkOwner()&&event.target.closest?.('#dataSafetyPanel'))return;
+  return quickLinkOriginal.outside(event);
+};
+
+function quickLinkProblem(message){toast(message);return false;}
+function quickLinkOwner(){
+  const session=current;if(!session)return null;
+  if(session.field==='links'&&lpTableTarget?.itemId===session.id)return session;
+  if(session.field==='note'&&lpNeed?.ed===session.ed&&session.exp?.contains(lpNeed.ed))return session;
+  return null;
+}
+function quickLinkRequestEnd(session){
+  if(session?.field!=='links'||quickLinkSwitchDepth)return;
+  queueMicrotask(()=>{
+    if(current===session&&!closing&&ready()&&!lpTableTarget&&!lpNeed)finishQuick();
+  });
+}
+function quickLinkCloseOwned(session){
+  if(!ready())return false;
+  const nd=lpNeed;
+  quickLinkOriginal.close();
+  if(nd)quickNeedLinkState.delete(nd);
+  quickLinkRequestEnd(session);
+  return true;
+}
+
+// Identify a real platform or a real +N option. The +N button itself is a chooser,
+// not an arbitrary platform; do not silently edit the first hidden platform.
+function quickLinkInfo(target){
+  if(!(target instanceof Element)||tselMode||selectMode)return null;
+  let itemId,slot;
+  const option=target.closest('#tableMoreLinks button[data-slot]');
+  if(option){
+    const anchor=tableMoreAnchor;
+    if(!anchor||!tableWrap.contains(anchor))return null; // never a card shortcut
+    itemId=anchor.closest('tr[data-id]')?.dataset.id;slot=Number(option.dataset.slot);
+  }else{
+    const chip=target.closest('.tchip[data-slot]');
+    if(!chip||!tableWrap.contains(chip))return null;
+    itemId=chip.closest('tr[data-id]')?.dataset.id;slot=Number(chip.dataset.slot);
+  }
+  if(!itemId||!getItem(itemId)||!linkSlotById(slot))return null;
+  return {id:itemId,field:'links',slot};
+}
+function quickLinkInside(target){
+  if(!(target instanceof Element)||!current)return false;
+  if(target.closest('#linkpop')&&quickLinkOwner()===current)return true;
+  return current.field==='links'&&!!target.closest('#tableMoreLinks')&&
+    tableMoreAnchor?.closest('tr[data-id]')?.dataset.id===current.id;
+}
+function startQuickLink(info){
+  if(!ready()||!getItem(info.id)||!linkSlotById(info.slot))return false;
+  const td=mountCell(info);if(!td)return false;
+  const anchor=td.querySelector('.tchip[data-slot="'+info.slot+'"]')||td.querySelector('.more-links');
+  if(!anchor)return false;
+  return openLinkPop(anchor,info.slot)!==false&&
+    lpTableTarget?.itemId===info.id&&lpTableTarget.slot===info.slot&&lpop.classList.contains('show');
+}
+
+function commitQuickPlatformLink(session){
+  if(!ready()||current!==session)return false;
+  const target=lpTableTarget;
+  if(!target||target.itemId!==session.id)return false;
+  const item=getItem(target.itemId),slot=target.slot,field=linkUrlField(slot);
+  if(!item||!field||!linkSlotById(slot))return quickLinkProblem('此物件或連結欄位已不存在');
+  const url=lpInput.value.trim(); // Same trimming semantics as original commitLink.
+  const names=linkNameEditValues(item,slot,lpNameEdit.value,target.initialLabel);
+  const changed=(item[field]||'')!==url||linkIsNone(item,slot)!==lpNone.checked||
+    Object.entries(names).some(([key,value])=>(item[key]||'')!==value);
+  if(changed){
+    item[field]=url||null;item['linkNone'+slot]=lpNone.checked;Object.assign(item,names);
+    item.updatedAt=Date.now();
+    if(!saveItems())return false;
+    onLocalChange('data');
+    if(!ready())return false; // Includes the second persistLocal in onLocalChange.
+  }
+  // Do not clear targets, inputs or popup until both persistence stages have succeeded.
+  // A retry may already have saved these values: unchanged is OK only after ready().
+  if(!quickLinkCloseOwned(session))return false;
+  listCounter.refresh(getFilteredItems());
+  return true;
+}
+
+function commitQuickNoteLink(session){
+  if(!ready()||current!==session)return false;
+  const nd=lpNeed,ed=nd?.ed,chip=nd?.chip;
+  if(!nd||!chip||ed!==session.ed||!ed.isConnected||!session.exp?.contains(ed)||
+      !getItem(session.id)||!tableNeedEdits.has(ed)){
+    return quickLinkProblem('備註編輯位置已變更，請重新開啟');
+  }
+  let state=quickNeedLinkState.get(nd);
+  if(!state){
+    if(!ed.contains(chip))return quickLinkProblem('連結編輯位置已變更，請重新開啟');
+    state={parent:chip.parentNode,next:chip.nextSibling,removed:false};
+    quickNeedLinkState.set(nd,state);
+  }
+  const url=lpInput.value.trim();
+  if(url){
+    if(!ed.contains(chip)){
+      // A previous clear can remove the chip before save fails. Keep its insertion point
+      // so retry/another URL edit does not lose the target or append it to the wrong line.
+      if(!state.removed||!state.parent?.isConnected||!ed.contains(state.parent)){
+        return quickLinkProblem('連結編輯位置已變更，請重新開啟');
+      }
+      state.parent.insertBefore(chip,state.next?.parentNode===state.parent?state.next:null);
+    }
+    chip.setAttribute('data-url',url);state.removed=false;
+  }else{
+    if(ed.contains(chip)){
+      state.parent=chip.parentNode;state.next=chip.nextSibling;chip.remove();
+    }else if(!state.removed)return quickLinkProblem('連結編輯位置已變更，請重新開啟');
+    state.removed=true;
+  }
+  // No direct ~~ or § replacement, no handmade note string. Existing editToNeed and
+  // normalizeNeedStorage retain URL edges and use the original field update tracking.
+  commitTableNeedEditor(ed);
+  if(!ready())return false;
+  // On failure lpNeed remains the SAME object and the input/checkbox/title stay visible.
+  // Do not revert the editor after failure: the existing retry must save pending items.
+  return quickLinkCloseOwned(session); // note quick session intentionally remains active
+}
+function commitQuickLinksForCurrent(){
+  if(!current||current.field!=='links')return true;
+  if(!ready())return false;
+  if(lpTableTarget?.itemId===current.id)return commitQuickPlatformLink(current);
+  return !lpop.classList.contains('show');
+}
+
+commitLink=function(refreshTable=true){
+  const session=quickLinkOwner();
+  if(!session)return quickLinkOriginal.commit(refreshTable);
+  if(!ready())return false;
+  return session.field==='links'?commitQuickPlatformLink(session):commitQuickNoteLink(session);
+};
+closeLinkPop=function(){
+  const session=quickLinkOwner();
+  if(!session)return quickLinkOriginal.close();
+  if(!ready())return false;
+  // Closing without commit preserves ordinary Esc/cancel behavior: unapplied popup
+  // input is discarded. A previously failed commit cannot be cancelled while blocked.
+  return quickLinkCloseOwned(session);
+};
+finishLinkEditor=function(save){
+  const session=quickLinkOwner();
+  if(!session)return quickLinkOriginal.finish(save);
+  const target=lpTableTarget,ed=lpNeed?.ed;
+  const ok=save?commitLink():closeLinkPop();
+  if(ok===false){indicator();return false;}
+  if(target){
+    const row=tableLinkRow(target.itemId);
+    (row?.querySelector('.tchip[data-slot="'+target.slot+'"]')||row?.querySelector('.more-links'))?.focus({preventScroll:true});
+  }else if(ed?.isConnected)ed.focus({preventScroll:true});
+  return true;
+};
+
+// The original open functions commit the old popup but ignore its result. Within quick
+// only, finish that old popup first and stop if it failed, so opening another platform
+// cannot overwrite a failed URL draft. Suppress session completion while switching.
+openLinkPop=function(source,slot=Number(source?.dataset.slot)){
+  const owner=quickLinkOwner();
+  const quick=current?.field==='links';
+  if(!owner&&!quick)return quickLinkOriginal.open(source,slot);
+  if(!ready())return false;
+  const id=source?.closest('tr[data-id]')?.dataset.id;
+  if(!id||!getItem(id)||!linkSlotById(slot))return false;
+  if(lpTableTarget?.itemId===id&&lpTableTarget.slot===slot)return true;
+  quickLinkSwitchDepth++;
+  try{
+    if(owner&&commitLink(false)===false)return false;
+    if(!ready())return false;
+    quickLinkOriginal.open(source,slot);
+    if(!ready())return false;
+    if(current?.field==='links'&&current.id===id)current.slot=slot;
+    return lpTableTarget?.itemId===id&&lpTableTarget.slot===slot&&lpop.classList.contains('show');
+  }finally{quickLinkSwitchDepth--;}
+};
+openLinkPopNeed=function(chip){
+  const owner=quickLinkOwner();
+  const quick=current?.field==='note'&&chip?.closest('.nseg-ed')===current.ed;
+  if(!owner&&!quick)return quickLinkOriginal.openNeed(chip);
+  if(!ready())return false;
+  if(lpNeed?.chip===chip&&lpop.classList.contains('show'))return true;
+  quickLinkSwitchDepth++;
+  try{
+    if(owner&&commitLink(false)===false)return false;
+    if(!ready())return false;
+    quickLinkOriginal.openNeed(chip);
+    return ready()&&lpNeed?.chip===chip&&lpop.classList.contains('show');
+  }finally{quickLinkSwitchDepth--;}
+};
+
+// Active platform quick session only. All ordinary platform/card/mobile clicks delegate.
+function handleQuickLinkClick(event){
+  if(current?.field!=='links'||!(event.target instanceof Element))return false;
+  const more=event.target.closest('.more-links');
+  if(more&&current.td?.contains(more)){
+    event.preventDefault();event.stopImmediatePropagation();
+    quickLinkSwitchDepth++;
+    try{
+      if(quickLinkOwner()&&commitLink(false)===false)return true;
+      if(ready())openMoreLinks(more);
+    }finally{quickLinkSwitchDepth--;}
+    return true;
+  }
+  const info=quickLinkInfo(event.target);
+  if(!info||info.id!==current.id)return false;
+  event.preventDefault();event.stopImmediatePropagation();
+  if(!ready())return true;
+  // Snapshot slot before openLinkPop closes/clears the +N panel.
+  const anchor=current.td?.querySelector('.tchip[data-slot="'+info.slot+'"]')||current.td?.querySelector('.more-links');
+  if(anchor)openLinkPop(anchor,info.slot);
+  return true;
+}
+
+
+ function inside(target){
+  if(quickLinkInside(target))return true;
+  if(current?.td?.contains(target))return true;
+  if(current?.field==='note'&&(current.seg?.contains(target)||target.closest('#linkpop')))return true;
+  if(current?.field==='cat'&&target.closest('#catmenu'))return true;
+  if(current?.field==='due'&&target.closest('#calBg'))return true;
+  return false;
+ }
+ const stop=event=>{event.preventDefault();event.stopImmediatePropagation();};
+ let pencilEnds=false;
+ window.addEventListener('pointerdown',event=>{
+  lastPointer=event.pointerType||'mouse';
+  rejectedClick=false;if(current&&event.button===0)pointerHeld=true;
+  if(event.button===2&&lastPointer==='mouse'){
+   if(identify(event.target))stop(event);return;
+  }
+  if(event.button!==0||!current)return;
+  if(event.target.closest('#dataSafetyPanel'))return;
+  if(event.target.closest('#modeBtn')&&!editMode){pencilEnds=true;event.preventDefault();return;}
+  if(!inside(event.target)&&!finishQuick()){rejectedClick=true;stop(event);}
+ },true);
+ window.addEventListener('contextmenu',event=>{
+  if(event.button!==2||(event.pointerType&&event.pointerType!=='mouse')||(!event.pointerType&&lastPointer==='touch'))return;
+  const info=identify(event.target);if(!info)return;
+  stop(event);begin(info,event);indicator();
+ },true);
+ window.addEventListener('click',event=>{
+  if(rejectedClick&&!event.target.closest('#dataSafetyPanel')){rejectedClick=false;stop(event);return;}
+  if(event.target.closest('#modeBtn')&&(pencilEnds||current&&!editMode)){
+   pencilEnds=false;stop(event);finishQuick();return;
+  }
+  pencilEnds=false;
+  if(handleQuickLinkClick(event))return;
+  if(current?.td?.contains(event.target)&&event.target.closest('.tcell[contenteditable="true"]'))event.stopImmediatePropagation();
+ },true);
+ window.addEventListener('pointerup',()=>{pointerHeld=false;},true);
+ window.addEventListener('pointercancel',()=>{pencilEnds=false;pointerHeld=false;rejectedClick=false;},true);
+ window.addEventListener('keydown',event=>{
+  if(!current||event.isComposing||event.keyCode===229||event.target.closest('#dataSafetyPanel')||!ready())return;
+  if(current.field==='note'&&current.seg?.contains(event.target)&&(event.key==='Escape'||event.key==='Tab'&&!event.shiftKey||current.title&&event.key==='Enter')){stop(event);finishQuick();return;}
+  if(textFields.has(current.field)&&current.td?.contains(event.target)&&['Enter','Escape','Tab'].includes(event.key)){
+   stop(event);finishQuick();
+  }
+ },true);
+ window.addEventListener('paste',event=>{
+  const cell=event.target.closest?.('[data-quick-edit] .tcell[contenteditable="true"]');
+  if(!cell||!current)return;
+  stop(event);withEditing(()=>tCellPastePlain(cell,tCellExtractPasteText(event)));
+ },true);
+ window.addEventListener('blur',event=>{
+  if(current?.field==='note'&&current.seg?.contains(event.target)){
+   // Focusing the nested URL input must not commit and close that newly opened popup.
+   if(ready()){if(current.title)commitTableNeedTitle(current.titleEl);else commitTableNeedEditor(current.ed);}
+   if(!ready()){event.stopImmediatePropagation();return;}
+  }
+  if(!current?.td?.contains(event.target)||!textFields.has(current.field))return;
+  const session=current;
+  queueMicrotask(()=>{if(current===session&&!session.td.contains(document.activeElement))finishQuick();});
+ },true);
+ indicator();
+})();
+// desktop-quick-edit:end
 
 </script>
 <script>PropertyCore.start("property-app-source");</script>
