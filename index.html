@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261122E">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261122E">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261122G">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261122G">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261122E"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261122E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261122G"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261122G"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1630,6 +1630,8 @@
 .history-tools{display:flex;align-items:center;margin:0 auto 0 0;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--card);flex-shrink:0}
 .history-tools button{font:600 13px/1.25 system-ui;color:var(--accent-deep);background:transparent;border:0;cursor:pointer}
 .history-tools button{width:77px;min-height:36px;padding:0 6px;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
+#app:not(.table-mode) .history-tools button{width:36px;padding:0}
+#app:not(.table-mode) .history-tools button span{display:none}
 .history-tools button+button{border-left:1px solid var(--line)}
 .history-tools svg{width:17px;height:17px;flex:none}#tryRedo svg{transform:scaleX(-1)}
 .history-tools button:disabled{color:var(--ink-soft);background:var(--surface-2);cursor:default}
@@ -2564,7 +2566,16 @@ function historyMove(latest,h,request){
     k===(legacyUrls[slot-1]||"url"+slot)||["linkName","linkNone","linkBaseName"].some(prefix=>k===prefix+slot))))conflict("這個連結欄位已永久移除。");
   if(from){
    const keys=to?d.fields:recordFields(current,from);
-   if(keys.some(k=>!same(fieldValue(current,k),fieldValue(from,k))))conflict("這筆物件已有其他修改。");
+   // A custom platform's missing metadata can come back from storage as its empty default.
+   // Compare that default only for edited fields. Whole-record deletes still use exact values.
+   const matches=k=>{
+    const actual=fieldValue(current,k),expected=fieldValue(from,k);
+    if(same(actual,expected))return true;
+    if(!to||!customLinkFieldId(k)||!k.startsWith("link"))return false;
+    const empty=k.startsWith("linkNone")?false:"";
+    return (actual===undefined&&expected===empty)||(expected===undefined&&actual===empty);
+   };
+   if(keys.some(k=>!matches(k)))conflict("這筆物件已有其他修改。");
   }
   if(!to){
    next.deleted[d.id]=deleteStamp(current.updatedAt,next.deleted[d.id],time);removed.add(d.id);
@@ -2835,7 +2846,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.22E";
+const APP_VERSION = "2026.11.22G";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
