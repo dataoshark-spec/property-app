@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261122H">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261122H">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261125A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261125A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261122H"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261122H"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261125A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261125A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -2846,7 +2846,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.22H";
+const APP_VERSION = "2026.11.25A";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -4389,11 +4389,25 @@ window.addEventListener("pointerup", _rzEnd);
 window.addEventListener("pointercancel", _rzEnd);
 function bindTableScrollSync(headWrap, bodyWrap){
   if (tableWrap._scrollUnbind){ tableWrap._scrollUnbind(); tableWrap._scrollUnbind = null; }
-  let syncing = false;
-  const onBody = () => { if (syncing) return; syncing = true; headWrap.scrollLeft = bodyWrap.scrollLeft; syncing = false; };
-  const onHead = () => { if (syncing) return; syncing = true; bodyWrap.scrollLeft = headWrap.scrollLeft; syncing = false; };
-  bodyWrap.addEventListener("scroll", onBody);
-  headWrap.addEventListener("scroll", onHead);
+  // scroll 事件會延後送達。記住兩側已處理的位置，避免回寫正在滑動的那一側。
+  const lastLeft = new Map([[bodyWrap, bodyWrap.scrollLeft], [headWrap, headWrap.scrollLeft]]);
+  function follow(source, target){
+    const left = source.scrollLeft;
+    if (left === lastLeft.get(source)) return;
+    lastLeft.set(source, left);
+    if (target.scrollLeft !== left) target.scrollLeft = left;
+    const applied = target.scrollLeft;
+    lastLeft.set(target, applied);
+    // 桌面捲軸可能讓兩側的最右界不同，只在超出共同範圍時校正。
+    if (Math.abs(applied - left) > 1){
+      source.scrollLeft = applied;
+      lastLeft.set(source, source.scrollLeft);
+    }
+  }
+  const onBody = () => follow(bodyWrap, headWrap);
+  const onHead = () => follow(headWrap, bodyWrap);
+  bodyWrap.addEventListener("scroll", onBody, {passive:true});
+  headWrap.addEventListener("scroll", onHead, {passive:true});
   tableWrap._scrollUnbind = () => { bodyWrap.removeEventListener("scroll", onBody); headWrap.removeEventListener("scroll", onHead); };
 }
 // 備註欄拖曳選字:關掉表頭/表身水平 overflow(勿用 scrollLeft 對拉,會震盪→標題狂晃)
