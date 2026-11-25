@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261125H">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261125H">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261125I">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261125I">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261125H"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261125H"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261125I"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261125I"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -461,7 +461,6 @@
 
   .search{display:flex;align-items:center;gap:10px;padding:12px 18px 0;}
   .search-box{position:relative;flex:1;min-width:0;display:flex;}
-  .search-box input{width:100%;padding-right:38px;}   /* 右側留給清除鈕 */
   /* 自訂清除鈕:只要有輸入文字就顯示(原生的 X 一失焦就消失,不方便) */
   .search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:none;
     width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--text-faint);
@@ -476,6 +475,7 @@
     background:var(--card);border:1px solid var(--line);border-radius:12px;
     padding:7px 14px;outline:none;transition:border-color .15s ease,box-shadow .15s ease;
   }
+  .search-box input{width:100%;padding-right:38px;}   /* 右側留給清除鈕 */
   .search input::placeholder{color:var(--text-faint);}
   .search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
   /* search-help:start */
@@ -2869,7 +2869,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.25H";
+const APP_VERSION = "2026.11.25I";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
