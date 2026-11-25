@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261125A">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261125A">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261125B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261125B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261125A"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261125A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261125B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261125B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -528,12 +528,15 @@
   }
   /* 到期提醒:整張卡片底色呼吸閃爍(與表格檢視同一套)— 快到期=琥珀慢閃、已過期=紅快閃。
      色彩/節奏/深色主題/減少動態備援皆與表格列一致;以 color-mix 疊在卡片底色上,深淺主題自動適配 */
-  .card.due-warn{animation:cardPulseWarn 2.4s ease-in-out infinite;}
-  .card.due-over{animation:cardPulseOver 1.2s ease-in-out infinite;}
+  .card.due-warn{animation:var(--card-alert-animation,cardPulseWarn) 2.4s ease-in-out infinite;}
+  .card.due-over{animation:var(--card-alert-animation,cardPulseOver) 1.2s ease-in-out infinite;}
   @keyframes cardPulseWarn{0%,100%{background:color-mix(in srgb,#E0A11B 5%,var(--card));}50%{background:color-mix(in srgb,#E0A11B 15%,var(--card));}}
   @keyframes cardPulseOver{0%,100%{background:color-mix(in srgb,#D6452A 5%,var(--card));}50%{background:color-mix(in srgb,#D6452A 16%,var(--card));}}
-  [data-theme="dark"] .card.due-warn{animation-name:cardPulseWarnD;}
-  [data-theme="dark"] .card.due-over{animation-name:cardPulseOverD;}
+  [data-theme="dark"] .card.due-warn{animation-name:var(--card-alert-animation,cardPulseWarnD);}
+  [data-theme="dark"] .card.due-over{animation-name:var(--card-alert-animation,cardPulseOverD);}
+  .cards.limit-due-motion .card:not(.due-in-view){--card-alert-animation:none;}
+  .cards.limit-due-motion .card.due-warn:not(.due-in-view){background:color-mix(in srgb,#E0A11B 10%,var(--card));}
+  .cards.limit-due-motion .card.due-over:not(.due-in-view){background:color-mix(in srgb,#D6452A 11%,var(--card));}
   @keyframes cardPulseWarnD{0%,100%{background:color-mix(in srgb,#E6A94A 7%,var(--card));}50%{background:color-mix(in srgb,#E6A94A 20%,var(--card));}}
   @keyframes cardPulseOverD{0%,100%{background:color-mix(in srgb,#F0745A 8%,var(--card));}50%{background:color-mix(in srgb,#F0745A 22%,var(--card));}}
   @media (prefers-reduced-motion: reduce){
@@ -561,9 +564,9 @@
   .meta .due.warn .ml,.meta .due.over .ml{color:inherit;opacity:.72;}     /* 到期警示時標籤跟隨警示色,不變灰 */
   .meta .due{color:var(--ink);background:var(--surface-2);border-color:var(--line);}
   .meta .due.warn{color:#8A5200;background:#FCEBCF;border-color:#F1D49B;font-weight:700;
-    animation:duePulse 2.4s ease-in-out infinite;}
+    animation:var(--card-alert-animation,duePulse) 2.4s ease-in-out infinite;}
   .meta .due.over{color:#A5341A;background:#F8D9CF;border-color:#EDB4A2;font-weight:700;
-    animation:duePulse 1.2s ease-in-out infinite;}
+    animation:var(--card-alert-animation,duePulse) 1.2s ease-in-out infinite;}
   @keyframes duePulse{0%,100%{opacity:1;}50%{opacity:.42;}}
   @media (prefers-reduced-motion: reduce){ .meta .due.warn,.meta .due.over{animation:none;} }
 
@@ -2846,7 +2849,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.25A";
+const APP_VERSION = "2026.11.25B";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -3373,6 +3376,37 @@ function sortList(list){
   return arr;
 }
 const cardsEl  = document.getElementById("cards");
+// Let the browser track card visibility without measuring rows during a scroll.
+const observeCardDueAlerts = (() => {
+  if (!window.IntersectionObserver) return () => {};
+  cardsEl.classList.add("limit-due-motion");
+  let observer = null;
+  let headerHeight = 0;
+  let cards = [];
+  function observeVisibleArea(){
+    observer?.disconnect();
+    observer = null;
+    if (!cards.length) return;
+    observer = new IntersectionObserver((entries, source) => {
+      if (source !== observer) return;
+      for (const entry of entries) entry.target.classList.toggle("due-in-view", entry.isIntersecting);
+    }, {rootMargin: "-" + headerHeight + "px 0px 0px"});
+    for (const card of cards) observer.observe(card);
+  }
+  if (window.ResizeObserver){
+    const header = document.querySelector(".list-header");
+    new ResizeObserver(() => {
+      const height = header.offsetHeight;
+      if (height === headerHeight) return;
+      headerHeight = height;
+      observeVisibleArea();
+    }).observe(header);
+  }
+  return cardView => {
+    cards = cardView ? cardsEl.querySelectorAll(".card.due-warn,.card.due-over") : [];
+    observeVisibleArea();
+  };
+})();
 const tableWrap = document.getElementById("tableWrap");
 const needHover = document.getElementById("needHover");
 let needHoverCell = null;
@@ -5484,6 +5518,7 @@ function applyFilter(){
   }
   syncTableMode();
   if(viewMode==="table")fitTableDueDates();
+  observeCardDueAlerts(viewMode === "card");
   finishTableDuplicate();
 }
 renderTabs();
