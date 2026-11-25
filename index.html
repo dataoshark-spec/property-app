@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261125E">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261125E">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261125F">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261125F">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261125E"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261125E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261125F"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261125F"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -906,6 +906,13 @@
   #app:not(.table-mode) .controls .ctrl-right{margin-left:auto;}
   #linkFilterBg{z-index:60;padding:16px;}
   .link-filter-panel{max-width:350px;}
+  .link-filter-panel.managing{max-width:460px;}
+  .link-panel-tabs{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--surface-1);}
+  .link-panel-tabs button{border:0;border-radius:7px;background:transparent;color:var(--ink-soft);font:inherit;font-size:.86rem;font-weight:600;padding:7px 10px;cursor:pointer;}
+  .link-panel-tabs button[aria-selected=true]{color:var(--on-accent,#fff);background:var(--accent);}
+  .link-filter-panel [role=tabpanel]{min-height:0;overflow-y:auto;overscroll-behavior:contain;}
+  #linkFilterBg #linkSettingsCard{padding:0 1px 3px;}
+  #app.table-mode #linkFilterBtn.no-slots{display:inline-flex;}
   .link-filter-rows{display:grid;grid-template-columns:fit-content(28%) minmax(0,1fr);align-items:center;gap:13px 12px;padding:13px 0 8px;}
   .link-filter-row{display:contents;}
   .link-filter-name{min-width:0;max-width:100%;justify-self:end;font-size:.84rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -1831,22 +1838,6 @@ tr.history-highlight>td{box-shadow:inset 0 2px #60ae93,inset 0 -2px #60ae93!impo
         </div>
       </div>
 
-      <div class="set-card" id="linkSettingsCard">
-        <div class="link-settings-head"><div class="set-card-title">連結名稱與顏色</div>
-          <div class="link-settings-actions">
-            <button class="link-action symbol" type="button" id="linkRemoveSlot" aria-label="選擇要刪除的連結欄位" aria-expanded="false" aria-controls="linkDeletePicker"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 8h12"/></svg><span class="cancel-label">取消</span></button>
-            <button class="link-action symbol add" type="button" id="linkAddSlot" aria-label="新增連結欄位"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 8h12 M8 2v12"/></svg></button>
-          </div>
-        </div>
-        <div id="linkSettingsRows"></div>
-        <div id="linkDeletePicker" hidden><p class="set-card-desc">選擇要刪除的欄位，下一步會顯示影響筆數。</p><div id="linkDeleteChoices"></div></div>
-      </div>
-      <dialog id="linkDeleteDialog" aria-labelledby="linkDeleteTitle" aria-describedby="linkDeleteImpact linkDeleteWarning">
-        <h3 id="linkDeleteTitle"></h3>
-        <div id="linkDeleteImpact"><strong id="linkDeleteTotal"></strong><div id="linkDeleteDetail"></div></div>
-        <p id="linkDeleteWarning"></p><p id="linkDeleteNotice" role="status" hidden></p>
-        <div class="link-delete-actions"><button type="button" class="link-action" id="linkDeleteCancel" autofocus>取消</button><button type="button" class="btn-danger" id="linkDeleteConfirm">永久刪除</button></div>
-      </dialog>
       <div class="ver-line" id="verLine"></div>
     </div>
   </section>
@@ -2015,11 +2006,35 @@ tr.history-highlight>td{box-shadow:inset 0 2px #60ae93,inset 0 -2px #60ae93!impo
 <!-- ===== Link paste popover (table view) ===== -->
 <!-- link-filter:start -->
 <div class="modal-bg center" id="linkFilterBg">
-  <div class="fpanel link-filter-panel" role="dialog" aria-modal="true" aria-labelledby="linkFilterTitle" aria-describedby="linkFilterHint">
-    <div class="fpanel-head"><span id="linkFilterTitle">連結篩選</span><button type="button" class="fx" id="linkFilterX" aria-label="關閉連結篩選">✕</button></div>
+  <div class="fpanel link-filter-panel" role="dialog" aria-modal="true" aria-label="連結">
+    <div class="fpanel-head">
+      <div class="link-panel-tabs" role="tablist" aria-label="連結功能">
+        <button type="button" id="linkFilterTitle" role="tab" aria-controls="linkFilterPane" aria-selected="true">連結篩選</button>
+        <button type="button" id="linkManageTab" role="tab" aria-controls="linkSettingsCard" aria-selected="false" tabindex="-1">名稱與顏色</button>
+      </div>
+      <button type="button" class="fx" id="linkFilterX" aria-label="關閉連結視窗">✕</button>
+    </div>
+    <div id="linkFilterPane" role="tabpanel" aria-labelledby="linkFilterTitle">
     <div class="link-filter-rows" id="linkFilterRows"></div>
     <p class="link-filter-hint" id="linkFilterHint">只點想篩的條件，再點一次可取消。<br>選了多個平台時，物件須符合每個平台的條件。</p>
     <div class="fpanel-foot"><button type="button" class="cal-fbtn cal-clear" id="linkFilterClear">清除篩選</button><button type="button" class="cal-fbtn cal-today" id="linkFilterApply">套用</button></div>
+    </div>
+      <div id="linkSettingsCard" role="tabpanel" aria-labelledby="linkManageTab" hidden>
+        <div class="link-settings-head"><small class="link-filter-hint">變更會自動儲存</small>
+          <div class="link-settings-actions">
+            <button class="link-action symbol" type="button" id="linkRemoveSlot" aria-label="選擇要刪除的連結欄位" aria-expanded="false" aria-controls="linkDeletePicker"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 8h12"/></svg><span class="cancel-label">取消</span></button>
+            <button class="link-action symbol add" type="button" id="linkAddSlot" aria-label="新增連結欄位"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 8h12 M8 2v12"/></svg></button>
+          </div>
+        </div>
+        <div id="linkSettingsRows"></div>
+        <div id="linkDeletePicker" hidden><p class="set-card-desc">選擇要刪除的欄位，下一步會顯示影響筆數。</p><div id="linkDeleteChoices"></div></div>
+      </div>
+      <dialog id="linkDeleteDialog" aria-labelledby="linkDeleteTitle" aria-describedby="linkDeleteImpact linkDeleteWarning">
+        <h3 id="linkDeleteTitle"></h3>
+        <div id="linkDeleteImpact"><strong id="linkDeleteTotal"></strong><div id="linkDeleteDetail"></div></div>
+        <p id="linkDeleteWarning"></p><p id="linkDeleteNotice" role="status" hidden></p>
+        <div class="link-delete-actions"><button type="button" class="link-action" id="linkDeleteCancel" autofocus>取消</button><button type="button" class="btn-danger" id="linkDeleteConfirm">永久刪除</button></div>
+      </dialog>
   </div>
 </div>
 <!-- link-filter:end -->
@@ -2849,7 +2864,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.25E";
+const APP_VERSION = "2026.11.25F";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -3603,7 +3618,7 @@ function applyLinkFilters(list, selections = linkFilterState){
 }
 const linkFilterBg = document.getElementById("linkFilterBg");
 function syncLinkFilterTriggers(){
-  document.getElementById("linkFilterBtn").hidden=!linkPreferences.linkSlots.length;
+  document.getElementById("linkFilterBtn").classList.toggle("no-slots",!linkPreferences.linkSlots.length);
   document.querySelectorAll('#linkFilterBtn, .th-flt[data-flt="links"]').forEach(button => {
     button.classList.toggle("on", anyLinkFilter());
     button.setAttribute("aria-expanded", String(linkFilterBg.classList.contains("open")));
@@ -3619,13 +3634,37 @@ function renderLinkFilter(){
   }).join("");
   document.getElementById("linkFilterApply").textContent = `套用（${getFilteredItems(linkFilterDraft).length} 筆）`;
 }
+const linkTabs=Array.from(linkFilterBg.querySelectorAll('[role="tab"]'));
+function showLinkTab(manage){
+  if(palettePop.classList.contains("open") && paletteFor?.hasAttribute("data-link-color-slot"))closePalette();
+  if(!linkDeleteUI.picker.hidden)setLinkDeleteMode(false);
+  const active=linkTabs[manage?1:0];
+  for(const tab of linkTabs){
+    const selected=tab===active;
+    tab.setAttribute("aria-selected",String(selected));
+    tab.tabIndex=selected?0:-1;
+    document.getElementById(tab.getAttribute("aria-controls")).hidden=!selected;
+  }
+  linkFilterBg.querySelector(".link-filter-panel").classList.toggle("managing",manage);
+  if(manage)renderLinkSettings();else renderLinkFilter();
+}
+for(const tab of linkTabs){
+  tab.addEventListener("click",()=>showLinkTab(tab===linkTabs[1]));
+  tab.addEventListener("keydown",e=>{
+    if(!["ArrowLeft","ArrowRight","Home","End"].includes(e.key))return;
+    e.preventDefault();
+    const manage=e.key==="End" || (e.key!=="Home" && tab===linkTabs[0]);
+    showLinkTab(manage);
+    linkTabs[manage?1:0].focus();
+  });
+}
 function openLinkFilter(trigger){
   if (linkFilterBg.classList.contains("open")) return;
   flushEditing();
   closeOtherOverlays("linkfilter");
   tableWrap.classList.remove("gen-open");
   linkFilterDraft = {...linkFilterState};
-  renderLinkFilter();
+  showLinkTab(!linkSlotIds().length);
   linkFilterBg.classList.add("open");
   lockOverlay(trigger);
   syncLinkFilterTriggers();
@@ -3633,6 +3672,12 @@ function openLinkFilter(trigger){
 }
 function closeLinkFilter(){
   if (!linkFilterBg.classList.contains("open")) return;
+  if (document.activeElement?.matches("#linkSettingsRows .link-setting-name"))document.activeElement.blur();
+  if (paletteFor?.hasAttribute("data-link-color-slot"))closePalette();
+  if (!linkDeleteUI.picker.hidden)setLinkDeleteMode(false);
+  // A settings change can rebuild the link column and replace its original trigger.
+  if(!_focusReturn?.isConnected || !_focusReturn.getClientRects().length)
+    _focusReturn=tableWrap.querySelector('.th-flt[data-flt="links"]')||document.getElementById("linkFilterBtn");
   linkFilterBg.classList.remove("open");
   linkFilterDraft = null;
   unlockOverlay();
@@ -5881,7 +5926,10 @@ function tabTrapTarget(){
   if (calOpen && calOpen.classList.contains("open")) return calOpen.querySelector(".cal");
   const flt = document.getElementById("fltBg");
   if (flt && flt.classList.contains("open")) return flt.querySelector(".fpanel");
-  if (linkFilterBg.classList.contains("open")) return linkFilterBg.querySelector(".fpanel");
+  if (linkFilterBg.classList.contains("open")){
+    if(palettePop.classList.contains("open") && paletteFor?.hasAttribute("data-link-color-slot"))return palettePop;
+    return linkFilterBg.querySelector(".fpanel");
+  }
   if(tableMoreAnchor)return tableMorePanel;
   if(lpTableTarget&&lpop.classList.contains("show"))return lpop;
   if (typeof palettePop !== "undefined" && palettePop.classList.contains("open") && palettePop.classList.contains("link-palette")) return palettePop;
@@ -5966,7 +6014,13 @@ document.addEventListener("keydown", e => {
   const isOn = (id, cls) => { const el = document.getElementById(id); return el && el.classList.contains(cls); };
   if (isOn("calBg","open")){ if (window.closeCal) window.closeCal(); return; }        // 日曆(最上層)
   if (isOn("fltBg","open")){ const fb = document.getElementById("fltBody"); if (fb && fb.classList.contains("editing")) exitFltEditing(); else if (window.closeColFlt) window.closeColFlt(); return; }    // 欄位篩選彈窗
-  if (isOn("linkFilterBg","open")){ e.preventDefault(); closeLinkFilter(); return; }
+  if (isOn("linkFilterBg","open")){
+    e.preventDefault();
+    if(paletteFor?.hasAttribute("data-link-color-slot"))closePalette();
+    else if(!linkDeleteUI.picker.hidden){setLinkDeleteMode(false);linkDeleteUI.remove.focus();}
+    else closeLinkFilter();
+    return;
+  }
   if (isOn("confirmBg","open")){ closeConfirm(); return; }                            // 確認框
   if (isOn("catmenu","show")){ closeCatMenu(); return; }                              // 表格類別選單
   if (isOn("linkpop","show")){ e.preventDefault(); finishLinkEditor(false); return; }          // 連結編輯框(只關面板,不收合備註展開)
@@ -9775,6 +9829,8 @@ document.addEventListener("pointerdown", e => {
 document.addEventListener("scroll", e => {
   // A narrow name input may scroll its text back on blur, without moving the palette anchor.
   if(paletteFor?.dataset.linkColorSlot && e.target.matches?.(".link-setting-name"))return;
+  // Refreshing filtered rows can scroll the table behind the fixed settings panel.
+  if(paletteFor?.closest("#linkSettingsCard") && !e.target.contains(paletteFor))return;
   if(!palettePop.contains(e.target))closePalette();
 }, true);
 window.addEventListener("resize", () => closePalette());
