@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261125D">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261125D">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261125E">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261125E">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261125D"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261125D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261125E"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261125E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -2849,7 +2849,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.25D";
+const APP_VERSION = "2026.11.25E";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -11432,7 +11432,7 @@ function handleQuickLinkClick(event){
 </script>
 <style>
 
-#columnTextDialog{position:fixed;inset:0;margin:auto;box-sizing:border-box;width:min(460px,calc(100vw - 28px));height:fit-content;max-height:calc(100dvh - 28px);overflow:auto;padding:18px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 40px #0003;font-family:inherit;}
+#columnTextDialog{position:fixed;inset:0;margin:auto;box-sizing:border-box;width:min(520px,calc(100vw - 28px));height:fit-content;max-height:calc(100dvh - 28px);overflow:auto;padding:22px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 40px #0003;font-family:inherit;}
 #columnTextDialog::backdrop{background:rgba(0,0,0,.35);}
 #columnTextDialog:focus{outline:none;}
 #columnTextDialog header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
@@ -11449,11 +11449,19 @@ function handleQuickLinkClick(event){
 #columnTextDialog .ct-error{color:var(--danger);font-size:13px;margin:10px 0 0;}
 #columnTextDialog .ct-error:empty{display:none;}
 #columnTextDialog .ct-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-#columnTextDialog fieldset{min-width:0;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;}
-#columnTextDialog legend{padding:0 5px;font-weight:600;}
-#columnTextDialog .ct-line{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:4px 0;color:var(--ink-soft);font-size:13px;}
-#columnTextDialog .ct-line :is(select,button){display:inline-flex;align-items:center;gap:5px;min-width:80px;min-height:32px;padding:4px 8px;background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--ink);font:inherit;}
-#columnTextDialog .ct-swatch{width:15px;height:15px;border-radius:4px;border:1px solid var(--line);}
+#columnTextDialog fieldset{min-width:0;margin:0;padding:10px 14px 14px;background:var(--surface-1);border:1px solid var(--line);border-radius:12px;}
+#columnTextDialog legend{padding:0 5px;font-size:14px;font-weight:700;color:var(--ink);}
+#columnTextDialog .ct-line{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;margin:6px 0;color:var(--ink-soft);font-size:13px;}
+#columnTextDialog .ct-line :is(select,button){box-sizing:border-box;display:inline-flex;align-items:center;gap:7px;min-width:0;min-height:34px;padding:4px 8px;background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--ink);font:inherit;}
+#columnTextDialog .ct-swatch{width:14px;height:14px;border-radius:50%;border:1px solid var(--line);flex:none;}
+#columnTextDialog .ct-preview-label{margin:0 0 6px;color:var(--ink-soft);font-size:12px;}
+#columnTextDialog .ct-preview{margin:0 0 18px;}
+#columnTextDialog .ct-preview th{height:34px;}
+#columnTextDialog .ct-preview td{height:42px;}
+#columnTextDialog .ct-line:last-child{margin-bottom:0;}
+#columnTextDialog .ct-weights{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--card);}
+#columnTextDialog .ct-weights button{justify-content:center;padding:2px;min-height:28px;border:0;border-radius:6px;background:transparent;}
+#columnTextDialog .ct-weights button[aria-pressed="true"]{color:var(--card);background:var(--ink);}
 #columnTextDialog .ct-palette:not(:empty){margin-top:10px;}
 .clcp-inline{box-sizing:border-box;width:100%;min-width:0;padding:0 2px 2px;color:var(--ink,#27353D);font-family:inherit;}
 .clcp-inline-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
@@ -11490,6 +11498,7 @@ function handleQuickLinkClick(event){
 </style>
 <dialog id="columnTextDialog" aria-labelledby="columnTextTitle" tabindex="-1">
   <header><h2 id="columnTextTitle"></h2><button type="button" data-close aria-label="關閉">×</button></header>
+  <p class="ct-preview-label"></p>
   <div class="ct-preview" inert><table class="ptable ro"><thead><tr></tr></thead><tbody><tr></tr></tbody></table></div>
   <div class="ct-controls"></div><div class="ct-palette" id="columnTextPalette"></div><p class="ct-error" role="alert"></p>
   <footer><button type="button" data-reset>回復原始預設</button><button type="button" data-close>取消</button><button type="button" data-save>儲存</button></footer>
@@ -11502,6 +11511,7 @@ function handleQuickLinkClick(event){
   const prefix = "property_app_column_text_v1_";
   const fields = T_FIELDS;
   const parts = ["head","body"];
+  const weights = new Map([[300,"細"],[500,"中"],[900,"粗"]]);
   const sizes = Array.from({length:15}, (_,i) => i+10);
   const saved = new Map();
   const rules = document.head.appendChild(document.createElement("style"));
@@ -11592,6 +11602,7 @@ function handleQuickLinkClick(event){
     for (const part of parts){
       const look = value?.[part];
       if (sizes.includes(look?.size)) result[part].size = look.size;
+      if (weights.has(look?.weight)) result[part].weight = look.weight;
       if (/^#[0-9a-f]{6}$/i.test(look?.color || "")) result[part].color = look.color.toLowerCase();
     }
     return result;
@@ -11606,12 +11617,12 @@ function handleQuickLinkClick(event){
   function css(field,looks,root){
     let text = "";
     for (const part of parts){
-      const {size,color} = looks[part];
-      if (!size && !color) continue;
+      const {size,color,weight} = looks[part];
+      if (!size && !color && !weight) continue;
       const target = part==="head" ? 'th[data-col="'+field+'"] .th-label' : bodySelector(field);
       const selector = root+" "+target;
       text += selector+(part==="body" ? ", "+selector+" :is(span,b,a,strong,em)" : "")+
-        (part==="body" && root==="#columnTextDialog" ? ", #columnTextDialog .ct-empty-sample" : "")+"{"+
+        "{"+(weight ? "font-weight:"+weight+"!important;" : "")+
         (size ? "font-size:"+size+"px!important;" : "")+(size && part==="head" ? "line-height:1;" : "")+
         (color ? "color:"+color+"!important;" : "")+"}";
     }
@@ -11628,6 +11639,8 @@ function handleQuickLinkClick(event){
   for (const part of parts){
     const label = part==="head"?"表頭":"內容";
     dialog.querySelector(".ct-controls").insertAdjacentHTML("beforeend",'<fieldset data-part="'+part+'"><legend>'+label+'</legend><label class="ct-line">字級<select aria-label="'+label+'字級"></select></label><div class="ct-line">字色<button type="button" data-color aria-label="'+label+'字色" aria-expanded="false" aria-controls="columnTextPalette"><span class="ct-swatch" aria-hidden="true"></span><span class="ct-color-label"></span></button></div></fieldset>');
+    const buttons=Array.from(weights,([weight,name])=>'<button type="button" data-weight="'+weight+'" style="font-weight:'+weight+'" aria-pressed="false">'+name+'</button>').join("");
+    dialog.querySelector('[data-part="'+part+'"]').insertAdjacentHTML("beforeend",'<div class="ct-line">粗細<div class="ct-weights" role="group" aria-label="'+label+'字體粗細">'+buttons+'</div></div>');
   }
   const group = part => dialog.querySelector('[data-part="'+part+'"]');
   function refreshPreview(){
@@ -11649,23 +11662,43 @@ function handleQuickLinkClick(event){
       g.querySelector("select").value=String(look.size ?? session.defaults[part].size);
       g.querySelector(".ct-swatch").style.backgroundColor=look.color || session.defaults[part].color;
       g.querySelector(".ct-color-label").textContent=look.color?.toUpperCase() || "原字色";
+      const weight=look.weight ?? session.defaults[part].weight;
+      const selected=weight>=650?900:weight>=400?500:300;
+      for(const button of g.querySelectorAll("[data-weight]"))button.setAttribute("aria-pressed",String(Number(button.dataset.weight)===selected));
     }
+  }
+  function previewCell(field,index){
+    const rows=tableWrap.querySelectorAll(".tbody-wrap tr[data-id]");
+    const slots=field==="links"?linkSlotIds():null;
+    const linkedIds=slots?new Set(items.filter(item=>slots.some(slot=>linkState(item,slot)==="has")).map(item=>String(item.id))):null;
+    for(const row of rows){
+      const cell=row.cells[index];
+      if(!cell)continue;
+      const value=cell.querySelector(bodySelector(field));
+      const text=value?.textContent.trim();
+      if(linkedIds ? linkedIds.has(row.dataset.id) : text && !/^[-—–－＋+]+$/.test(text) && !value.querySelector(".tneed-ph")){
+        return {cell,actual:true};
+      }
+    }
+    // Use the same formatter as the table, including date widths and platform badges.
+    const example={...SEED[0],id:"",note:"備註範例"};
+    const slot=linkSlotIds()[0];
+    if(slot!=null)example[linkUrlField(slot)]="https://example.com/";
+    const tbody=document.createElement("tbody");
+    tbody.innerHTML=trowHTML(example);
+    return {cell:tbody.rows[0].cells[index],actual:false};
   }
   function open(th){
     const field=th.dataset.col;
     if (!fields.includes(field) || dialog.open || window._saveBlocked || document.querySelector("#modeBtn.quick-edit")) return;
-    const first=tableWrap.querySelector(".tbody-wrap tr[data-id]");
-    const cell=first?.cells[th.cellIndex];
-    const head=th.cloneNode(true), body=cell?.cloneNode(true)||document.createElement("td");
-    if (!cell){
-      const empty=document.createElement("span");
-      empty.className="ct-empty-sample tcell";empty.dataset.field=field;empty.textContent="—";body.append(empty);
-    }
+    const {cell,actual}=previewCell(field,th.cellIndex);
+    const head=th.cloneNode(true), body=cell.cloneNode(true);
+    dialog.querySelector(".ct-preview-label").textContent=actual?"即時預覽":"格式示例 · 目前清單此欄皆空白";
     head.querySelector(".col-resize")?.remove();
     body.querySelectorAll(".gen-edge,.gen-btn,.dup-btn").forEach(el=>el.remove());
     preview.querySelector("thead tr").replaceChildren(head);
     preview.querySelector("tbody tr").replaceChildren(body);
-    preview.querySelector("tbody tr").className=first?.className || "";
+    preview.querySelector("tbody tr").className=actual?cell.parentElement.className:"";
     preview.querySelector("table").classList.toggle("ro",!editMode);
     previewRules.textContent="";
     let original;
@@ -11682,7 +11715,7 @@ function handleQuickLinkClick(event){
       ctx.fillStyle=style.color;ctx.fillRect(0,0,1,1);
       const color="#"+Array.from(ctx.getImageData(0,0,1,1).data.slice(0,3),n=>n.toString(16).padStart(2,"0")).join("");
       const size=parseFloat(style.fontSize);
-      session.defaults[part]={color,size};
+      session.defaults[part]={color,size,weight:Number(style.fontWeight)};
       const choices=[...new Set([...sizes,size])].sort((a,b)=>a-b);
       group(part).querySelector("select").replaceChildren(...choices.map(n=>new Option(n+" px",n)));
     }
@@ -11693,7 +11726,7 @@ function handleQuickLinkClick(event){
     const {field,original,draft}=session;
     try{
       const latest=read(field);
-      for (const part of parts) for(const prop of ["size","color"]){
+      for (const part of parts) for(const prop of ["size","color","weight"]){
         const before=original[part][prop], next=draft[part][prop];
         if (next===before) continue;
         if (latest[part][prop]!==before && latest[part][prop]!==next){
@@ -11720,6 +11753,10 @@ function handleQuickLinkClick(event){
     if(b.hasAttribute("data-close"))dialog.close();
     else if(b.hasAttribute("data-save"))save();
     else if(b.hasAttribute("data-reset")){closePicker();session.draft={head:{},body:{}};refreshPreview();}
+    else if(b.hasAttribute("data-weight")){
+      session.draft[b.closest("fieldset").dataset.part].weight=Number(b.dataset.weight);
+      refreshPreview();
+    }
     else if(b.hasAttribute("data-color")){
       const part=b.closest("fieldset").dataset.part, again=picking===part;
       if(picker && !picker.validate())return;
