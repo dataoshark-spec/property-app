@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261125J">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261125J">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261126A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261126A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261125J"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261125J"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261126A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261126A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -841,14 +841,12 @@
   /* Confirm dialog (centered) + toast */
   .modal-bg.center{align-items:center;padding:24px;}
   /* ==== 表格欄位標題篩選(參考客戶總覽:勾選式 + 售價範圍 + 長按拖曳排序) ==== */
-  .th-flt{display:inline-flex;align-items:center;justify-content:center;gap:4px;background:none;border:0;padding:3px 8px;margin:-3px -8px;border-radius:999px;color:inherit;font:inherit;cursor:pointer;
-    transition:background .16s ease,box-shadow .16s ease,gap .12s ease,padding .12s ease;}
-  .th-flt:focus{outline:none;}
-  /* TAB 選中:藏箭頭、文字置中,柔光膠囊焦點(避免右緣被裁) */
-  .th-flt:focus-visible{outline:none;gap:0;padding:3px 11px;background:rgba(255,255,255,.14);
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.92),0 0 0 3px rgba(255,255,255,.16),0 2px 10px rgba(0,0,0,.12);}
-  .th-flt:focus-visible .fmk{display:none;}
-  .th-flt .fmk{opacity:.55;font-size:.72em;line-height:1;transition:opacity .12s ease;}
+  .th-flt{position:absolute;inset:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:pointer;}
+  .th-flt:focus-visible{outline:1px solid currentColor;outline-offset:-2px;}
+  .th-flt .fmk{position:absolute;top:3px;right:3px;width:5px;height:5px;background:currentColor;opacity:.65;clip-path:polygon(0 0,100% 0,100% 100%);pointer-events:none;}
+  .th-flt.on{background:#c3e3d6;color:#064f44;}
+  [data-theme="dark"] .th-flt.on{background:#294a43;color:#c6f3df;}
+  .th-flt.on .fmk{opacity:1;}
   /* 關鍵字搜尋中(聚焦或已有文字):點亮「會被比對」的欄位標題,讓使用者知道搜尋範圍(到期日/連結/電話不在搜尋範圍故不亮) */
   .thead-wrap th .th-label{transition:color .15s;}
   .table-wrap.search-hint th[data-col="cat"] .th-label,
@@ -860,7 +858,7 @@
   .table-wrap.search-hint th[data-col="agent"] .th-label,
   .table-wrap.search-hint th[data-col="store"] .th-label,
   .table-wrap.search-hint th[data-col="note"] .th-label{color:#FFE08A;}
-  .th-flt.on .fmk{opacity:1;color:#FFE08A;}   /* 已套用此欄篩選:標記加亮 */
+  .table-wrap.search-hint th[data-col] .th-flt.on .th-label{color:inherit;}
   .fpanel{background:var(--card);width:100%;max-width:390px;max-height:80dvh;border-radius:20px;padding:15px 16px 16px;box-shadow:0 18px 50px rgba(22,34,42,.3);display:flex;flex-direction:column;}
   .fpanel-head{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:1.02rem;color:var(--ink);margin-bottom:8px;}
   .fpanel-head .fx{border:0;background:var(--surface-1);color:var(--ink-soft);width:34px;height:34px;border-radius:11px;font-size:1rem;cursor:pointer;}
@@ -1007,6 +1005,8 @@
     background:var(--ink);color:#fff;font-size:.9rem;font-weight:600;padding:12px 20px;border-radius:999px;
     box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;pointer-events:none;
     transition:opacity .2s ease,transform .2s ease;max-width:88%;text-align:center;}
+  .toast.copy-result{width:max-content;line-height:1.5;}
+  .toast .copied-value{color:#ffda83;overflow-wrap:anywhere;}
   .toast.show{opacity:1;transform:translate(-50%,0);}
 
   @media (prefers-reduced-motion:reduce){
@@ -1084,7 +1084,7 @@
   .tbody-wrap::-webkit-scrollbar-corner{background:transparent;}
   .ptable{--table-row-height:32px;border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed;font-size:.85rem;}   /* width:100%:表格撐滿容器,備註(彈性欄)吸收剩餘寬度;與客戶總覽一致 */
   .ptable thead th{position:relative;background:var(--accent-deep);color:var(--accent-tint);font-weight:700;font-size:.8rem;
-    height:var(--table-row-height);text-align:center;padding:0 11px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);}
+    height:var(--table-row-height);text-align:center;padding:0 4px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);}
   .th-label{display:inline-block;}
   /* 欄寬把手:置中於欄界(th 右緣),線固定 2px,只變顏色深淺(hover/拖曳變亮),不忽粗忽細、不偏一邊 */
   .col-resize{position:absolute;top:0;right:-6px;width:12px;height:100%;cursor:col-resize;touch-action:none;user-select:none;z-index:4;}
@@ -2296,7 +2296,7 @@ function settings(value){
  if(value.colw!=null){
   if(!obj(value.colw)) fail("欄寬設定不正確");s.colw={};
   for(const f of ["due","cat","layout","name","addr","floor","price","links","agent","tel","store"]){
-   if(own(value.colw,f)){const n=value.colw[f];if(typeof n!=="number"||!Number.isFinite(n)) fail("欄寬必須是數字");s.colw[f]=Math.max(48,Math.min(640,n));}
+   if(own(value.colw,f)){const n=value.colw[f];if(typeof n!=="number"||!Number.isFinite(n)) fail("欄寬必須是數字");s.colw[f]=Math.max(24,Math.min(640,n));}
   }
  }
  for(const key of ["fltorder","colFilter"]){
@@ -2869,7 +2869,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.25J";
+const APP_VERSION = "2026.11.26A";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -4102,7 +4102,7 @@ const T_FIELDS = ["due","cat","layout","name","addr","floor","price","links","ag
 function tableFields(){return linkPreferences.linkSlots.length?T_FIELDS:T_FIELDS.filter(field=>field!=="links");}
 const FLEX_FIELD = "note";   // 備註=彈性欄(最後一欄,無拉桿,自動吸收剩餘寬度),與客戶總覽「客戶需求」欄一致。其餘欄固定可調(右緣拉桿),表格 width:100% 撐滿
 const DEFAULT_COLW = {due:78,cat:80,layout:64,name:150,addr:200,floor:68,price:76,links:146,agent:78,tel:112,store:150};   // 各固定欄(可調);note(備註)為彈性欄不列(與客戶總覽 need 一致)
-const COLW_MIN = 48, COLW_MAX = 640, FLEX_MIN_FALLBACK = 36, DEL_W = 40;   // 彈性欄(備註)最小寬改為「剛好容納欄名」動態量測;量不到時用此保底
+const COLW_MIN = 24, COLW_MAX = 640, FLEX_MIN_FALLBACK = 36, DEL_W = 40;   // 彈性欄(備註)最小寬改為「剛好容納欄名」動態量測;量不到時用此保底
 function loadColW(){ if (storageOK){ try { const s = JSON.parse(localStorage.getItem("property_app_colw_v1") || "null"); if (s && typeof s === "object") return {...DEFAULT_COLW, ...s}; } catch(e){} } return {...DEFAULT_COLW}; }
 function saveColW(){ if (storageOK){ try { localStorage.setItem("property_app_colw_v1", JSON.stringify(colW)); } catch(e){} } }
 let colW = loadColW();
@@ -4120,7 +4120,7 @@ function flexMinWidth(){
   const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
   const lw = label.getBoundingClientRect().width;
   if (lw <= 0) return FLEX_MIN_FALLBACK;   // 尚未排版(初次渲染)→ 保底
-  return Math.max(FLEX_MIN_FALLBACK, Math.ceil(lw + pad + 6));
+  return Math.max(FLEX_MIN_FALLBACK, Math.ceil(lw + pad));
 }
 function colSumMinWidth(){ let s = 0; for (const f of tableFields()) if(f!==FLEX_FIELD)s += (colW[f] || DEFAULT_COLW[f]); return s + flexMinWidth() + DEL_W; }   // 固定欄總和 + 備註最小寬 + 40px；查看時由備註吸收，切換模式總寬不變。
 // 產生 colgroup:固定欄用 colW(px)、彈性欄不給寬、編輯模式尾端加刪除欄
@@ -4138,7 +4138,7 @@ function tHeadHTML(){
     if(f==="links"&&!linkPreferences.linkSlots.length)return "";
     const rz = (f && f !== FLEX_FIELD) ? `<span class="col-resize" data-field="${f}"></span>` : "";
     const lab = (f && FILTERABLE[f])
-      ? `<button type="button" class="th-flt${colFilterOn(f) ? " on" : ""}" data-flt="${f}"${f === "links" ? ' aria-haspopup="dialog" aria-expanded="false" aria-controls="linkFilterBg"' : ' aria-haspopup="dialog" aria-controls="fltBg"'}><span class="th-label">${h}</span><span class="fmk" aria-hidden="true">▾</span></button>`
+      ? `<button type="button" class="th-flt${colFilterOn(f) ? " on" : ""}" data-flt="${f}"${f === "links" ? ' aria-haspopup="dialog" aria-expanded="false" aria-controls="linkFilterBg"' : ' aria-haspopup="dialog" aria-controls="fltBg"'}><span class="th-label">${h}</span><span class="fmk" aria-hidden="true"></span></button>`
       : `<span class="th-label">${h}</span>`;
     return `<th data-col="${f}">${lab}${rz}</th>`;
   }).join("") + (editMode ? `<th></th>` : "");
@@ -4442,7 +4442,7 @@ function colHeaderMin(idx){
   const cs = getComputedStyle(th);
   const pad = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
   const lw = label ? label.getBoundingClientRect().width : 0;   // 量 .th-label 內容寬,不受欄寬影響
-  const base = Math.max(COLW_MIN, Math.ceil(lw + pad + 6));
+  const base = Math.max(COLW_MIN, Math.ceil(lw + pad));
   return base;
 }
 function naturalLinkColumnWidth(bodyTable){
@@ -5091,7 +5091,7 @@ tableWrap.addEventListener("click", e=>{
     if (it){
       const fn = buildFileName(it);
       if (fn){
-        const done = () => { genBtn.classList.remove("gen-flash"); void genBtn.offsetWidth; genBtn.classList.add("gen-flash"); setTimeout(() => genBtn.classList.remove("gen-flash"), 500); toast("已複製檔名：" + fn); };
+        const done = () => { genBtn.classList.remove("gen-flash"); void genBtn.offsetWidth; genBtn.classList.add("gen-flash"); setTimeout(() => genBtn.classList.remove("gen-flash"), 500); toast("已複製檔名：", fn); };
         if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(fn).then(done).catch(() => { if (legacyCopy(fn)) done(); }); }
         else if (legacyCopy(fn)){ done(); }
       } else { toast("此物件資料不足，無法生成檔名"); }
@@ -5142,7 +5142,7 @@ function copyCellText(cell, overrideText){
   const ok = () => {
     cell.classList.remove("saved"); void cell.offsetWidth; cell.classList.add("saved");
     setTimeout(() => cell.classList.remove("saved"), 700);
-    toast("已複製：" + text);
+    toast("已複製：", text);
   };
   if (navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(ok).catch(() => { if (legacyCopy(text)) ok(); });
@@ -5167,7 +5167,7 @@ function copyFieldText(el){
   const ok = () => {
     el.classList.remove("copied"); void el.offsetWidth; el.classList.add("copied");
     setTimeout(() => el.classList.remove("copied"), 700);
-    toast("已複製：" + text);
+    toast("已複製：", text);
   };
   if (navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(ok).catch(() => { if (legacyCopy(text)) ok(); });
@@ -5823,9 +5823,16 @@ sortTxt.textContent = (SORTS.find(s => s.key === currentSort) || SORTS[0]).label
 // ---- Toast + confirm dialog (native alert/confirm are blocked in the sandbox) ----
 const toastEl = document.getElementById("toast");
 let toastTimer = null;
-function toast(msg){
+function toast(msg, copiedText){
   if (window._saveBlocked) return;
   toastEl.textContent = msg;
+  toastEl.classList.toggle("copy-result", copiedText !== undefined);
+  if (copiedText !== undefined){
+    const value = document.createElement("span");
+    value.className = "copied-value";
+    value.textContent = copiedText;
+    toastEl.append(value);
+  }
   toastEl.classList.add("show");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
