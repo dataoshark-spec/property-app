@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261126I">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261126I">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261126J">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261126J">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261126I"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261126I"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261126J"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261126J"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -2893,7 +2893,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.26I";
+const APP_VERSION = "2026.11.26J";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -5779,7 +5779,7 @@ function openList(cat){
   const warmTable = viewMode==="table" && coverTableTimer!==0;
   if (!warmTable) {
     if (coverTableTimer) endCoverTableReturn();
-    applyFilter();
+    applyFilter("switchView");
   }
   cover.style.display = "none";
   listView.classList.add("active");
@@ -5787,6 +5787,8 @@ function openList(cat){
   if (warmTable){
     applyFilter("reopenTable");
     endCoverTableReturn();
+  }
+  if (viewMode==="table"){
     const body = tableWrap.querySelector(".tbody-wrap");
     if(body)body.scrollTo(0,0);
     const head = tableWrap.querySelector(".thead-wrap");
