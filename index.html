@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261126A">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261126A">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261126B">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261126B">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261126A"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261126A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261126B"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261126B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1122,6 +1122,19 @@
   /* 外圈焦框(勿用 inset:易被相鄰格/gen-edge 蓋成「缺一邊」);z-index 高於 gen-edge(3) */
   /* 內縮焦框:外圈會被 overflow／下一列 hover 裁掉;聚焦時藏 gen-edge */
   .tcell:focus{background:var(--card);box-shadow:inset 0 0 0 2px var(--accent);border-radius:5px;overflow:hidden;white-space:normal;position:relative;z-index:6;}
+  @media (hover:hover) and (pointer:fine){
+    #tableWrap .ptable .tcell[data-field]:focus{white-space:nowrap;}
+  }
+  #tableWrap .ptable .tcell[data-desktop-draft][contenteditable="true"]:focus{
+    outline:none;box-shadow:inset 0 0 0 1px var(--accent);white-space:pre;text-overflow:clip;
+  }
+  #tableWrap .ptable td:has(> .tcell[data-expanded-editor][contenteditable="true"]){position:relative;overflow:visible;}
+  #tableWrap .ptable .tcell[data-expanded-editor][contenteditable="true"]:focus{
+    position:absolute;top:0;left:var(--editor-offset);width:var(--editor-width);z-index:7;background:var(--card);
+  }
+  #tableWrap .ptable .tcell[data-expanded-editor="wrap"][contenteditable="true"]:focus{
+    white-space:pre-wrap;overflow-wrap:anywhere;max-height:8lh;overflow-y:auto;
+  }
   td.duewrap:has(.tcell:focus) .gen-edge,td.datewrap:has(.tcell:focus) .gen-edge{visibility:hidden;}
   .ptable :where(.topt-trigger,.tcat-trigger,.tdel button,.tdue-btn):focus-visible{box-shadow:var(--focus-ring-inset);}
   .ptable tbody tr:has(:focus-visible),
@@ -2869,7 +2882,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.26A";
+const APP_VERSION = "2026.11.26B";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -4423,7 +4436,7 @@ function syncTableChrome(){
   queueTableDueFit();
 }
 // ---- 欄寬:量測欄名最小寬、雙擊自適應、拖曳 ----
-function _measText(text, srcEl){
+function _measText(text, srcEl, preserveSpaces=false){
   if (!window._measEl){
     const m = document.createElement("span");
     m.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap;top:-9999px;left:-9999px;pointer-events:none;padding:0;margin:0;border:0;";
@@ -4431,6 +4444,7 @@ function _measText(text, srcEl){
   }
   const m = window._measEl, cs = getComputedStyle(srcEl);
   ["fontFamily","fontSize","fontWeight","fontStyle","letterSpacing","fontVariantNumeric","textTransform"].forEach(p => { m.style[p] = cs[p]; });
+  m.style.whiteSpace = preserveSpaces ? "pre" : "nowrap";
   m.textContent = text || "";
   return m.getBoundingClientRect().width;
 }
@@ -4644,10 +4658,58 @@ function tCommitCell(cell){                       // 回傳 true=值有變更(�
 function caretEnd(el){ try{ const r=document.createRange(); r.selectNodeContents(el); r.collapse(false); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
 function caretStart(el){ try{ const r=document.createRange(); r.selectNodeContents(el); r.collapse(true); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }catch(e){} }
 function tCellIsEditing(cell){ return !!(cell && cell.classList && cell.classList.contains("tcell") && cell.dataset.field && cell.getAttribute("contenteditable") === "true"); }
+function sizeTableEditor(cell){
+  if (!tCellIsEditing(cell) || !cell.hasAttribute("data-desktop-draft")) return;
+  const td = cell.parentElement, viewport = td.closest(".tbody-wrap");
+  if (!viewport) return;
+  const rect = td.getBoundingClientRect(), left = viewport.getBoundingClientRect().left + viewport.clientLeft;
+  const right = left + viewport.clientWidth, original = td.clientWidth;
+  const css = getComputedStyle(cell);
+  const needed = _measText(cell.textContent,cell,true) + parseFloat(css.paddingLeft) + parseFloat(css.paddingRight);
+  if (needed <= original || rect.right <= left || rect.left >= right){
+    cell.removeAttribute("data-expanded-editor");
+    return;
+  }
+  const width = Math.min(viewport.clientWidth,Math.ceil(needed)+1);
+  const x = Math.max(left,Math.min(rect.left+(original-width)/2,right-width));
+  cell.style.setProperty("--editor-width",width+"px");
+  cell.style.setProperty("--editor-offset",(x-rect.left)+"px");
+  cell.dataset.expandedEditor = needed > width ? "wrap" : "line";
+}
+let editorSizeFrame = 0;
+function queueEditorSize(){
+  const active = document.activeElement;
+  if (editorSizeFrame || !tCellIsEditing(active) || !active.hasAttribute("data-desktop-draft")) return;
+  editorSizeFrame = requestAnimationFrame(()=>{editorSizeFrame=0;sizeTableEditor(document.activeElement);});
+}
+tableWrap.addEventListener("scroll",queueEditorSize,true);
+window.addEventListener("resize",queueEditorSize);
+// The scrollport can finish resizing after the window event or when its scrollbar appears.
+const editorBoundsObserver = new ResizeObserver(queueEditorSize);
+function watchEditorBounds(cell){
+  editorBoundsObserver.disconnect();
+  if (!tCellIsEditing(cell) || !cell.hasAttribute("data-desktop-draft")) return;
+  editorBoundsObserver.observe(cell.closest(".tbody-wrap"));
+  editorBoundsObserver.observe(cell.parentElement);
+}
+tableWrap.addEventListener("blur",event=>{
+  if (event.target.hasAttribute("data-desktop-draft")) editorBoundsObserver.disconnect();
+},true);
+function startTableTextDraft(cell){
+  cell.toggleAttribute("data-desktop-draft",cell.closest("[data-quick-edit]") !== null || matchMedia("(hover:hover) and (pointer:fine)").matches);
+  cell.removeAttribute("data-expanded-editor");
+  cell.setAttribute("contenteditable","true");
+}
+function tableTextChanged(cell){
+  clearTimeout(cell._saveT);
+  if (cell.hasAttribute("data-desktop-draft")) sizeTableEditor(cell);
+  else cell._saveT = setTimeout(()=>{if(cell.isConnected) tCommitCell(cell);},200);
+}
 function tCellExitEdit(cell, opts){
   if (!tCellIsEditing(cell)) return;
   opts = opts || {};
   clearTimeout(cell._saveT);
+  editorBoundsObserver.disconnect();
   cell.setAttribute("contenteditable", "false");
   if (opts.commit === false) return;
   const run = () => {
@@ -4685,8 +4747,10 @@ function tCellBeginType(cell){
   const active = document.activeElement;
   if (active && active !== cell && tCellIsEditing(active)) tCellExitEdit(active, {flash: false, defer: true});
   cell.textContent = "";
-  cell.setAttribute("contenteditable", "true");
+  startTableTextDraft(cell);
   cell.focus({ preventScroll: true });
+  watchEditorBounds(cell);
+  sizeTableEditor(cell);
   caretEnd(cell);
 }
 function tCellEdit(cell, x, y, opts){
@@ -4694,8 +4758,10 @@ function tCellEdit(cell, x, y, opts){
   if (!cell || !cell.classList.contains("tcell") || !cell.dataset.field || !editMode) return;
   const active = document.activeElement;
   if (active && active !== cell && tCellIsEditing(active)) tCellExitEdit(active, {flash: false, defer: true});
-  cell.setAttribute("contenteditable", "true");
+  startTableTextDraft(cell);
   cell.focus({ preventScroll: true });
+  watchEditorBounds(cell);
+  sizeTableEditor(cell);
   if (x != null && y != null){
     if (opts.syncCaret) tPlaceCaretAtPoint(cell, x, y);
     else requestAnimationFrame(() => tPlaceCaretAtPoint(cell, x, y));
@@ -4727,8 +4793,7 @@ function tCellPastePlain(cell, text){
   if (!cell || !text || !editMode) return;
   if (!tCellIsEditing(cell)) tCellBeginType(cell);
   tCellInsertPlainText(cell, text);
-  clearTimeout(cell._saveT);
-  cell._saveT = setTimeout(function(){ if (cell.isConnected) tCommitCell(cell); }, 200);
+  tableTextChanged(cell);
 }
 function tCellCopyPlain(cell){
   if (!cell || !editMode) return "";
@@ -4866,12 +4931,22 @@ tableWrap.addEventListener("dblclick", e => {
 tableWrap.addEventListener("keydown", e=>{
   const c = e.target;
   if (!c.classList || !c.classList.contains("tcell") || !c.dataset.field) return;
+  if (e.isComposing || e.keyCode===229) return;
   if (e.key === "Enter"){
     e.preventDefault();
     if (tCellIsEditing(c)) tCellExitEdit(c);
     tNavGrid(c, 1, 0);
   } else if (e.key === "Escape"){
-    if (tCellIsEditing(c)){ e.preventDefault(); tCellExitEdit(c); tCellSelect(c); }
+    if (tCellIsEditing(c)){
+      e.preventDefault();
+      if (c.hasAttribute("data-desktop-draft")){
+        e.stopPropagation();
+        c.textContent = tFindItem(c)?.[c.dataset.field] ?? "";
+        c.removeAttribute("aria-invalid");
+        tCellExitEdit(c,{commit:false});
+      } else tCellExitEdit(c);
+      tCellSelect(c);
+    }
     else c.blur();
   } else if (e.key === "F2"){
     e.preventDefault();
@@ -4896,8 +4971,7 @@ tableWrap.addEventListener("keydown", e => {
     e.preventDefault();
     tCellBeginType(c);
     try { document.execCommand("insertText", false, e.key); } catch(err){ c.textContent = e.key; caretEnd(c); }
-    clearTimeout(c._saveT);
-    c._saveT = setTimeout(function(){ if (c.isConnected) tCommitCell(c); }, 200);
+    tableTextChanged(c);
   }
 }, true);
 tableWrap.addEventListener("compositionstart", e => {
@@ -5019,10 +5093,8 @@ tableWrap.addEventListener("input", e => {
     cell.textContent = txt;
     try { const r = document.createRange(); r.selectNodeContents(cell); r.collapse(false); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch(err){}
   }
-  // 邊打邊存的保險:一般格原本只在 blur 才 commit,這裡加 debounce 自動落地。
-  // 就算 App 被直接滑掉/強制關閉(visibilitychange、pagehide 未必觸發),資料也已寫進 items,最多只漏最後 ~0.2 秒的字。
-  clearTimeout(cell._saveT);
-  cell._saveT = setTimeout(function(){ if (cell.isConnected) tCommitCell(cell); }, 200);
+  // 桌面保留草稿到提交，觸控維持原本的延遲儲存。
+  tableTextChanged(cell);
 });
 // 從到期欄左側啟動，跨到類別欄時不因欄線收起；不攔截類別原有操作。
 tableWrap.addEventListener("pointerover",e=>{
@@ -10923,9 +10995,9 @@ function paintPropertyState(state){
   if(current.field==='links')return commitQuickLinksForCurrent();
   return ready();
  }
- function finishQuick(){
+ function finishQuick(discardText=false){
   if(!current)return true;
-  if(!commitCurrent()){indicator();return false;}
+  if(!(discardText===true && textFields.has(current.field)) && !commitCurrent()){indicator();return false;}
   const done=current;current=null;closing=true;
   try{
    original.closeCat();if(done.field==='due')window.closeCal?.();
@@ -11344,7 +11416,7 @@ function handleQuickLinkClick(event){
    return;
   }
   if(textFields.has(current.field)&&current.td?.contains(event.target)&&['Enter','Escape','Tab'].includes(event.key)){
-   stop(event);finishQuick();
+   stop(event);finishQuick(event.key==='Escape');
   }
  },true);
  window.addEventListener('paste',event=>{
