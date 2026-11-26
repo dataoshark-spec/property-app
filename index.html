@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261126D">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261126D">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261126E">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261126E">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261126D"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261126D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261126E"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261126E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -2889,7 +2889,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.26D";
+const APP_VERSION = "2026.11.26E";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -12379,6 +12379,12 @@ const observe=new MutationObserver(changes=>{
  schedule();
 });
 observe.observe(table,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+// Recheck hit targets once the desktop opening clip is gone.
+function onCoverRevealEnd(event){
+ if(event.target===document.body && event.animationName==='coverTableReveal')schedule();
+}
+document.body.addEventListener('animationend',onCoverRevealEnd);
+document.body.addEventListener('animationcancel',onCoverRevealEnd);
 touchView.addEventListener('change',schedule);
 const resize=new ResizeObserver(schedule);resize.observe(table);
 document.addEventListener('scroll',event=>{
