@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261126C">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261126C">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261126D">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261126D">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261126C"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261126C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261126D"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261126D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1037,6 +1037,13 @@
   @media (hover:hover){ .mode-btn:not(.on):hover{border-color:var(--border-2);color:var(--ink);} }
   .mode-btn:active{transform:scale(.94);}
 
+  @keyframes coverTableReveal{
+    from{clip-path:inset(0 calc(50% - 240px));}
+    to{clip-path:inset(0 0);}
+  }
+  @media (min-width:820px) and (prefers-reduced-motion:no-preference){
+    body:has(#app.table-mode.opened-from-cover){animation:coverTableReveal .28s ease;}
+  }
   /* ===== editable table ===== */
   @media (min-width:820px){
     #app.table-mode{max-width:96vw;transition:none;}   /* 拿掉 1280px 固定上限、只留 96vw:縮小(Ctrl-)時內容跟著視窗等比縮放,左右白邊固定 2vw、不會越縮越多,還能看到更多欄位(與客戶總覽一致) */
@@ -2882,7 +2889,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.26C";
+const APP_VERSION = "2026.11.26D";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -4097,7 +4104,10 @@ function syncToggleUI(){
   if (tableWrap) tableWrap.classList.toggle("edit-mode", editMode);   // 表格展開區底色:編輯=灰、正常=淺藍
 }
 function syncTableMode(){
-  document.getElementById("app").classList.toggle("table-mode", viewMode==="table" && listView.classList.contains("active"));
+  const app=document.getElementById("app");
+  const tableActive=viewMode==="table" && listView.classList.contains("active");
+  app.classList.toggle("table-mode",tableActive);
+  if(!tableActive)app.classList.remove("opened-from-cover");
 }
 function setViewMode(vm){
   viewMode = (vm==="table") ? "table" : "card"; saveViewMode();
@@ -5637,7 +5647,8 @@ lpOpenBtn.addEventListener("click", ()=>{ const u=lpInput.value.trim(); if (u) o
 document.getElementById("coverVT").addEventListener("click", e=>{
   const b = e.target.closest("button"); if (!b) return;
   viewMode = (b.dataset.vm === "table") ? "table" : "card"; saveViewMode();
-  openList("");                       // 進入「全部」;openList 內會一律恢復正常模式
+  openList("");
+  if(viewMode==="table")document.getElementById("app").classList.add("opened-from-cover");                       // 進入「全部」;openList 內會一律恢復正常模式
 });
 let switchingListView = false;
 document.getElementById("viewBtn").addEventListener("click", () => {
