@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261126E">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261126E">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261126F">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261126F">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261126E"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261126E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261126F"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261126F"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1046,6 +1046,11 @@
   }
   /* ===== editable table ===== */
   @media (min-width:820px){
+    /* Retain the last desktop layout while the home view contracts. */
+    #list.returning-table:not(.active){
+      display:flex;position:fixed;inset:0 2vw;height:100dvh;min-height:0;
+      content-visibility:hidden;opacity:0;pointer-events:none;overflow:hidden;
+    }
     #app.table-mode{max-width:96vw;transition:none;}   /* 拿掉 1280px 固定上限、只留 96vw:縮小(Ctrl-)時內容跟著視窗等比縮放,左右白邊固定 2vw、不會越縮越多,還能看到更多欄位(與客戶總覽一致) */
     #app.table-mode .search-box{max-width:460px;}   /* 上限放外框:清除鈕以外框定位,X 才會貼在輸入框內側 */
   }
@@ -2889,7 +2894,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.26E";
+const APP_VERSION = "2026.11.26F";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -4168,6 +4173,7 @@ function tHeadHTML(){
 }
 // 同時把某欄寬度套到「表頭 table」與「表身 table」兩邊的 <col>,並同步兩表 min-width
 function setColWidth(field, w){
+  renderedTable = null;
   tableWrap.querySelectorAll(`col[data-field="${field}"]`).forEach(c => c.style.width = w + "px");
   const mw = colSumMinWidth() + "px";
   tableWrap.querySelectorAll(".ptable").forEach(t => t.style.minWidth = mw);
@@ -4381,6 +4387,7 @@ function listMarkup(list, render){
   }).join("");
 }
 function reorderList(list){
+  renderedTable = null;
   if (editMode || openNeedId || tselMode || selectMode || !list.length || lastListMarkup.size !== list.length) return false;
   const table = viewMode === "table";
   const parent = table ? tableWrap.querySelector(".tbody-wrap tbody") : cardsEl;
@@ -4401,14 +4408,35 @@ function reorderList(list){
   if (table){hideNeedHover();observeTableLinks();}
   return true;
 }
-function renderTable(list){
+// Compare the inputs of the read-only table, including order, platform settings
+// and local date (the due-date colours can change at midnight).
+let renderedTable = null;
+let coverTableTimer = 0;
+function tableContentKey(list, head, cols){
+  return JSON.stringify([head, cols, cats, linkPreferences, new Date().toDateString(), list]);
+}
+function endCoverTableReturn(){
+  clearTimeout(coverTableTimer);
+  coverTableTimer = 0;
+  listView.classList.remove("returning-table");
+}
+tableWrap.addEventListener("contextmenu", () => { renderedTable = null; }, true);
+tableWrap.addEventListener("input", () => { renderedTable = null; }, true);
+function renderTable(list, reopening){
   hideNeedHover();
+  const head = tHeadHTML();
+  const cols = colGroupHTML();
+  const remember = !editMode && !openNeedId && !tselMode && !duplicateHighlightId &&
+    list.length && matchMedia("(min-width:820px)").matches;
+  const key = remember ? tableContentKey(list, head, cols) : null;
+  if (reopening && key && renderedTable?.key === key && renderedTable.body.isConnected &&
+      renderedTable.body.children.length === list.length &&
+      list.every((item,i) => renderedTable.body.children[i].dataset.id === item.id)) return;
+  renderedTable = null;
   const oldScroll = tableWrap.querySelector(".tbody-wrap");
   const wasHidden = tableWrap.style.display === "none";
   const sTop = wasHidden ? hiddenTablePosition.top : oldScroll?.scrollTop || 0;
   const sLeft = wasHidden ? hiddenTablePosition.left : oldScroll?.scrollLeft || 0;
-  const head = tHeadHTML();
-  const cols = colGroupHTML();
   const mw = colSumMinWidth();
   const rows = list.length ? listMarkup(list,trowHTML)
     : `<tr><td colspan="${tableFields().length + (editMode ? 1 : 0)}" class="tempty">${items.length ? "找不到符合的物件" : "還沒有物件，點右上「＋ 新增物件」開始建立。"}</td></tr>`;
@@ -4423,6 +4451,7 @@ function renderTable(list){
   if (bodyWrap){ bodyWrap.scrollTop = sTop; bodyWrap.scrollLeft = sLeft; }
   if (headWrap) headWrap.scrollLeft = sLeft;
   if (headWrap && bodyWrap) bindTableScrollSync(headWrap, bodyWrap);
+  if (key) renderedTable = {body:bodyWrap.querySelector("tbody"), key};
   // 重繪後還原展開中的備註列(搜尋/同步/切換造成重繪時,展開狀態不消失)
   if (openNeedId){
     const otr = tableWrap.querySelector(`tr[data-id="${openNeedId}"]`);
@@ -5698,7 +5727,7 @@ function applyFilter(reason){
   if (viewMode === "table"){
     cardsEl.style.display = "none";
     syncTableMode();
-    renderTable(list);
+    renderTable(list,reason==="reopenTable");
   } else {
     if (tableWrap.style.display !== "none"){
       const body = tableWrap.querySelector(".tbody-wrap");
@@ -5733,22 +5762,48 @@ function openList(cat){
   saveNav("list", currentCat);   // 記住:目前在列表(含分類)
   searchEl.value = "";
   tableWrap.classList.remove("gen-open");   // 重新進列表:收起手機生成面板
-  applyFilter();
+  const warmTable = viewMode==="table" && coverTableTimer!==0;
+  if (!warmTable) {
+    if (coverTableTimer) endCoverTableReturn();
+    applyFilter();
+  }
   cover.style.display = "none";
   listView.classList.add("active");
   syncTableMode();
+  if (warmTable){
+    applyFilter("reopenTable");
+    endCoverTableReturn();
+    const body = tableWrap.querySelector(".tbody-wrap");
+    if(body)body.scrollTo(0,0);
+    const head = tableWrap.querySelector(".thead-wrap");
+    if(head)head.scrollLeft=0;
+  }
   if(viewMode==="table")fitTableDueDates();
   window.scrollTo(0,0);
   requestAnimationFrame(updateLH);
 }
 function showCover(){
+  const keepTable = renderedTable && viewMode==="table" && !editMode && !openNeedId && !tselMode &&
+    !window.isTableBusy?.() && listView.classList.contains("active") &&
+    matchMedia("(min-width:820px)").matches && CSS.supports("content-visibility","hidden");
   closeTableMoreLinks();
   /* search-help:start */ closeSearchHelp(); /* search-help:end */
   closeLinkFilter();
   exitSelectMode();
-  if (typeof closeColFlt === "function") closeColFlt();
+  // Closing the filter may apply a pending data refresh. Keep that refresh,
+  // but omit intermediate list paints while leaving a read-only table.
+  const wasSwitching = switchingListView;
+  if (keepTable) switchingListView = true;
+  try {
+    if (typeof closeColFlt === "function") closeColFlt();
+  } finally { switchingListView = wasSwitching; }
   if (typeof closeNeedExp === "function") closeNeedExp();   // 離開列表:收合備註展開並提交,避免隱藏 DOM 內未落地編輯遺失
   if (typeof hideNeedHover === "function") hideNeedHover();
+  if (keepTable && renderedTable){
+    listView.classList.add("returning-table");
+    clearTimeout(coverTableTimer);
+    coverTableTimer = setTimeout(endCoverTableReturn,400);
+  }
   saveNav("cover");   // 記住:目前在封面
   listView.classList.remove("active");
   syncTableMode();
