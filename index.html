@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261126F">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261126F">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261126G">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261126G">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261126F"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261126F"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261126G"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261126G"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1042,11 +1042,23 @@
     to{clip-path:inset(0 0);}
   }
   @media (min-width:820px) and (prefers-reduced-motion:no-preference){
-    body:has(#app.table-mode.opened-from-cover){animation:coverTableReveal .28s ease;}
+    body:has(#app.table-mode.table-reveal){animation:coverTableReveal .28s ease;}
   }
   /* ===== editable table ===== */
   @media (min-width:820px){
-    /* Retain the last desktop layout while the home view contracts. */
+    /* Keep narrow cards at their final width while the outer view contracts. */
+    @media screen{
+      .cards.cmode-view > .card{content-visibility:auto;contain-intrinsic-block-size:auto 220px;}
+      .cards.cmode-view > .compact-card{contain-intrinsic-block-size:auto 75px;}
+    }
+    #app:not(.table-mode) > #list.active{width:min(100%,480px);margin-inline:auto;}
+    /* Keep the read-only desktop table laid out behind settings. The list is inert until return. */
+    #list.settings-table:not(.active){
+      display:flex;position:fixed;inset:0 2vw;height:100dvh;min-height:0;
+      opacity:0;pointer-events:none;overflow:hidden;
+    }
+    #list.settings-table:not(.active) .table-wrap{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;margin-bottom:12px;}
+    #list.settings-table:not(.active) .tbody-wrap{flex:1 1 auto;min-height:0;max-height:none;}
     #list.returning-table:not(.active){
       display:flex;position:fixed;inset:0 2vw;height:100dvh;min-height:0;
       content-visibility:hidden;opacity:0;pointer-events:none;overflow:hidden;
@@ -2894,7 +2906,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.26F";
+const APP_VERSION = "2026.11.26G";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -4112,7 +4124,7 @@ function syncTableMode(){
   const app=document.getElementById("app");
   const tableActive=viewMode==="table" && listView.classList.contains("active");
   app.classList.toggle("table-mode",tableActive);
-  if(!tableActive)app.classList.remove("opened-from-cover");
+  if(!tableActive)app.classList.remove("table-reveal");
 }
 function setViewMode(vm){
   viewMode = (vm==="table") ? "table" : "card"; saveViewMode();
@@ -4120,7 +4132,8 @@ function setViewMode(vm){
     if (typeof closeNeedExp === "function") closeNeedExp();
     if (typeof hideNeedHover === "function") hideNeedHover();
   }
-  applyFilter();
+  applyFilter("switchView");
+  if(viewMode==="table")document.getElementById("app").classList.add("table-reveal");
 }
 
 // ---- table rendering ----
@@ -4411,6 +4424,7 @@ function reorderList(list){
 // Compare the inputs of the read-only table, including order, platform settings
 // and local date (the due-date colours can change at midnight).
 let renderedTable = null;
+let lastCardMarkup = null;
 let coverTableTimer = 0;
 function tableContentKey(list, head, cols){
   return JSON.stringify([head, cols, cats, linkPreferences, new Date().toDateString(), list]);
@@ -4431,7 +4445,17 @@ function renderTable(list, reopening){
   const key = remember ? tableContentKey(list, head, cols) : null;
   if (reopening && key && renderedTable?.key === key && renderedTable.body.isConnected &&
       renderedTable.body.children.length === list.length &&
-      list.every((item,i) => renderedTable.body.children[i].dataset.id === item.id)) return;
+      list.every((item,i) => renderedTable.body.children[i].dataset.id === item.id)) {
+    if (tableWrap.style.display === "none"){
+      tableWrap.style.display = "";
+      const scroller = tableWrap.querySelector(".tbody-wrap");
+      scroller.scrollTop = hiddenTablePosition.top;
+      scroller.scrollLeft = hiddenTablePosition.left;
+      tableWrap.querySelector(".thead-wrap").scrollLeft = scroller.scrollLeft;
+      syncTableChrome();
+    }
+    return;
+  }
   renderedTable = null;
   const oldScroll = tableWrap.querySelector(".tbody-wrap");
   const wasHidden = tableWrap.style.display === "none";
@@ -5677,7 +5701,7 @@ document.getElementById("coverVT").addEventListener("click", e=>{
   const b = e.target.closest("button"); if (!b) return;
   viewMode = (b.dataset.vm === "table") ? "table" : "card"; saveViewMode();
   openList("");
-  if(viewMode==="table")document.getElementById("app").classList.add("opened-from-cover");                       // 進入「全部」;openList 內會一律恢復正常模式
+  if(viewMode==="table")document.getElementById("app").classList.add("table-reveal");                       // 進入「全部」;openList 內會一律恢復正常模式
 });
 let switchingListView = false;
 document.getElementById("viewBtn").addEventListener("click", () => {
@@ -5723,20 +5747,26 @@ function applyFilter(reason){
   listCounter.refresh(list);
   document.querySelectorAll(".tab").forEach(t =>
     t.classList.toggle("active", t.dataset.cat === currentCat));
-  if (reason === "sort" && reorderList(list)) return;
+  if (reason === "sort"){
+    lastCardMarkup = null;
+    if (reorderList(list)) return;
+  }
   if (viewMode === "table"){
     cardsEl.style.display = "none";
     syncTableMode();
-    renderTable(list,reason==="reopenTable");
+    renderTable(list,reason==="reopenTable" || reason==="switchView");
   } else {
     if (tableWrap.style.display !== "none"){
       const body = tableWrap.querySelector(".tbody-wrap");
       if (body) hiddenTablePosition = {top:body.scrollTop,left:body.scrollLeft};
     }
     tableWrap.style.display = "none"; cardsEl.style.display = "";
-    cardsEl.innerHTML = list.length
+    const markup = list.length
       ? listMarkup(list,cardHTML)
       : `<p class="empty">${items.length ? "找不到符合的物件" : "尚無物件，點右下角「＋ 新增物件」開始建立。"}</p>`;
+    const remember = !editMode && !selectMode && list.length && matchMedia("(min-width:820px)").matches;
+    if (!remember || reason !== "switchView" || lastCardMarkup !== markup) cardsEl.innerHTML = markup;
+    lastCardMarkup = remember ? markup : null;
   }
   syncTableMode();
   if(viewMode==="table")fitTableDueDates();
@@ -9447,6 +9477,10 @@ function openSettings(trigger,fromPointer=false){
   if(fromList){
     const body=tableWrap.querySelector(".tbody-wrap");
     settingsListReturn={top:body?.scrollTop||0,left:body?.scrollLeft||0,windowTop:window.scrollY,windowLeft:window.scrollX,tabsLeft:document.getElementById("tabs").scrollLeft,trigger,quietGearFocus:trigger===listGear&&fromPointer};
+    if(viewMode==="table" && !editMode && !openNeedId && matchMedia("(min-width:820px)").matches){
+      listView.classList.add("settings-table");
+      listView.inert = true;
+    }
     if(viewMode==="table")flushEditing();
     closeOtherOverlays("");
   }else{
@@ -9467,13 +9501,16 @@ function closeSettings(event){
   if (typeof palettePop !== "undefined" && palettePop.classList.contains("link-palette")) closePalette();
   if(linkDeleteUI.picker.hidden===false)setLinkDeleteMode(false);
   settingsView.classList.remove("active");
+  listView.classList.remove("settings-table");
+  listView.inert = false;
   if(settingsListReturn){
     const position=settingsListReturn;
     settingsListReturn=null;
     listView.classList.add("active");
     syncTableMode();
+    if(viewMode==="table")document.getElementById("app").classList.add("table-reveal");
     updateLH();
-    syncTableChrome();
+    if(viewMode==="table")syncTableChrome();
     const body=tableWrap.querySelector(".tbody-wrap"),head=tableWrap.querySelector(".thead-wrap");
     if(body){
       body.scrollTop=position.top;
