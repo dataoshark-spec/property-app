@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261127M">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261127M">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261127N">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261127N">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261127M"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261127M"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261127N"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261127N"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -767,6 +767,7 @@
   .cselect.open .cselect-btn{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
   .cselect-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}
   .cselect-chev{flex:none;font-size:.68rem;color:var(--ink-soft);transition:transform .18s ease;}
+  #catSelBtn .cselect-chev{width:6px;height:3px;background:currentColor;clip-path:polygon(0 0,100% 0,50% 100%);}
   .cselect.open .cselect-chev{transform:rotate(180deg);}
   .cselect-menu{position:absolute;top:calc(100% + 6px);right:0;z-index:20;min-width:158px;max-width:230px;
     background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;
@@ -1918,7 +1919,7 @@ tr.history-highlight>td{box-shadow:inset 0 2px #60ae93,inset 0 -2px #60ae93!impo
           <div class="cselect" id="catSel">
             <button type="button" class="cselect-btn" id="catSelBtn" aria-haspopup="listbox" aria-expanded="false">
               <span class="cselect-txt" id="catSelTxt"></span>
-              <span class="cselect-chev">▾</span>
+              <span class="cselect-chev" aria-hidden="true"></span>
             </button>
             <div class="cselect-menu" id="catSelMenu" role="listbox"></div>
           </div>
@@ -2931,7 +2932,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27M";
+const APP_VERSION = "2026.11.27N";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
