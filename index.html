@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261127B">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261127B">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261127C">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261127C">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261127B"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261127B"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261127C"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261127C"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1505,24 +1505,30 @@
   .ptable.ro .tchip.property-link:not(.on){opacity:1;color:var(--text-faint);background:var(--surface-1);border-color:var(--line);}
   .links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0;}
   .card .price-value{flex:0 0 auto;}
-  .card .price .links{flex:0 1 58%;max-width:240px;}
+  .listing-head{align-items:flex-start;}
+  .listing-head .name{min-width:0;overflow-wrap:anywhere;}
+  .listing-head .price-value{justify-content:flex-end;color:var(--ink);max-width:65%;}
+  .listing-head .num{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+  .listing-head .unit{flex:none;font-size:11px;margin-left:3px;color:var(--ink-soft);}
+  @media(max-width:380px){.listing-head .num{font-size:21px;}}
+  .listing-location{overflow-wrap:anywhere;}
+  .listing-category{font-weight:700;color:var(--ink);margin-inline-end:7px;}
   .links .property-link,.dtl-links .property-link{min-width:0;justify-content:center;}
   /* 2026.11.06B card compact links: keep the four slots together and retain their configured colors. */
-  .card .price{flex-wrap:wrap;row-gap:4px;}
-  .card .price .links{flex:0 0 210px;width:210px;max-width:100%;margin-left:auto;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
-  .card .price .links .property-link,
-  .card .price .links .property-link:hover,
-  .card .price .links .property-link:active{position:relative;isolation:isolate;box-sizing:border-box;height:28px;padding:0 5px;border:0;border-radius:9px;background:transparent;font-size:12px;font-weight:600;line-height:1.2;letter-spacing:0;}
-  .card .price .links .property-link::before{content:"";position:absolute;inset:50% 0 auto;height:28px;transform:translateY(-50%);box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--surface-1);z-index:-1;pointer-events:none;}
-  .card .price .links .property-link.on::before{background:var(--link-color);border-color:var(--link-color);}
-  .card .price .links .property-link.off{color:var(--text-faint);}
-  .card .price .links .property-link .ext{display:none;}
-  @media (max-width:600px),(pointer:coarse){.card .price .links .property-link{height:44px;}}
+  .card .card-platforms{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:294px;margin:10px auto;}
+  .card-platforms>.property-link{flex:0 0 calc((100% - 24px)/5);}
+  .card .card-platforms .property-link,
+  .card .card-platforms .property-link:hover,
+  .card .card-platforms .property-link:active{position:relative;isolation:isolate;box-sizing:border-box;height:28px;padding:0 5px;border:0;border-radius:9px;background:transparent;font-size:12px;font-weight:600;line-height:1.2;letter-spacing:0;}
+  .card .card-platforms .property-link::before{content:"";position:absolute;inset:50% 0 auto;height:28px;transform:translateY(-50%);box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--surface-1);z-index:-1;pointer-events:none;}
+  .card .card-platforms .property-link.on::before{background:var(--link-color);border-color:var(--link-color);}
+  .card .card-platforms .property-link.off{color:var(--text-faint);}
+  .card .card-platforms .property-link .ext{display:none;}
+  @media (max-width:600px),(pointer:coarse){.card .card-platforms .property-link{height:44px;}}
   /* End 2026.11.06B card compact links. */
   .more-links{min-width:0;height:26px;width:30px;padding:0 1px;border:1px solid var(--line);border-radius:7px;background:var(--surface-1);color:var(--accent-deep);font-family:inherit;font-size:11.5px;line-height:1.2;font-weight:600;cursor:pointer;}
   .more-links[aria-expanded="true"]{border-color:var(--accent);}
-  .card .price .links{grid-template-columns:repeat(var(--visible-links,4),minmax(0,1fr));width:calc(var(--visible-links,4)*54px - 6px);flex-basis:auto;}
-  .card .price .links:empty{display:none;}
+  .card .card-platforms:empty{display:none;}
   .card .meta{align-items:baseline;column-gap:18px;row-gap:3px;min-height:25px;}
   .card .meta>span{min-width:0;max-width:100%;overflow-wrap:anywhere;padding:3px 0;border:0;background:transparent;font-size:15px;font-variant-numeric:tabular-nums;}
   .card .meta .ml{font-size:12px;font-weight:400;color:var(--ink-soft);}
@@ -1532,7 +1538,6 @@
   [data-theme="dark"] .card .meta .due.warn{color:#e6a94a;}
   [data-theme="dark"] .card .meta .due.over{color:#f0745a;}
   .card .meta .due .ml{color:inherit;}
-  .card .price .links:not(:empty){flex:1 1 calc(var(--visible-links)*34px);max-width:calc(var(--visible-links)*46px - 6px);}
   .card .more-links{position:relative;isolation:isolate;height:28px;width:100%;border:0;border-radius:9px;background:transparent;}
   .card .more-links::before{content:"";position:absolute;inset:50% 0 auto;height:28px;transform:translateY(-50%);box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--surface-1);z-index:-1;}
   .card .more-links[aria-expanded="true"]::before{border-color:var(--accent);}
@@ -2903,7 +2908,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27B";
+const APP_VERSION = "2026.11.27C";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -2986,13 +2991,6 @@ function linkChip(d,slot){
   return href
     ? `<a class="chip on property-link" ${attrs} href="${esc(href)}" target="_blank" rel="noopener"><span class="link-text">${esc(label)}</span><span class="ext">↗</span></a>`
     : `<span class="chip off property-link${none?' link-none':''}" ${attrs}><span class="link-text">${none?'無':esc(label)}</span></span>`;
-}
-function propertyLinksHTML(d,compact=false){
-  const slots=linkSlotIds(),overflow=compact&&slots.length>4;
-  const visible=overflow?slots.slice(0,3):slots;
-  const chips=visible.map(slot=>linkChip(d,slot)).join("");
-  if(!overflow)return chips;
-  return chips+moreLinksButtonHTML(slots.length-visible.length);
 }
 function detailLinkRowsHTML(d,slots){
   if(!slots.length)return "";
@@ -3120,15 +3118,12 @@ function cardHTML(d){
   return `<article class="card${sel}${ds ? " due-"+ds : ""}" data-id="${esc(d.id)}"><svg class="lp-ring" aria-hidden="true"><rect class="lp-track"/><rect class="lp-draw" pathLength="100"/><rect class="lp-tip" pathLength="100"/></svg>
     ${selMark(d)}
     <div class="body">
-      <div class="card-head">
+      <div class="card-head listing-head">
         <h3 class="name">${nameSegmentsHTML(d.name)}</h3>
-        <span class="badge">${esc(d.cat)}</span>
+        ${d.price ? `<span class="price-value" data-copy="${esc(d.price)}"><span class="num">${money(d.price)}</span><span class="unit">萬</span></span>` : ""}
       </div>
-      <div class="addr"><span class="cv" data-copy="${esc(d.addr)}">${esc(d.addr)}</span></div>
-      <div class="price">
-        ${d.price ? `<span class="price-value" data-copy="${esc(d.price)}"><span class="num">${money(d.price)}</span><span class="unit">萬</span></span>` : `<span class="price-value"></span>`}
-        <div class="links" style="--visible-links:${Math.min(4,linkPreferences.linkSlots.length)}">${propertyLinksHTML(d,true)}</div>
-      </div>
+      <div class="addr listing-location">${d.cat ? `<span class="listing-category">${esc(d.cat)}</span>` : ""}<span class="cv" data-copy="${esc(d.addr)}">${esc(d.addr)}</span></div>
+      <div class="links card-platforms">${linkSlotIds().map(slot=>linkChip(d,slot)).join("")}</div>
       <div class="meta">
         <span data-copy="${esc(d.layout)}"><i class="ml">格局</i> ${esc(d.layout)}</span>
         <span data-copy="${esc(d.floor)}"><i class="ml">樓層</i> ${esc(d.floor)}</span>
