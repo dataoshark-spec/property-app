@@ -617,17 +617,19 @@
   /* CRUD: card actions, new-item button, data tools, modal */
   .cards{padding-bottom:32px;}
 
-  /* Compact density: 案名 + 售價 (top), 類別 + 地址 (below); no edit/delete */
+  /* 緊湊卡片保留兩行：案名與類別、地址與售價。 */
   .cards.compact{gap:10px;}
   .compact-card{cursor:pointer;}
   .compact-card .body{padding:13px 15px;}
-  .compact-card .card-head{align-items:center;gap:10px;}
-  .compact-card .name{font-size:1.24rem;}
+  .compact-card .card-head{align-items:center;gap:10px;min-height:1.55rem;}
+  .compact-card .name{font-size:1.24rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .compact-card .name .cv{display:inline;}
+  .compact-card .badge{max-width:40%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .compact-card .price-tag{flex:none;white-space:nowrap;font-variant-numeric:tabular-nums;
     font-size:1.2rem;font-weight:900;color:var(--accent-deep);}
   .compact-card .price-tag small{font-size:.72rem;font-weight:700;color:var(--ink-soft);margin-left:2px;}
-  .compact-card .sub-row{display:flex;align-items:baseline;gap:10px;margin-top:8px;}
-  .compact-card .sub-row .addr{flex:1;min-width:0;font-size:.84rem;color:var(--ink-soft);line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .compact-card .sub-row{display:flex;align-items:center;gap:10px;margin-top:8px;min-height:1.8rem;}
+  .compact-card .sub-row .addr{flex:1;min-width:0;margin-top:0;font-size:.84rem;color:var(--ink-soft);line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .compact-card .sub-row .addr .cv{display:inline;}   /* 內層設 inline:複製高亮貼合文字、且保留過長省略號 */
 
   .add-obj{flex:none;margin-left:auto;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
@@ -2951,7 +2953,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27Q";
+const APP_VERSION = "2026.11.27R";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
