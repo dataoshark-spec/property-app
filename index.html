@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261127E">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261127E">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261127F">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261127F">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261127E"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261127E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261127F"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261127F"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -2910,7 +2910,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27E";
+const APP_VERSION = "2026.11.27F";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -2952,7 +2952,32 @@ const safeUrl = u => {
   if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return "";
   return "https://" + s.replace(/^\/+/, "");
 };
-const openExtUrl = u => { const href = safeUrl(u); if (href) window.open(href, "_blank", "noopener"); };
+// Android installed apps can present ordinary _blank web links as an in-app Custom Tab.
+function androidBrowserIntent(href){
+  if(!/android/i.test(navigator.userAgent)||!matchMedia("(display-mode: standalone)").matches)return "";
+  let url;
+  try{url=new URL(href);}catch(_){return "";}
+  if(!["https:","http:"].includes(url.protocol)||url.origin===location.origin)return "";
+  const ua=navigator.userAgent;
+  const browserPackage=/SamsungBrowser/i.test(ua)?"com.sec.android.app.sbrowser"
+    : /EdgA\//i.test(ua)?"com.microsoft.emmx"
+    : /Firefox\//i.test(ua)?"org.mozilla.firefox":"com.android.chrome";
+  return "intent:"+url.href.slice(url.protocol.length)+"#Intent;scheme="+url.protocol.slice(0,-1)
+    +";action=android.intent.action.VIEW;package="+browserPackage+";B.create_new_tab=true;S.browser_fallback_url="+encodeURIComponent(url.href)+";end";
+}
+function openExtUrl(value){
+  const href=safeUrl(value);
+  if(href)window.open(androidBrowserIntent(href)||href,"_blank","noopener");
+}
+function openAndroidPlatformAnchor(event){
+  if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  const anchor=event.target.closest("a.property-link[href]");
+  if(!anchor)return;
+  const intent=androidBrowserIntent(anchor.href);
+  if(!intent)return;
+  event.preventDefault();
+  window.open(intent,"_blank","noopener");
+}
 const normUrl = u => safeUrl(u);
 // 欄位識別碼不隨名稱或順序改變。舊欄位沿用原本儲存的網址名稱。
 const LINK_FIELDS=["url591","urlLeju","urlI","url4"];
@@ -6639,6 +6664,7 @@ detailBg.addEventListener("pointerdown", e => { _dtlDownOnBg = (e.target === det
 detailBg.addEventListener("click", e => { if (e.target === detailBg && _dtlDownOnBg) closeDetail(); _dtlDownOnBg = false; });
 // 明細頁內點欄位值 → 複製
 document.getElementById("detailBody").addEventListener("click", e => {
+  openAndroidPlatformAnchor(e);
   const cp = e.target.closest(".dtl-copy"); if (cp) copyFieldText(cp);
 });
 
@@ -9268,7 +9294,7 @@ cardsEl.addEventListener("click", e => {
   }
   const more=e.target.closest(".more-links");
   if(more){e.stopPropagation();openMoreLinks(more);return;}
-  if (isLink(e.target)) return;   // 電話撥號 / 連結開啟:兩模式皆維持原生動作
+  if (isLink(e.target)){openAndroidPlatformAnchor(e);return;}
   if (editMode){
     openForm(id);                 // 編輯模式:點卡片進編輯表單
   } else {
