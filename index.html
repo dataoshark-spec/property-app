@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261127F">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261127F">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261127G">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261127G">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261127F"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261127F"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261127G"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261127G"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -725,17 +725,17 @@
   .modal-body input:focus,.modal-body select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(15,122,95,.12);}
   .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
   .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}   /* 格局/樓層/售價 各 1/3 */
-  /* ===== 表單連結群組:預設收合成一排三欄,可展開成三排 ===== */
+  /* ===== 表單連結群組:一列一個平台，預設使用緊湊間距 ===== */
   .link-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;}
   .link-head-t{font-size:.8rem;font-weight:600;color:var(--ink-soft);}
   .link-toggle{display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;padding:4px;margin:-4px;cursor:pointer;color:var(--accent-deep);border-radius:6px;}
   @media (hover:hover){ .link-toggle:hover{background:var(--accent-tint);} }
   .link-toggle svg{width:14px;height:14px;transition:transform .18s ease;}
   .link-group:not(.collapsed) .link-toggle svg{transform:rotate(180deg);}   /* 展開時箭頭朝上 */
-  .link-fields{display:grid;gap:10px;}
-  .link-group.collapsed .link-fields{grid-template-columns:repeat(3,minmax(0,1fr));}   /* 收合:三欄一排 */
-  .link-group:not(.collapsed) .link-fields{grid-template-columns:1fr;}                  /* 展開:各佔一排 */
-  .link-f{display:flex;flex-direction:column;gap:5px;min-width:0;}
+  .link-fields{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;}
+  .link-group.collapsed .link-fields{gap:4px;}
+  .link-f{display:grid;grid-template-columns:clamp(70px,22%,104px) minmax(0,1fr);align-items:center;gap:8px;min-width:0;}
+  .link-group.collapsed .link-f input{min-height:36px;padding:5px 9px;}
   /* link-none:start */
   .link-none-check{display:inline-flex;align-items:center;gap:5px;flex:none;white-space:nowrap;color:var(--ink-soft);font-size:.8rem;font-weight:400;cursor:pointer;}
   .link-none-check[hidden]{display:none;}
@@ -1548,9 +1548,7 @@
   .link-filter-panel{max-height:calc(100dvh - 32px);overflow:auto;}
   #linkFilterBtn[hidden]{display:none;}
   @media(max-width:600px),(pointer:coarse){.card .more-links{height:44px;}}
-  .link-group.collapsed .link-fields{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .link-f{min-width:0;display:flex;flex-direction:column;gap:7px;}
-  .form-link-name-trigger{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:100%;padding:3px 2px 3px 0;border:0;border-radius:4px;background:transparent;color:var(--ink);font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;}
+  .form-link-name-trigger{align-self:stretch;display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:100%;padding:3px 2px 3px 0;border:0;border-radius:4px;background:transparent;color:var(--ink);font:inherit;font-size:.82rem;font-weight:600;cursor:pointer;}
   .form-link-name-trigger::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--link-color);}
   .form-link-name-trigger span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .form-link-name-trigger svg{flex:none;width:12px;height:12px;color:var(--ink-soft);}
@@ -1559,7 +1557,7 @@
   .form-link-options[hidden]{display:none;}
   .form-link-options-actions{display:flex;justify-content:flex-end;gap:7px;}
   .form-link-options-actions button{min-height:34px;flex:none;padding:5px 12px;font-size:.83rem;}
-  @media(pointer:coarse){.form-link-name-trigger,.form-link-options-actions button,.modal-body .form-link-options .link-none-check{min-height:44px;}}
+  @media(pointer:coarse){.collapsed .form-link-name-trigger{min-height:36px;}.form-link-name-trigger,.form-link-options-actions button,.modal-body .form-link-options .link-none-check{min-height:44px;}}
   .lp-head .lp-name{border:0;border-bottom:1px dashed currentColor;padding:0 0 2px;background:none;font:inherit;font-size:16px;color:inherit;cursor:pointer;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .lp-head .lp-name:disabled{border:0;cursor:default;}
   .lp-name-edit{min-width:0;max-width:180px;flex:1;padding:4px 6px;border:1px solid var(--accent);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;}
@@ -1639,7 +1637,7 @@
     .link-setting-row:not(.link-renamed-row) .link-text-color{width:60px;padding-left:3px;padding-right:3px;}
   }
   /* End 2026.11.06B mobile link setting row. */
-  @media(max-width:600px){.modal .link-f input,.modal .form-link-options input{font-size:16px;}.lp-name-edit{font-size:16px;}.link-setting-name,.link-text-color{font-size:16px;}}
+  @media(max-width:600px){.modal .link-group .link-f input,.modal .form-link-options input{font-size:16px;}.lp-name-edit{font-size:16px;}.link-setting-name,.link-text-color{font-size:16px;}}
 
   /* 2026.11.06B: preserve row height; category badge stays centered at narrow widths. */
   .ptable tbody td.tcat{padding:0 4px;text-align:center;}
@@ -2910,7 +2908,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27F";
+const APP_VERSION = "2026.11.27G";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
