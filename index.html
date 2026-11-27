@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261126J">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261126J">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261127A">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261127A">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261126J"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261126J"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261127A"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261127A"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1523,6 +1523,18 @@
   .more-links[aria-expanded="true"]{border-color:var(--accent);}
   .card .price .links{grid-template-columns:repeat(var(--visible-links,4),minmax(0,1fr));width:calc(var(--visible-links,4)*54px - 6px);flex-basis:auto;}
   .card .price .links:empty{display:none;}
+  @media (max-width:819px){
+    .card .meta{align-items:baseline;column-gap:18px;row-gap:3px;min-height:25px;}
+    .card .meta>span{min-width:0;max-width:100%;overflow-wrap:anywhere;padding:3px 0;border:0;background:transparent;font-size:15px;font-variant-numeric:tabular-nums;}
+    .card .meta .ml{font-size:12px;font-weight:400;color:var(--ink-soft);}
+    .card .meta .due{margin-inline-start:auto;background:transparent;font-size:12px;font-weight:400;color:var(--ink-soft);}
+    .card .meta .due.warn{color:#8a5200;}
+    .card .meta .due.over{color:#a5341a;}
+    [data-theme="dark"] .card .meta .due.warn{color:#e6a94a;}
+    [data-theme="dark"] .card .meta .due.over{color:#f0745a;}
+    .card .meta .due .ml{color:inherit;}
+    .card .price .links:not(:empty){flex:1 1 calc(var(--visible-links)*34px);max-width:calc(var(--visible-links)*46px - 6px);}
+  }
   .card .more-links{position:relative;isolation:isolate;height:28px;width:100%;border:0;border-radius:9px;background:transparent;}
   .card .more-links::before{content:"";position:absolute;inset:50% 0 auto;height:28px;transform:translateY(-50%);box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--surface-1);z-index:-1;}
   .card .more-links[aria-expanded="true"]::before{border-color:var(--accent);}
@@ -2893,7 +2905,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.26J";
+const APP_VERSION = "2026.11.27A";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
