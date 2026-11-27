@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261127H">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261127H">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261127I">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261127I">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261127H"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261127H"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261127I"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261127I"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1288,8 +1288,8 @@
   .dtl-h svg{width:15px;height:15px;color:var(--accent);flex:none;}
   .dtl-card{border:1px solid var(--line);border-radius:12px;background:var(--card);display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
   .dtl-cell{display:flex;align-items:center;gap:8px;padding:11px 13px;min-width:0;}
-  .dtl-cell:nth-child(even){border-left:1px solid var(--line);}
-  .dtl-cell:nth-child(n+3){border-top:1px solid var(--line);}
+  .dtl-card > .dtl-cell:nth-child(even){border-left:1px solid var(--line);}
+  .dtl-card > .dtl-cell:nth-child(n+3){border-top:1px solid var(--line);}
   .dtl-cell > svg{width:13px;height:13px;color:var(--text-faint);flex:none;}
   .dtl-cell.dtl-wide{grid-column:1 / -1;}   /* 地址等長欄位橫跨整列 */
   /* 基本資料專用三欄佈局:售價|格局|樓層 一排,地址(跨前兩欄)|到期 一排;到期左線與樓層左線垂直對齊 */
@@ -1303,6 +1303,7 @@
   .dtl-empty{color:var(--text-faint);font-weight:500;display:inline-flex;align-items:center;}
   .dtl-empty::before{content:"";width:.8em;height:2px;background:currentColor;border-radius:1px;}   /* 空值橫桿:畫線垂直置中,永不歪 */
   #detailTitle{display:flex;align-items:center;gap:9px;min-width:0;overflow:hidden;}
+  #detailBg > .modal{border-radius:20px;}
   #detailBg .modal-head .x{position:relative;z-index:1;}
   .dtl-due-top{margin-left:auto;flex:none;font-family:-apple-system,"Noto Sans TC",sans-serif;font-size:.78rem;font-weight:400;color:var(--text-faint);white-space:nowrap;letter-spacing:.02em;}   /* 標題列到期:推到最右(X鈕左邊)、淺色細字弱化 */
   .dtl-cat{flex:none;font-family:"Noto Sans TC",-apple-system,sans-serif;font-size:.8rem;font-weight:800;line-height:1.25;color:var(--accent-deep);background:var(--accent-tint);border:1px solid var(--accent-tint-bd);border-radius:7px;padding:2px 8px;}
@@ -2909,7 +2910,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27H";
+const APP_VERSION = "2026.11.27I";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
