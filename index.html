@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261127J">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261127J">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261127K">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261127K">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261127J"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261127J"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261127K"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261127K"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1522,9 +1522,10 @@
   /* 2026.11.06B card compact links: keep the four slots together and retain their configured colors. */
   .card .card-platforms{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:294px;margin:10px auto;}
   .card-platforms>.property-link{flex:0 0 calc((100% - 24px)/5);}
+  .card .card-platforms .property-link{height:28px;}
   .card .card-platforms .property-link,
   .card .card-platforms .property-link:hover,
-  .card .card-platforms .property-link:active{position:relative;isolation:isolate;box-sizing:border-box;height:28px;padding:0 5px;border:0;border-radius:9px;background:transparent;font-size:12px;font-weight:600;line-height:1.2;letter-spacing:0;}
+  .card .card-platforms .property-link:active{position:relative;isolation:isolate;box-sizing:border-box;padding:0 5px;border:0;border-radius:9px;background:transparent;font-size:12px;font-weight:600;line-height:1.2;letter-spacing:0;}
   .card .card-platforms .property-link::before{content:"";position:absolute;inset:50% 0 auto;height:28px;transform:translateY(-50%);box-sizing:border-box;border:1px solid var(--line);border-radius:9px;background:var(--surface-1);z-index:-1;pointer-events:none;}
   .card .card-platforms .property-link.on::before{background:var(--link-color);border-color:var(--link-color);}
   .card .card-platforms .property-link.off{color:var(--text-faint);}
@@ -2912,7 +2913,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27J";
+const APP_VERSION = "2026.11.27K";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
