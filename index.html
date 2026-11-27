@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261127D">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261127D">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261127E">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261127E">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261127D"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261127D"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261127E"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261127E"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1512,7 +1512,8 @@
   .listing-head .unit{flex:none;font-size:11px;margin-left:3px;color:var(--ink-soft);}
   @media(max-width:380px){.listing-head .num{font-size:21px;}}
   .listing-location{overflow-wrap:anywhere;}
-  .listing-category{font-weight:700;color:var(--ink);margin-inline-end:7px;}
+  .listing-term{margin-inline-start:auto;max-width:100%;overflow-wrap:anywhere;padding:3px 0;font-size:12px;color:var(--ink-soft);text-align:end;}
+  .listing-category{font-weight:700;color:var(--ink);}
   .links .property-link,.dtl-links .property-link{min-width:0;justify-content:center;}
   /* 2026.11.06B card compact links: keep the four slots together and retain their configured colors. */
   .card .card-platforms{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:294px;margin:10px auto;}
@@ -1530,9 +1531,10 @@
   .more-links[aria-expanded="true"]{border-color:var(--accent);}
   .card .card-platforms:empty{display:none;}
   .card .meta{align-items:baseline;column-gap:18px;row-gap:3px;min-height:25px;}
+  @media(max-width:380px){.card .meta{column-gap:10px;}}
   .card .meta>span{min-width:0;max-width:100%;overflow-wrap:anywhere;padding:3px 0;border:0;background:transparent;font-size:15px;font-variant-numeric:tabular-nums;}
   .card .meta .ml{font-size:12px;font-weight:400;color:var(--ink-soft);}
-  .card .meta .due{margin-inline-start:auto;background:transparent;font-size:12px;font-weight:400;color:var(--ink-soft);}
+  .card .meta .due{padding:0;border:0;background:transparent;font-size:12px;font-weight:400;color:var(--ink-soft);}
   .card .meta .due.warn{color:#8a5200;}
   .card .meta .due.over{color:#a5341a;}
   [data-theme="dark"] .card .meta .due.warn{color:#e6a94a;}
@@ -2908,7 +2910,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27D";
+const APP_VERSION = "2026.11.27E";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -3122,12 +3124,12 @@ function cardHTML(d){
         <h3 class="name">${nameSegmentsHTML(d.name)}</h3>
         ${d.price ? `<span class="price-value" data-copy="${esc(d.price)}"><span class="num">${money(d.price)}</span><span class="unit">萬</span></span>` : ""}
       </div>
-      <div class="addr listing-location">${d.cat ? `<span class="listing-category">${esc(d.cat)}</span>` : ""}<span class="cv" data-copy="${esc(d.addr)}">${esc(d.addr)}</span></div>
+      <div class="addr listing-location"><span class="cv" data-copy="${esc(d.addr)}">${esc(d.addr)}</span></div>
       <div class="links card-platforms">${linkSlotIds().map(slot=>linkChip(d,slot)).join("")}</div>
       <div class="meta">
         <span data-copy="${esc(d.layout)}"><i class="ml">格局</i> ${esc(d.layout)}</span>
         <span data-copy="${esc(d.floor)}"><i class="ml">樓層</i> ${esc(d.floor)}</span>
-        <span class="due ${ds}" data-copy="${dueText}"><i class="ml">到期</i> ${dueText}</span>
+        <div class="listing-term">${d.cat ? `<b class="listing-category">${esc(d.cat)}</b>` : ""}${d.cat && dueText ? "／" : ""}${dueText ? `<span class="due ${ds}" data-copy="${dueText}"><i class="ml">到期</i>${dueText}</span>` : ""}</div>
       </div>
       <div class="agent">
         <div class="agent-info"><b data-copy="${esc(d.agent)}">${esc(d.agent)}</b><br><span data-copy="${esc(d.store)}">${esc(d.store)}</span></div>
