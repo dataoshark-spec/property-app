@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>物件總覽</title>
-<link rel="icon" type="image/png" href="icon-192.png?v=20261127K">
-<link rel="apple-touch-icon" href="icon-180.png?v=20261127K">
+<link rel="icon" type="image/png" href="icon-192.png?v=20261127L">
+<link rel="apple-touch-icon" href="icon-180.png?v=20261127L">
 <link rel="manifest" id="propertyManifest">
 <script>
 (function(){
@@ -13,8 +13,8 @@
  var absolute=function(file){return new URL(file,base).href};
  var manifest={id:base.href,name:"物件總覽",short_name:"物件總覽",start_url:base.href,scope:base.href,display:"standalone",
   orientation:"portrait",background_color:"#F4F6F7",theme_color:"#0F7A5F",
-  icons:[{src:absolute("icon-192.png?v=20261127K"),sizes:"192x192",type:"image/png",purpose:"any"},
-         {src:absolute("icon-512.png?v=20261127K"),sizes:"512x512",type:"image/png",purpose:"any"}]};
+  icons:[{src:absolute("icon-192.png?v=20261127L"),sizes:"192x192",type:"image/png",purpose:"any"},
+         {src:absolute("icon-512.png?v=20261127L"),sizes:"512x512",type:"image/png",purpose:"any"}]};
  document.getElementById("propertyManifest").href="data:application/manifest+json;charset=utf-8,"+encodeURIComponent(JSON.stringify(manifest));
 })();
 </script>
@@ -1828,6 +1828,20 @@ tr.history-highlight>td{box-shadow:inset 0 2px #60ae93,inset 0 -2px #60ae93!impo
     </div>
     <div class="settings-body">
 
+      <div class="set-card" id="androidBrowserCard" hidden>
+        <label class="set-card-title" for="androidBrowserSelect">外部網站使用的瀏覽器</label>
+        <p class="set-card-desc" id="androidBrowserHint">請選擇這支手機已安裝的瀏覽器。若網站仍在物件總覽內開啟，可改選另一款瀏覽器。</p>
+        <div class="set-actions">
+          <select class="s-btn" id="androidBrowserSelect" aria-describedby="androidBrowserHint">
+            <option value="">自動（沿用目前瀏覽器）</option>
+            <option value="com.android.chrome">Chrome</option>
+            <option value="com.microsoft.emmx">Microsoft Edge</option>
+            <option value="org.mozilla.firefox">Firefox</option>
+            <option value="com.sec.android.app.sbrowser">Samsung Internet</option>
+          </select>
+        </div>
+      </div>
+
       <div class="set-card" id="syncCard">
         <div class="set-card-title">Google 雲端同步</div>
         <p class="set-card-desc">連結 Google 帳號後，物件資料會自動同步至你的應用程式資料夾。不同欄位的修改會合併；同一欄位以較新的修改為準。所有裝置請使用同一新版，並定期匯出備份。</p>
@@ -2913,7 +2927,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27K";
+const APP_VERSION = "2026.11.27L";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -2956,15 +2970,37 @@ const safeUrl = u => {
   return "https://" + s.replace(/^\/+/, "");
 };
 // Android installed apps can present ordinary _blank web links as an in-app Custom Tab.
+const androidBrowserPrefKey="property_external_browser_android_v1";
+const androidBrowserSelect=document.getElementById("androidBrowserSelect");
+function isAndroidStandalone(){
+  return /android/i.test(navigator.userAgent)&&matchMedia("(display-mode: standalone)").matches;
+}
+function showAndroidBrowserPreference(){
+  if(!isAndroidStandalone())return;
+  document.getElementById("androidBrowserCard").hidden=false;
+  try{androidBrowserSelect.value=localStorage.getItem(androidBrowserPrefKey)||"";}
+  catch{androidBrowserSelect.value="";}
+  if(androidBrowserSelect.selectedIndex<0)androidBrowserSelect.value="";
+}
+showAndroidBrowserPreference();
+window.addEventListener("storage",event=>{
+  if(event.key===androidBrowserPrefKey||event.key===null)showAndroidBrowserPreference();
+});
+androidBrowserSelect.addEventListener("change",()=>{
+  try{
+    if(androidBrowserSelect.value)localStorage.setItem(androidBrowserPrefKey,androidBrowserSelect.value);
+    else localStorage.removeItem(androidBrowserPrefKey);
+  }catch{toast("此設定只在這次開啟期間有效");}
+});
 function androidBrowserIntent(href){
-  if(!/android/i.test(navigator.userAgent)||!matchMedia("(display-mode: standalone)").matches)return "";
+  if(!isAndroidStandalone())return "";
   let url;
   try{url=new URL(href);}catch(_){return "";}
   if(!["https:","http:"].includes(url.protocol)||url.origin===location.origin)return "";
   const ua=navigator.userAgent;
-  const browserPackage=/SamsungBrowser/i.test(ua)?"com.sec.android.app.sbrowser"
+  const browserPackage=androidBrowserSelect.value||(/SamsungBrowser/i.test(ua)?"com.sec.android.app.sbrowser"
     : /EdgA\//i.test(ua)?"com.microsoft.emmx"
-    : /Firefox\//i.test(ua)?"org.mozilla.firefox":"com.android.chrome";
+    : /Firefox\//i.test(ua)?"org.mozilla.firefox":"com.android.chrome");
   return "intent:"+url.href.slice(url.protocol.length)+"#Intent;scheme="+url.protocol.slice(0,-1)
     +";action=android.intent.action.VIEW;package="+browserPackage+";B.create_new_tab=true;S.browser_fallback_url="+encodeURIComponent(url.href)+";end";
 }
