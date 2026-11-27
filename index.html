@@ -1431,6 +1431,18 @@
   /* dropdown menu */
   .catmenu{position:fixed;z-index:210;display:none;min-width:150px;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;background:var(--card);
     border:1px solid var(--line);border-radius:11px;box-shadow:0 14px 36px rgba(22,34,42,.2);padding:5px;}
+  .category-option-row{display:flex;align-items:center;gap:4px;padding:1px 0;}
+  .category-option-row>:first-child{flex:1;min-width:0;overflow-wrap:anywhere;}
+  .category-rename{flex:none;cursor:pointer;font-weight:600;line-height:1.3;font-family:inherit;font-size:.72rem;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);border-radius:7px;padding:6px;}
+  .category-rename-dialog{box-sizing:border-box;width:min(340px,calc(100vw - 28px));border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);padding:18px;}
+  .category-rename-dialog::backdrop{background:#152f355c;}
+  .category-rename-dialog h3{margin:0 0 16px;}
+  .category-rename-dialog label{display:grid;gap:6px;font-weight:600;}
+  .category-rename-dialog input{min-width:0;font:inherit;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px;background:var(--card);}
+  .category-rename-dialog p{font-size:.84rem;color:var(--ink-soft);}
+  .category-rename-dialog footer{display:flex;gap:8px;}
+  .category-rename-dialog footer button{flex:1;}
+
   .category-custom{position:sticky;bottom:0;z-index:1;display:grid;gap:6px;flex:none;padding:8px;border-top:1px solid var(--line);background:var(--card);}
   .category-custom input{width:100%;min-width:0;box-sizing:border-box;font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:8px;color:var(--ink);background:var(--card);}
   .category-custom button{font:inherit;font-weight:700;min-height:36px;border:0;border-radius:8px;background:var(--accent);color:white;cursor:pointer;}
@@ -2939,7 +2951,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27P";
+const APP_VERSION = "2026.11.27Q";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -5411,7 +5423,7 @@ function catMenuSyncIdx(){
   catMenuHighlight();
 }
 function onCatMenuKey(e){
-  if(e.target.closest(".category-custom") && e.key!=="Escape")return;
+  if(e.target.closest(".category-rename-dialog,[data-rename-category]") || (e.target.closest(".category-custom") && e.key!=="Escape"))return;
   if (!catmenu.classList.contains("show")) return;
   const opts = catmenu.querySelectorAll(".catmenu-opt");
   if (!opts.length) return;
@@ -5426,7 +5438,72 @@ function onCatMenuKey(e){
   }
 }
 document.addEventListener("keydown", onCatMenuKey, true);
+function categoryOptionRow(option,key){
+  return '<div class="category-option-row">'+option+'<button type="button" class="category-rename" data-rename-category="'+esc(key)+'" aria-label="重新命名「'+esc(key)+'」">重新命名</button></div>';
+}
+function renameCategory(oldKey,newKey){
+  if(!newKey || newKey.length>80)return "請輸入 1 至 80 字的類別名稱";
+  if(!cats.some(c=>c.key===oldKey))return "類別已更新，請重新開啟選單";
+  if(oldKey===newKey)return "";
+  if(cats.some(c=>c.key===newKey))return "這個名稱已存在";
+  try{
+    const latest=PropertyCore.local().readLatest();
+    const assigned=new Set(items.filter(it=>it.cat===oldKey).map(it=>it.id));
+    const stored=latest.items.filter(it=>it.cat===oldKey);
+    if(latest.resetAt!==(window._resetAt||0) || JSON.stringify(latest.cats)!==JSON.stringify(cats) ||
+       assigned.size!==stored.length || stored.some(it=>!assigned.has(it.id)))return "類別或使用筆數已變更，請重新開啟清單後再改名";
+  }catch(e){return "無法讀取最新類別，請稍後重試";}
+  const oldCats=cats,oldItems=items,now=Date.now();
+  cats=cats.map(c=>c.key===oldKey?{...c,key:newKey}:c);
+  items=items.map(it=>it.cat===oldKey?{...it,cat:newKey,updatedAt:Math.max(now,(it.updatedAt||0)+1)}:it);
+  if(!persistLocal()){
+    cats=oldCats;items=oldItems;return "尚未儲存類別名稱";
+  }
+  remapColFilterCat(oldKey,newKey);saveColFilterState();
+  if(currentCat===oldKey){currentCat=newKey;if(listView.classList.contains("active"))saveNav("list",newKey);}
+  if(modalBg.classList.contains("open")){
+    if(formBaseRec?.cat===oldKey)formBaseRec.cat=newKey;
+    if(formCat===oldKey)setFormCat(newKey);
+    saveFormDraft();
+  }
+  window.touchCats?.();
+  renderCover();renderTabs();renderCatOptions();applyFilter();onLocalChange("data");
+  return "";
+}
+function openCategoryRename(oldKey){
+  const dialog=document.createElement("dialog");
+  dialog.className="category-rename-dialog";
+  dialog.setAttribute("aria-labelledby","categoryRenameHeading");
+  dialog.innerHTML='<form><h3 id="categoryRenameHeading">重新命名類別</h3><label>新名稱<input maxlength="80" required autocomplete="off"></label><p role="status"></p><footer><button class="btn-ghost" type="button">取消</button><button class="btn-primary" type="submit">確認改名</button></footer></form>';
+  document.body.append(dialog);
+  const input=dialog.querySelector("input"),save=dialog.querySelector("[type=submit]"),hint=dialog.querySelector("p");
+  input.value=oldKey;
+  function validate(){
+    const key=input.value.trim(),duplicate=key!==oldKey&&cats.some(c=>c.key===key);
+    save.disabled=!key||key===oldKey||duplicate;
+    hint.textContent=duplicate?"這個名稱已存在":"使用此類別的 "+catCount(oldKey)+" 筆物件會一起更新。";
+  }
+  input.oninput=validate;
+  dialog.querySelector("[type=button]").onclick=()=>dialog.close();
+  dialog.querySelector("form").onsubmit=e=>{
+    e.preventDefault();validate();if(save.disabled)return;
+    const error=renameCategory(oldKey,input.value.trim());
+    if(error){hint.textContent=error;return;}
+    dialog.close();toast("已重新命名");
+  };
+  dialog.addEventListener("keydown",e=>{e.stopPropagation();if(e.key==="Enter"&&(e.isComposing||e.keyCode===229))e.preventDefault();});
+  dialog.addEventListener("close",()=>dialog.remove(),{once:true});
+  validate();dialog.showModal();input.focus();input.select();
+}
+
+
 function installCategoryAdd(menu,form){
+  menu.addEventListener("click",e=>{
+    const button=e.target.closest("[data-rename-category]");if(!button)return;
+    e.preventDefault();e.stopPropagation();
+    if(form)closeCatSel();else closeCatMenu();
+    openCategoryRename(button.dataset.renameCategory);
+  });
   const footerClass="category-custom";
   menu.addEventListener("keydown",e=>{
     if(!e.target.matches("[data-new-category]"))return;
@@ -5507,9 +5584,9 @@ function openCatMenu(trigger){
   closeOtherOverlays("cat");
   const it = tFindItem(trigger); if (!it) return;
   catTrigger = trigger;
-  catmenu.innerHTML = cats.map(c =>
+  catmenu.innerHTML = cats.map(c =>categoryOptionRow(
     `<button type="button" class="catmenu-opt${c.key===it.cat?' sel':''}" data-key="${esc(c.key)}"><span class="dot" style="background:${safeColor(c.color)}"></span>${esc(c.key)}</button>`
-  ).join("")+categoryFooter;
+  ,c.key)).join("")+categoryFooter;
   catmenu.classList.add("show");
   if (window.refreshLed) window.refreshLed();
   catMenuSyncIdx();
@@ -6610,12 +6687,12 @@ installCategoryAdd(catSelMenu,true);
 installCategoryAdd(catmenu,false);
 let formCat = "";
 function renderCatOptions(){
-  catSelMenu.innerHTML = cats.map(c => `
+  catSelMenu.innerHTML = cats.map(c => categoryOptionRow(`
     <button type="button" class="cselect-opt" data-key="${esc(c.key)}" role="option">
       <span class="dot" style="background:${safeColor(c.color)}"></span>
       <span class="nm">${esc(c.key)}</span>
       <span class="chk">✓</span>
-    </button>`).join("")+categoryFooter;
+    </button>`,c.key)).join("")+categoryFooter;
   catSelMenu.querySelectorAll(".cselect-opt").forEach(o => o.classList.toggle("sel", o.dataset.key === formCat));
 }
 function setFormCat(key){
@@ -10252,17 +10329,9 @@ catListEl.addEventListener("change", e => {
     const newKey = e.target.value.trim();
     if (!newKey){ e.target.value = oldKey; return; }
     if (newKey === oldKey) return;
-    if (cats.some(c => c.key === newKey)){ toast("類別名稱重複"); e.target.value = oldKey; return; }
-    cat.key = newKey;
-    item.dataset.key = newKey;
-    // 改名要一併更新受影響資料的 updatedAt:否則兩台裝置同 id 同時間戳、內容不同,雲端合併無法收斂。
-    const _renameTs = Date.now();
-    items.forEach(it => { if (it.cat === oldKey){ it.cat = newKey; it.updatedAt = _renameTs; } });
-    remapColFilterCat(oldKey, newKey);
-    if (currentCat === oldKey) currentCat = newKey;
-    saveItems();
-    refreshCategories();
-    onLocalChange("data");
+    const error=renameCategory(oldKey,newKey);
+    if(error){toast(error);e.target.value=oldKey;return;}
+    item.dataset.key=newKey;
     toast("已改名");
   }
 });
