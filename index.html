@@ -773,6 +773,9 @@
     background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;
     box-shadow:0 14px 34px rgba(22,34,42,.18);display:none;flex-direction:column;gap:2px;}
   .cselect.open .cselect-menu{display:flex;}
+  #catSelMenu{box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;}
+  #catSelMenu > button{flex-shrink:0;}
+  #catSelMenu.opens-up{top:auto;bottom:calc(100% + 6px);}
   .cselect-opt{display:flex;align-items:center;gap:9px;width:100%;box-sizing:border-box;
     font-family:inherit;font-size:.95rem;color:var(--ink);background:none;border:none;
     border-radius:8px;padding:9px 10px;cursor:pointer;text-align:left;transition:background .12s ease;}
@@ -1426,7 +1429,7 @@
     border-radius:7px;padding:4px 8px;font-size:.77rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
   /* dropdown menu */
-  .catmenu{position:fixed;z-index:210;display:none;min-width:150px;max-height:280px;overflow-y:auto;background:var(--card);
+  .catmenu{position:fixed;z-index:210;display:none;min-width:150px;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;background:var(--card);
     border:1px solid var(--line);border-radius:11px;box-shadow:0 14px 36px rgba(22,34,42,.2);padding:5px;}
   .catmenu.show{display:block;}
   .catmenu-opt{display:flex;align-items:center;gap:9px;width:100%;font-family:inherit;font-size:.9rem;font-weight:600;
@@ -2932,7 +2935,7 @@ root.addEventListener("storage",e=>{
 })(typeof window==="undefined"?globalThis:window);
 </script>
 <script id="property-app-source" type="application/x-property-app">
-const APP_VERSION = "2026.11.27N";
+const APP_VERSION = "2026.11.27O";
 const { UNKNOWN_DUE, dueValue, setDueValue } = PropertyCore;
 // ---- Seed data (示範資料;實際資料請用「設定→匯入備份檔」或雲端同步帶入) ----
 const SEED = [
@@ -5418,6 +5421,33 @@ function onCatMenuKey(e){
   }
 }
 document.addEventListener("keydown", onCatMenuKey, true);
+function fitCategoryMenu(menu,anchor,gap,clip){
+  const viewport=window.visualViewport;
+  const top=Math.max(clip?.top ?? 0,(viewport?.offsetTop ?? 0)+8);
+  const bottom=Math.min(clip?.bottom ?? Infinity,(viewport ? viewport.offsetTop+viewport.height : innerHeight)-8);
+  const below=Math.max(0,Math.floor(bottom-anchor.bottom-gap));
+  const above=Math.max(0,Math.floor(anchor.top-top-gap));
+  const natural=menu.scrollHeight+menu.offsetHeight-menu.clientHeight;
+  const up=natural>below && above>below;
+  menu.style.maxHeight=(up ? above : below)+"px";
+  return up;
+}
+function positionTableCategoryMenu(){
+  if(!catTrigger) return;
+  if(!catTrigger.isConnected){
+    // A pending table redraw can replace the button during opening.
+    const id=catTrigger.closest("tr[data-id]")?.dataset.id;
+    catTrigger=id ? tableWrap.querySelector('tr[data-id="'+CSS.escape(id)+'"] .tcat-trigger') : null;
+    if(!catTrigger) return closeCatMenu();
+  }
+  const rect=catTrigger.getBoundingClientRect();
+  const up=fitCategoryMenu(catmenu,rect,5);
+  const viewport=window.visualViewport;
+  const left=viewport?.offsetLeft ?? 0;
+  const right=left+(viewport?.width ?? innerWidth);
+  catmenu.style.left=Math.max(left+10,Math.min(rect.left,right-catmenu.offsetWidth-10))+"px";
+  catmenu.style.top=(up ? rect.top-5-catmenu.offsetHeight : rect.bottom+5)+"px";
+}
 function openCatMenu(trigger){
   closeOtherOverlays("cat");
   const it = tFindItem(trigger); if (!it) return;
@@ -5425,15 +5455,10 @@ function openCatMenu(trigger){
   catmenu.innerHTML = cats.map(c =>
     `<button type="button" class="catmenu-opt${c.key===it.cat?' sel':''}" data-key="${esc(c.key)}"><span class="dot" style="background:${safeColor(c.color)}"></span>${esc(c.key)}</button>`
   ).join("");
-  const r = trigger.getBoundingClientRect();
   catmenu.classList.add("show");
   if (window.refreshLed) window.refreshLed();
   catMenuSyncIdx();
-  const w = catmenu.offsetWidth;
-  let left = Math.min(r.left, window.innerWidth - w - 10); left = Math.max(10, left);
-  let top = r.bottom + 5;
-  if (top + catmenu.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - catmenu.offsetHeight - 5);
-  catmenu.style.left = left + "px"; catmenu.style.top = top + "px";
+  positionTableCategoryMenu();
   setTimeout(()=>document.addEventListener("click", catMenuOutside), 0);
 }
 function catMenuOutside(e){ if (e.target.closest("#catmenu") || e.target.closest(".tcat-trigger")) return; closeCatMenu(); }
@@ -6540,7 +6565,24 @@ function setFormCat(key){
   catSelTxt.textContent = formCat || "選擇類別";
   catSelMenu.querySelectorAll(".cselect-opt").forEach(o => o.classList.toggle("sel", o.dataset.key === formCat));
 }
-function openCatSel(){ catSel.classList.add("open"); catSelBtn.setAttribute("aria-expanded","true"); }
+const categoryFormBody=catSel.closest(".modal-body");
+function positionFormCategoryMenu(){
+  const up=fitCategoryMenu(catSelMenu,catSel.getBoundingClientRect(),6,categoryFormBody.getBoundingClientRect());
+  catSelMenu.classList.toggle("opens-up",up);
+}
+function positionOpenCategoryMenu(){
+  if(catSel.classList.contains("open")) positionFormCategoryMenu();
+  if(catTrigger) positionTableCategoryMenu();
+}
+categoryFormBody.addEventListener("scroll",()=>{if(catSel.classList.contains("open")) positionFormCategoryMenu();},{passive:true});
+window.addEventListener("resize",positionOpenCategoryMenu);
+window.visualViewport?.addEventListener("resize",positionOpenCategoryMenu);
+window.visualViewport?.addEventListener("scroll",positionOpenCategoryMenu);
+function openCatSel(){
+  catSel.classList.add("open");
+  catSelBtn.setAttribute("aria-expanded","true");
+  positionFormCategoryMenu();
+}
 function closeCatSel(){ catSel.classList.remove("open"); catSelBtn.setAttribute("aria-expanded","false"); }
 catSelBtn.addEventListener("click", e => { e.stopPropagation(); catSel.classList.contains("open") ? closeCatSel() : openCatSel(); });
 catSelMenu.addEventListener("click", e => { const o = e.target.closest(".cselect-opt"); if (o){ setFormCat(o.dataset.key); closeCatSel(); } });
